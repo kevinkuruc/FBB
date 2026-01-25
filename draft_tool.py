@@ -39,15 +39,17 @@ LEAGUE_AVG_WEEKLY = {
     'OBP': 0.32
 }
 
-# Replacement level (average of players ranked 145-160)
+# Replacement level (average of players ranked 145-160, scaled up by 1.263 for realistic baseline)
+# Scale factor calibrated so starting with 9 replacement players gives ~45% SO win probability
+SCALE_FACTOR = 1.263
 REPLACEMENT_LEVEL = {
-    'PA': 505.5,
-    'R': 60.8,
-    'HR': 16.8,
-    'RBI': 60.1,
-    'SO': 113.1,
-    'TB': 185.9,
-    'SB': 8.8,
+    'PA': round(505.5 * SCALE_FACTOR),
+    'R': round(60.8 * SCALE_FACTOR),
+    'HR': round(16.8 * SCALE_FACTOR),
+    'RBI': round(60.1 * SCALE_FACTOR),
+    'SO': round(113.1 * SCALE_FACTOR),
+    'TB': round(185.9 * SCALE_FACTOR),
+    'SB': round(8.8 * SCALE_FACTOR),
     'OBP': 0.312
 }
 
