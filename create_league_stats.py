@@ -2,7 +2,7 @@ import csv
 
 # Read the raw data and create a clean CSV with only relevant fantasy categories
 input_file = '/home/user/FBB/The_Bat_Raw_Jan_25.csv'
-output_file = '/home/user/FBB/fantasy_hitters_2025.csv'
+output_file = '/home/user/FBB/fantasy_hitters_2026.csv'
 
 with open(input_file, 'r', encoding='utf-8-sig') as infile:
     reader = csv.DictReader(infile)
@@ -33,12 +33,13 @@ with open(input_file, 'r', encoding='utf-8-sig') as infile:
 
             output_rows.append({
                 'Name': name,
-                'R': round(runs, 1),
-                'HR': round(hr, 1),
-                'RBI': round(rbi, 1),
-                'SO': round(strikeouts, 1),
-                'TB': round(total_bases, 1),
-                'SB': round(sb, 1),
+                'PA': round(pa),
+                'R': round(runs),
+                'HR': round(hr),
+                'RBI': round(rbi),
+                'SO': round(strikeouts),
+                'TB': round(total_bases),
+                'SB': round(sb),
                 'OBP': round(obp, 3)
             })
         except (ValueError, KeyError) as e:
@@ -47,7 +48,7 @@ with open(input_file, 'r', encoding='utf-8-sig') as infile:
             continue
 
 # Write output CSV
-fieldnames = ['Name', 'R', 'HR', 'RBI', 'SO', 'TB', 'SB', 'OBP']
+fieldnames = ['Name', 'PA', 'R', 'HR', 'RBI', 'SO', 'TB', 'SB', 'OBP']
 with open(output_file, 'w', newline='', encoding='utf-8') as outfile:
     writer = csv.DictWriter(outfile, fieldnames=fieldnames)
     writer.writeheader()
@@ -56,4 +57,4 @@ with open(output_file, 'w', newline='', encoding='utf-8') as outfile:
 print(f"Created {output_file} with {len(output_rows)} players")
 print("\nFirst 10 players:")
 for row in output_rows[:10]:
-    print(f"  {row['Name']}: R={row['R']}, HR={row['HR']}, RBI={row['RBI']}, SO={row['SO']}, TB={row['TB']}, SB={row['SB']}, OBP={row['OBP']}")
+    print(f"  {row['Name']}: PA={row['PA']}, R={row['R']}, HR={row['HR']}, RBI={row['RBI']}, SO={row['SO']}, TB={row['TB']}, SB={row['SB']}, OBP={row['OBP']}")
