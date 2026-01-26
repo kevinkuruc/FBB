@@ -19,6 +19,20 @@ AVG_OBP = 0.32
 # Number of weeks in season
 NUM_WEEKS = 25
 
+# Target PA - all players supplemented to this level with replacement production
+TARGET_PA = 625
+
+# Replacement level per-PA rates (from ~145th ranked player baseline: 505.5 PA)
+# These are the rates for a replacement-level player
+REP_PA_BASE = 505.5
+REP_R_PER_PA = 60.8 / REP_PA_BASE      # 0.1202
+REP_HR_PER_PA = 16.8 / REP_PA_BASE     # 0.0332
+REP_RBI_PER_PA = 60.1 / REP_PA_BASE    # 0.1189
+REP_SO_PER_PA = 113.1 / REP_PA_BASE    # 0.2238
+REP_TB_PER_PA = 185.9 / REP_PA_BASE    # 0.3677
+REP_SB_PER_PA = 8.8 / REP_PA_BASE      # 0.0174
+REP_OBP = 0.312
+
 with open(input_file, 'r', encoding='utf-8-sig') as infile:
     reader = csv.DictReader(infile)
 
@@ -45,6 +59,19 @@ with open(input_file, 'r', encoding='utf-8-sig') as infile:
 
             # Calculate Total Bases: 1B + 2*2B + 3*3B + 4*HR
             total_bases = singles + (2 * doubles) + (3 * triples) + (4 * hr)
+
+            # Supplement low-PA players with replacement-level production
+            if pa < TARGET_PA:
+                gap_pa = TARGET_PA - pa
+                runs = runs + gap_pa * REP_R_PER_PA
+                hr = hr + gap_pa * REP_HR_PER_PA
+                rbi = rbi + gap_pa * REP_RBI_PER_PA
+                strikeouts = strikeouts + gap_pa * REP_SO_PER_PA
+                total_bases = total_bases + gap_pa * REP_TB_PER_PA
+                sb = sb + gap_pa * REP_SB_PER_PA
+                # OBP is weighted average
+                obp = (pa * obp + gap_pa * REP_OBP) / TARGET_PA
+                pa = TARGET_PA
 
             # Calculate z-scores
             # Counting stats: (season_stat / NUM_WEEKS) / SD
