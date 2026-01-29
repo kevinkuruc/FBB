@@ -146,12 +146,12 @@
         }
         .player-row {
             display: grid;
-            grid-template-columns: 40px 180px 40px 45px 45px 45px 45px 45px 45px 55px 55px 60px 55px;
-            gap: 5px;
-            padding: 8px 5px;
+            grid-template-columns: 30px 160px 32px 55px 38px 32px 32px 35px 30px 35px 35px 45px 35px 30px 32px 35px 35px 32px 38px 45px;
+            gap: 3px;
+            padding: 6px 5px;
             border-bottom: 1px solid #2d5a2d;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             align-items: center;
         }
         .player-row:hover:not(.header) {
@@ -366,24 +366,26 @@
                 <h3>Relief Pitchers (4 daily slots)</h3>
                 <div id="rp-roster" class="roster-grid pitchers"></div>
             </div>
+            <div class="expected-wins" style="font-size: 28px; margin: 20px 0; padding: 15px; background: #0d1f0d; border-radius: 8px; text-align: center;">
+                Expected Weekly Wins: <span id="expected-wins" style="font-size: 36px;">7.00</span> / 14
+            </div>
             <h3>Category Win Probabilities</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div>
-                    <h4 style="color: #5cb85c; margin-bottom: 10px;">Hitting (7 categories)</h4>
+                    <h4 style="color: #5cb85c; margin-bottom: 10px;">Hitting (7 categories + volume)</h4>
                     <table class="category-table">
                         <thead><tr><th>Cat</th><th>My Wk</th><th>Lg Avg</th><th>P(Win)</th></tr></thead>
                         <tbody id="hitting-category-tbody"></tbody>
                     </table>
                 </div>
                 <div>
-                    <h4 style="color: #5cb85c; margin-bottom: 10px;">Pitching (7 categories)</h4>
+                    <h4 style="color: #5cb85c; margin-bottom: 10px;">Pitching (7 categories + volume)</h4>
                     <table class="category-table">
                         <thead><tr><th>Cat</th><th>My Wk</th><th>Lg Avg</th><th>P(Win)</th></tr></thead>
                         <tbody id="pitching-category-tbody"></tbody>
                     </table>
                 </div>
             </div>
-            <div class="expected-wins">Expected Weekly Wins: <span id="expected-wins">7.00</span> / 14</div>
         </div>
 
         <!-- Best Available Panel -->
@@ -445,12 +447,12 @@
     const TEAM_NAMES = ['My Team', 'JDM', 'Calabria', 'Ferrante', 'Prut', 'Gwon', 'Bish', 'Jerik', 'Buster', 'Triz', 'Fanning', 'B Smith', 'Der', 'Wes', 'Derek', 'Mende'];
 
     // Weekly standard deviations from 2024 league data
-    const HITTING_SD = { R: 6.03, HR: 2.93, RBI: 6.72, SB: 2.57, SO: 7.45, TB: 15.94, OBP: 0.04 };
-    const PITCHING_SD = { L: 1.8346, SV: 1.5362, K: 11.7861, HLD: 1.6383, ERA: 1.3141, WHIP: 0.2057, QS: 1.4012 };
+    const HITTING_SD = { R: 6.03, HR: 2.93, RBI: 6.72, SB: 2.57, SO: 7.45, TB: 15.94, OBP: 0.04, AB: 16.89 };
+    const PITCHING_SD = { L: 1.8346, SV: 1.5362, K: 11.7861, HLD: 1.6383, ERA: 1.3141, WHIP: 0.2057, QS: 1.4012, IP: 10.82 };
 
     // League averages
-    const HITTING_AVG = { R: 28.96, HR: 8.02, RBI: 27.86, SB: 4.74, SO: 50.11, TB: 88.87, OBP: 0.32 };
-    const PITCHING_AVG = { L: 3.08, SV: 2.27, K: 50.90, HLD: 2.30, ERA: 3.79, WHIP: 1.20, QS: 3.25 };
+    const HITTING_AVG = { R: 28.96, HR: 8.02, RBI: 27.86, SB: 4.74, SO: 50.11, TB: 88.87, OBP: 0.32, AB: 208.3 };
+    const PITCHING_AVG = { L: 3.08, SV: 2.27, K: 50.90, HLD: 2.30, ERA: 3.79, WHIP: 1.20, QS: 3.25, IP: 51.0 };
 
     // Hitter replacement level (625 PA)
     const HITTER_REP = {
@@ -525,6 +527,8 @@
             proj[cat.toUpperCase()] = players.reduce((sum, p) => sum + p[cat] / NUM_WEEKS, 0);
         });
         proj['OBP'] = players.reduce((sum, p) => sum + p.obp, 0) / players.length;
+        // PA/week as proxy for AB (AB ≈ PA * 0.9)
+        proj['AB'] = players.reduce((sum, p) => sum + (p.pa * 0.9) / NUM_WEEKS, 0);
 
         return proj;
     }
@@ -592,6 +596,7 @@
         const total_wh = sp_wh + rp_wh;
 
         return {
+            IP: total_ip,  // Total innings pitched per week
             L: sp_l + rp_l,
             SV: rp_sv,  // Only RPs get saves
             K: sp_k + rp_k,
@@ -712,25 +717,33 @@
         // Category tables
         const { hittingProj, pitchingProj, wins } = getExpectedWins('My Team');
 
-        // Hitting categories
+        // Hitting categories - AB first (volume, not counted in wins)
+        const abPWin = winProbability(hittingProj['AB'], HITTING_AVG['AB'], HITTING_SD['AB']);
+        const abRow = `<tr style="background: #0d2d0d;"><td><em>AB</em></td><td>${hittingProj['AB'].toFixed(1)}</td><td>${HITTING_AVG['AB'].toFixed(1)}</td><td class="win-prob ${abPWin >= 0.55 ? 'good' : abPWin >= 0.45 ? 'neutral' : 'bad'}" style="opacity: 0.7;">${(abPWin * 100).toFixed(1)}%</td></tr>`;
+
         const hittingCats = ['R', 'HR', 'RBI', 'SO', 'TB', 'SB', 'OBP'];
-        document.getElementById('hitting-category-tbody').innerHTML = hittingCats.map(cat => {
+        const hittingRows = hittingCats.map(cat => {
             const pWin = wins.hitting[cat];
             const colorClass = pWin >= 0.55 ? 'good' : pWin >= 0.45 ? 'neutral' : 'bad';
             const myVal = cat === 'OBP' ? hittingProj[cat].toFixed(3) : hittingProj[cat].toFixed(1);
             const lgVal = cat === 'OBP' ? HITTING_AVG[cat].toFixed(3) : HITTING_AVG[cat].toFixed(1);
             return `<tr><td>${cat}</td><td>${myVal}</td><td>${lgVal}</td><td class="win-prob ${colorClass}">${(pWin * 100).toFixed(1)}%</td></tr>`;
         }).join('');
+        document.getElementById('hitting-category-tbody').innerHTML = abRow + hittingRows;
 
-        // Pitching categories
+        // Pitching categories - IP first (volume, not counted in wins)
+        const ipPWin = winProbability(pitchingProj['IP'], PITCHING_AVG['IP'], PITCHING_SD['IP']);
+        const ipRow = `<tr style="background: #0d2d0d;"><td><em>IP</em></td><td>${pitchingProj['IP'].toFixed(1)}</td><td>${PITCHING_AVG['IP'].toFixed(1)}</td><td class="win-prob ${ipPWin >= 0.55 ? 'good' : ipPWin >= 0.45 ? 'neutral' : 'bad'}" style="opacity: 0.7;">${(ipPWin * 100).toFixed(1)}%</td></tr>`;
+
         const pitchingCats = ['L', 'SV', 'K', 'HLD', 'ERA', 'WHIP', 'QS'];
-        document.getElementById('pitching-category-tbody').innerHTML = pitchingCats.map(cat => {
+        const pitchingRows = pitchingCats.map(cat => {
             const pWin = wins.pitching[cat];
             const colorClass = pWin >= 0.55 ? 'good' : pWin >= 0.45 ? 'neutral' : 'bad';
             const myVal = ['ERA', 'WHIP'].includes(cat) ? pitchingProj[cat].toFixed(3) : pitchingProj[cat].toFixed(2);
             const lgVal = ['ERA', 'WHIP'].includes(cat) ? PITCHING_AVG[cat].toFixed(3) : PITCHING_AVG[cat].toFixed(2);
             return `<tr><td>${cat}</td><td>${myVal}</td><td>${lgVal}</td><td class="win-prob ${colorClass}">${(pWin * 100).toFixed(1)}%</td></tr>`;
         }).join('');
+        document.getElementById('pitching-category-tbody').innerHTML = ipRow + pitchingRows;
 
         document.getElementById('expected-wins').textContent = wins.TOTAL.toFixed(2);
     }
@@ -757,17 +770,24 @@
             <div class="player-row header">
                 <div>#</div>
                 <div>Name</div>
-                <div>Type</div>
-                <div>Stat1</div>
-                <div>Stat2</div>
-                <div>Stat3</div>
-                <div>Stat4</div>
-                <div>Stat5</div>
-                <div>Stat6</div>
-                <div>Stat7</div>
-                <div>Stat8</div>
-                <div>MargVal</div>
-                <div>WAR</div>
+                <div>Typ</div>
+                <div>+MV</div>
+                <div>PA</div>
+                <div>R</div>
+                <div>HR</div>
+                <div>RBI</div>
+                <div>SB</div>
+                <div>SO</div>
+                <div>TB</div>
+                <div>OBP</div>
+                <div>IP</div>
+                <div>L</div>
+                <div>SV</div>
+                <div>K</div>
+                <div>HLD</div>
+                <div>QS</div>
+                <div>ERA</div>
+                <div>WHIP</div>
             </div>
         `;
 
@@ -784,16 +804,23 @@
                         <div>${idx + 1}</div>
                         <div>${p.name}</div>
                         <div><span class="type-badge ${typeBadge}">${p.type}</span></div>
-                        <div>IP:${p.ip_wk.toFixed(1)}</div>
-                        <div>K:${p.k_wk.toFixed(1)}</div>
-                        <div>L:${p.l_wk.toFixed(2)}</div>
-                        <div>SV:${p.sv_wk.toFixed(2)}</div>
-                        <div>HLD:${p.hld_wk.toFixed(2)}</div>
-                        <div>QS:${p.qs_wk.toFixed(2)}</div>
-                        <div>ERA:${p.era.toFixed(2)}</div>
-                        <div>WHIP:${p.whip.toFixed(2)}</div>
                         <div class="${mvClass}">${mvText}</div>
-                        <div>${p.war.toFixed(1)}</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>${p.ip_wk.toFixed(1)}</div>
+                        <div>${p.l_wk.toFixed(2)}</div>
+                        <div>${p.sv_wk.toFixed(2)}</div>
+                        <div>${p.k_wk.toFixed(1)}</div>
+                        <div>${p.hld_wk.toFixed(2)}</div>
+                        <div>${p.qs_wk.toFixed(2)}</div>
+                        <div>${p.era.toFixed(2)}</div>
+                        <div>${p.whip.toFixed(2)}</div>
                     </div>
                 `;
             } else {
@@ -802,16 +829,23 @@
                         <div>${idx + 1}</div>
                         <div>${p.name}</div>
                         <div><span class="type-badge ${typeBadge}">H</span></div>
-                        <div>R:${p.r}</div>
-                        <div>HR:${p.hr}</div>
-                        <div>RBI:${p.rbi}</div>
-                        <div>SO:${p.so}</div>
-                        <div>TB:${p.tb}</div>
-                        <div>SB:${p.sb}</div>
-                        <div>OBP:${p.obp.toFixed(3)}</div>
-                        <div>PA:${p.pa}</div>
                         <div class="${mvClass}">${mvText}</div>
-                        <div>${p.zTotal.toFixed(2)}</div>
+                        <div>${p.pa}</div>
+                        <div>${p.r}</div>
+                        <div>${p.hr}</div>
+                        <div>${p.rbi}</div>
+                        <div>${p.sb}</div>
+                        <div>${p.so}</div>
+                        <div>${p.tb}</div>
+                        <div>${p.obp.toFixed(3)}</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
+                        <div>-</div>
                     </div>
                 `;
             }
