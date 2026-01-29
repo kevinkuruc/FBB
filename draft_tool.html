@@ -26,7 +26,7 @@
             margin-bottom: 20px;
         }
         .container {
-            max-width: 1600px;
+            max-width: 1800px;
             margin: 0 auto;
         }
         .tabs {
@@ -59,11 +59,24 @@
         .panel.active {
             display: block;
         }
+        /* My Roster Tab */
+        .roster-section {
+            margin-bottom: 20px;
+        }
+        .roster-section h3 {
+            color: #5cb85c;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #2d5a2d;
+            padding-bottom: 5px;
+        }
         .roster-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             margin-bottom: 20px;
+        }
+        .roster-grid.pitchers {
+            grid-template-columns: repeat(5, 1fr);
         }
         .roster-slot {
             background: #0d1f0d;
@@ -98,88 +111,173 @@
         .category-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-bottom: 20px;
         }
         .category-table th, .category-table td {
             padding: 8px 12px;
-            text-align: center;
+            text-align: left;
             border-bottom: 1px solid #2d5a2d;
         }
         .category-table th {
-            background: #1a4d1a;
             color: #5cb85c;
         }
-        .category-table .win-prob {
-            font-weight: bold;
+        .win-prob.good { color: #5cb85c; }
+        .win-prob.neutral { color: #ccc; }
+        .win-prob.bad { color: #d9534f; }
+        .expected-wins {
+            font-size: 24px;
+            color: #5cb85c;
+            margin-top: 10px;
         }
-        .win-prob.good { color: #4ade80; }
-        .win-prob.neutral { color: #fbbf24; }
-        .win-prob.bad { color: #f87171; }
+        /* Best Available Tab */
         .search-box {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #2d5a2d;
-            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid #2d5a2d;
+            border-radius: 5px;
             background: #0d1f0d;
             color: #eee;
-            font-size: 16px;
             margin-bottom: 15px;
-        }
-        .search-box:focus {
-            outline: none;
-            border-color: #5cb85c;
+            font-size: 14px;
         }
         .player-list {
-            max-height: 500px;
+            max-height: 800px;
             overflow-y: auto;
         }
         .player-row {
             display: grid;
-            grid-template-columns: 30px 200px repeat(8, 60px) 80px 80px;
+            grid-template-columns: 40px 180px 40px 45px 45px 45px 45px 45px 45px 55px 55px 60px 55px;
+            gap: 5px;
             padding: 8px 5px;
             border-bottom: 1px solid #2d5a2d;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
             align-items: center;
         }
-        .player-row:hover {
+        .player-row:hover:not(.header) {
             background: #2d5a2d;
         }
         .player-row.header {
-            background: #1a4d1a;
             font-weight: bold;
             color: #5cb85c;
             cursor: default;
             position: sticky;
             top: 0;
+            background: #1a3d1a;
         }
-        .player-row.drafted {
-            opacity: 0.4;
-            text-decoration: line-through;
+        .player-row.pitcher {
+            background: #1a2d3d;
+        }
+        .player-row.pitcher:hover {
+            background: #2d4a5d;
         }
         .marginal-value {
-            color: #4ade80;
+            color: #5cb85c;
             font-weight: bold;
         }
-        .z-total {
-            color: #fbbf24;
+        .marginal-value.negative {
+            color: #d9534f;
         }
-        .modal {
+        .type-badge {
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .type-badge.hitter { background: #2d5a2d; color: #5cb85c; }
+        .type-badge.sp { background: #2d3d5a; color: #5cb5c8; }
+        .type-badge.rp { background: #5a2d3d; color: #c85c5c; }
+        /* All Teams Tab */
+        .other-teams-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .other-team-card {
+            background: #0d1f0d;
+            border: 2px solid #2d5a2d;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .other-team-card.my-team-card {
+            border-color: #5cb85c;
+        }
+        .other-team-card h4 {
+            margin: 0 0 10px 0;
+            color: #5cb85c;
+            font-size: 14px;
+        }
+        .team-roster-mini {
+            font-size: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            margin-bottom: 10px;
+        }
+        .mini-slot {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .mini-slot .pos {
+            color: #888;
+        }
+        .mini-slot .name {
+            color: #5cb85c;
+        }
+        .mini-slot .name.empty {
+            color: #555;
+        }
+        .team-projections {
+            font-size: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+        }
+        .proj-row .cat {
+            color: #888;
+        }
+        .proj-row .val {
+            color: #5cb85c;
+        }
+        /* Draft Log Tab */
+        .draft-log {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .draft-log-entry {
+            padding: 8px;
+            border-bottom: 1px solid #2d5a2d;
+            font-size: 13px;
+        }
+        .draft-log-entry.my-pick {
+            background: #1a4d1a;
+        }
+        .pick-num {
+            color: #888;
+            margin-right: 10px;
+        }
+        .team-name {
+            color: #5cb85c;
+            font-weight: bold;
+        }
+        /* Modal */
+        .modal-overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
             background: rgba(0,0,0,0.8);
-            justify-content: center;
-            align-items: center;
             z-index: 1000;
+            align-items: center;
+            justify-content: center;
         }
-        .modal.active {
+        .modal-overlay.active {
             display: flex;
         }
-        .modal-content {
+        .modal {
             background: #1a3d1a;
             border-radius: 10px;
             padding: 20px;
@@ -188,310 +286,200 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-        .modal-content h3 {
+        .modal h2 {
             margin-top: 0;
             color: #5cb85c;
         }
-        .team-select {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
+        .modal-buttons {
+            display: flex;
             gap: 10px;
-            margin-bottom: 15px;
-        }
-        .team-btn {
-            padding: 10px;
-            border: 2px solid #2d5a2d;
-            border-radius: 5px;
-            background: #0d1f0d;
-            color: #eee;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .team-btn:hover {
-            border-color: #5cb85c;
-        }
-        .team-btn.my-team {
-            border-color: #4ade80;
-            background: #1a4d1a;
-        }
-        .team-btn.selected {
-            border-color: #fbbf24;
-            background: #3d3d1a;
-        }
-        .position-select {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
             margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #2d5a2d;
+            flex-wrap: wrap;
         }
-        .position-btn {
-            padding: 8px;
-            border: 2px solid #2d5a2d;
-            border-radius: 5px;
-            background: #0d1f0d;
-            color: #eee;
-            cursor: pointer;
-            font-size: 11px;
-            text-align: center;
-        }
-        .position-btn:hover {
-            border-color: #5cb85c;
-        }
-        .position-btn.filled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .btn {
+        .modal-btn {
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
-            margin: 5px;
         }
-        .btn-primary {
+        .modal-btn.primary {
             background: #5cb85c;
             color: #000;
         }
-        .btn-danger {
-            background: #f87171;
-            color: #000;
-        }
-        .btn-secondary {
+        .modal-btn.secondary {
             background: #2d5a2d;
             color: #eee;
         }
-        .expected-wins {
-            font-size: 24px;
-            text-align: center;
-            margin: 20px 0;
+        .modal-btn.cancel {
+            background: #444;
+            color: #eee;
         }
-        .expected-wins span {
-            color: #5cb85c;
-            font-weight: bold;
+        .modal-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-        .draft-log {
-            max-height: 400px;
-            overflow-y: auto;
-            font-size: 12px;
+        .team-select, .slot-select {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        .team-btn, .slot-btn {
+            padding: 8px 12px;
+            border: 2px solid #2d5a2d;
             background: #0d1f0d;
-            padding: 10px;
+            color: #eee;
             border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
         }
-        .draft-log-entry {
-            padding: 5px 0;
-            border-bottom: 1px solid #2d5a2d;
-        }
-        .draft-log-entry .pick-num {
-            color: #888;
-        }
-        .draft-log-entry .team-name {
-            color: #5cb85c;
-        }
-        .draft-log-entry.my-pick .team-name {
-            color: #4ade80;
-            font-weight: bold;
-        }
-        .other-teams-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-        }
-        .other-team-card {
-            background: #0d1f0d;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 11px;
-            border: 1px solid #2d5a2d;
-        }
-        .other-team-card h4 {
-            margin: 0 0 8px 0;
-            color: #5cb85c;
-            font-size: 14px;
-            border-bottom: 1px solid #2d5a2d;
-            padding-bottom: 5px;
-        }
-        .other-team-card.my-team-card {
-            border-color: #4ade80;
-        }
-        .other-team-card.my-team-card h4 {
-            color: #4ade80;
-        }
-        .team-roster-mini {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2px;
-        }
-        .mini-slot {
-            display: flex;
-            font-size: 10px;
-            padding: 2px 0;
-        }
-        .mini-slot .pos {
-            color: #888;
-            width: 30px;
-            flex-shrink: 0;
-        }
-        .mini-slot .name {
-            color: #ccc;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .mini-slot .name.empty {
-            color: #555;
-            font-style: italic;
-        }
-        .team-projections {
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid #2d5a2d;
-            font-size: 10px;
-        }
-        .proj-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 1px 0;
-        }
-        .proj-row .cat {
-            color: #888;
-        }
-        .proj-row .val {
-            color: #5cb85c;
+        .team-btn.selected, .slot-btn.selected {
+            border-color: #5cb85c;
+            background: #1a4d1a;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Fantasy Baseball Draft Tool</h1>
-        <p class="subtitle">Dynamic rankings based on marginal win probability</p>
+        <h1>Fantasy Baseball Draft Tool 2026</h1>
+        <p class="subtitle">Marginal Win Probability Analysis | 14 Categories</p>
 
         <div class="tabs">
-            <button class="tab active" data-tab="roster">My Roster</button>
-            <button class="tab" data-tab="available">Best Available</button>
-            <button class="tab" data-tab="teams">All Teams</button>
-            <button class="tab" data-tab="log">Draft Log</button>
+            <button class="tab active" onclick="showTab('roster')">My Roster</button>
+            <button class="tab" onclick="showTab('available')">Best Available</button>
+            <button class="tab" onclick="showTab('teams')">All Teams</button>
+            <button class="tab" onclick="showTab('log')">Draft Log</button>
         </div>
 
         <!-- My Roster Panel -->
-        <div class="panel active" id="roster-panel">
-            <div class="expected-wins">
-                Expected Wins/Week: <span id="expected-wins">3.11</span> / 7
+        <div id="roster-panel" class="panel active">
+            <div class="roster-section">
+                <h3>Hitters (9 slots)</h3>
+                <div id="hitter-roster" class="roster-grid"></div>
             </div>
-
-            <div class="roster-grid" id="roster-grid"></div>
-
+            <div class="roster-section">
+                <h3>Starting Pitchers (7 starts/week, each SP = 1.1 starts)</h3>
+                <div id="sp-roster" class="roster-grid pitchers"></div>
+            </div>
+            <div class="roster-section">
+                <h3>Relief Pitchers (4 daily slots)</h3>
+                <div id="rp-roster" class="roster-grid pitchers"></div>
+            </div>
             <h3>Category Win Probabilities</h3>
-            <table class="category-table">
-                <thead>
-                    <tr>
-                        <th>Category</th>
-                        <th>My Weekly</th>
-                        <th>Lg Avg</th>
-                        <th>P(Win)</th>
-                    </tr>
-                </thead>
-                <tbody id="category-tbody"></tbody>
-            </table>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h4 style="color: #5cb85c; margin-bottom: 10px;">Hitting (7 categories)</h4>
+                    <table class="category-table">
+                        <thead><tr><th>Cat</th><th>My Wk</th><th>Lg Avg</th><th>P(Win)</th></tr></thead>
+                        <tbody id="hitting-category-tbody"></tbody>
+                    </table>
+                </div>
+                <div>
+                    <h4 style="color: #5cb85c; margin-bottom: 10px;">Pitching (7 categories)</h4>
+                    <table class="category-table">
+                        <thead><tr><th>Cat</th><th>My Wk</th><th>Lg Avg</th><th>P(Win)</th></tr></thead>
+                        <tbody id="pitching-category-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="expected-wins">Expected Weekly Wins: <span id="expected-wins">7.00</span> / 14</div>
         </div>
 
         <!-- Best Available Panel -->
-        <div class="panel" id="available-panel">
-            <input type="text" class="search-box" id="player-search" placeholder="Search players...">
-            <div class="player-list" id="player-list"></div>
+        <div id="available-panel" class="panel">
+            <input type="text" class="search-box" placeholder="Search players..." oninput="renderAvailablePlayers(this.value)">
+            <div id="player-list" class="player-list"></div>
         </div>
 
         <!-- All Teams Panel -->
-        <div class="panel" id="teams-panel">
-            <div class="other-teams-grid" id="other-teams-grid"></div>
+        <div id="teams-panel" class="panel">
+            <div id="other-teams-grid" class="other-teams-grid"></div>
         </div>
 
         <!-- Draft Log Panel -->
-        <div class="panel" id="log-panel">
-            <div class="draft-log" id="draft-log">
-                <em>No picks yet...</em>
-            </div>
+        <div id="log-panel" class="panel">
+            <div id="draft-log" class="draft-log"></div>
         </div>
     </div>
 
-    <!-- Player Selection Modal -->
-    <div class="modal" id="draft-modal">
-        <div class="modal-content">
-            <h3>Draft <span id="modal-player-name"></span></h3>
-            <p>Select team:</p>
-            <div class="team-select" id="team-select"></div>
-            <div id="position-select-container" style="display:none;">
-                <p>Select position:</p>
-                <div class="position-select" id="position-select"></div>
+    <!-- Draft Modal -->
+    <div id="draft-modal" class="modal-overlay">
+        <div class="modal">
+            <h2>Draft <span id="modal-player-name"></span></h2>
+            <p id="modal-player-type"></p>
+            <div id="modal-step1">
+                <p>Select team:</p>
+                <div id="team-select" class="team-select"></div>
             </div>
-            <div style="text-align: center; margin-top: 15px;">
-                <button class="btn btn-primary" id="confirm-draft-btn" style="display:none;" onclick="confirmDraft()">Confirm Draft</button>
-                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <div id="modal-step2" style="display: none;">
+                <p>Select slot:</p>
+                <div id="slot-select" class="slot-select"></div>
             </div>
-        </div>
-    </div>
-
-    <!-- Roster Slot Modal -->
-    <div class="modal" id="slot-modal">
-        <div class="modal-content">
-            <h3 id="slot-modal-title">Position</h3>
-            <input type="text" class="search-box" id="slot-search" placeholder="Search players...">
-            <div class="player-list" id="slot-player-list" style="max-height: 300px;"></div>
-            <div style="text-align: center; margin-top: 15px;">
-                <button class="btn btn-danger" id="clear-slot-btn" style="display:none;">Remove Player</button>
-                <button class="btn btn-secondary" onclick="closeSlotModal()">Cancel</button>
+            <div class="modal-buttons">
+                <button class="modal-btn primary" id="confirm-draft-btn" onclick="confirmDraft()" disabled>Confirm Draft</button>
+                <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
             </div>
         </div>
     </div>
 
     <script>
     // =============================================================================
-    // PLAYER DATA (embedded)
+    // PLAYER DATA
     // =============================================================================
-    const PLAYERS = [{"name": "Shohei Ohtani", "pa": 671, "r": 124, "hr": 48, "rbi": 118, "so": 158, "tb": 342, "sb": 23, "obp": 0.385, "zTotal": 2.73}, {"name": "Jos\u00e9 Ram\u00edrez", "pa": 658, "r": 95, "hr": 29, "rbi": 91, "so": 76, "tb": 290, "sb": 33, "obp": 0.348, "zTotal": 2.49}, {"name": "Aaron Judge", "pa": 646, "r": 106, "hr": 49, "rbi": 120, "so": 161, "tb": 325, "sb": 8, "obp": 0.414, "zTotal": 2.43}, {"name": "Juan Soto", "pa": 681, "r": 107, "hr": 37, "rbi": 97, "so": 122, "tb": 285, "sb": 17, "obp": 0.401, "zTotal": 2.36}, {"name": "Bobby Witt Jr.", "pa": 668, "r": 102, "hr": 27, "rbi": 92, "so": 115, "tb": 304, "sb": 35, "obp": 0.341, "zTotal": 2.34}, {"name": "Kyle Tucker", "pa": 625, "r": 97, "hr": 30, "rbi": 89, "so": 88, "tb": 267, "sb": 19, "obp": 0.369, "zTotal": 2.2}, {"name": "Corbin Carroll", "pa": 650, "r": 105, "hr": 26, "rbi": 80, "so": 139, "tb": 276, "sb": 36, "obp": 0.345, "zTotal": 2.11}, {"name": "Yordan Alvarez", "pa": 625, "r": 91, "hr": 33, "rbi": 97, "so": 106, "tb": 288, "sb": 4, "obp": 0.383, "zTotal": 2.03}, {"name": "Ronald Acu\u00f1a Jr.", "pa": 627, "r": 99, "hr": 28, "rbi": 82, "so": 137, "tb": 257, "sb": 28, "obp": 0.378, "zTotal": 2.03}, {"name": "Vladimir Guerrero Jr.", "pa": 672, "r": 94, "hr": 27, "rbi": 92, "so": 90, "tb": 286, "sb": 6, "obp": 0.376, "zTotal": 2.02}, {"name": "Julio Rodr\u00edguez", "pa": 663, "r": 95, "hr": 30, "rbi": 92, "so": 149, "tb": 292, "sb": 25, "obp": 0.338, "zTotal": 1.96}, {"name": "Francisco Lindor", "pa": 674, "r": 94, "hr": 29, "rbi": 86, "so": 126, "tb": 273, "sb": 24, "obp": 0.332, "zTotal": 1.95}, {"name": "Fernando Tatis Jr.", "pa": 643, "r": 95, "hr": 27, "rbi": 82, "so": 129, "tb": 264, "sb": 23, "obp": 0.35, "zTotal": 1.91}, {"name": "Junior Caminero", "pa": 632, "r": 83, "hr": 36, "rbi": 106, "so": 121, "tb": 295, "sb": 5, "obp": 0.322, "zTotal": 1.86}, {"name": "Gunnar Henderson", "pa": 658, "r": 97, "hr": 27, "rbi": 83, "so": 142, "tb": 278, "sb": 20, "obp": 0.346, "zTotal": 1.83}, {"name": "Ketel Marte", "pa": 625, "r": 87, "hr": 29, "rbi": 95, "so": 104, "tb": 271, "sb": 5, "obp": 0.358, "zTotal": 1.83}, {"name": "Mookie Betts", "pa": 629, "r": 87, "hr": 22, "rbi": 81, "so": 72, "tb": 250, "sb": 9, "obp": 0.346, "zTotal": 1.81}, {"name": "Kyle Schwarber", "pa": 667, "r": 99, "hr": 44, "rbi": 111, "so": 186, "tb": 284, "sb": 6, "obp": 0.352, "zTotal": 1.81}, {"name": "Jackson Chourio", "pa": 628, "r": 84, "hr": 23, "rbi": 87, "so": 126, "tb": 268, "sb": 25, "obp": 0.323, "zTotal": 1.79}, {"name": "Cal Raleigh", "pa": 629, "r": 87, "hr": 44, "rbi": 113, "so": 172, "tb": 284, "sb": 8, "obp": 0.331, "zTotal": 1.78}, {"name": "Jazz Chisholm Jr.", "pa": 625, "r": 93, "hr": 31, "rbi": 77, "so": 167, "tb": 253, "sb": 32, "obp": 0.315, "zTotal": 1.72}, {"name": "Bryce Harper", "pa": 625, "r": 87, "hr": 27, "rbi": 88, "so": 131, "tb": 263, "sb": 10, "obp": 0.366, "zTotal": 1.71}, {"name": "Corey Seager", "pa": 625, "r": 82, "hr": 30, "rbi": 95, "so": 119, "tb": 269, "sb": 3, "obp": 0.355, "zTotal": 1.7}, {"name": "Trea Turner", "pa": 625, "r": 86, "hr": 18, "rbi": 75, "so": 114, "tb": 254, "sb": 24, "obp": 0.333, "zTotal": 1.7}, {"name": "Josh Naylor", "pa": 625, "r": 76, "hr": 24, "rbi": 82, "so": 93, "tb": 244, "sb": 15, "obp": 0.327, "zTotal": 1.69}, {"name": "Elly De La Cruz", "pa": 640, "r": 92, "hr": 23, "rbi": 73, "so": 178, "tb": 256, "sb": 39, "obp": 0.327, "zTotal": 1.67}, {"name": "Pete Alonso", "pa": 662, "r": 89, "hr": 36, "rbi": 98, "so": 152, "tb": 281, "sb": 3, "obp": 0.332, "zTotal": 1.63}, {"name": "Chandler Simpson", "pa": 625, "r": 78, "hr": 7, "rbi": 52, "so": 86, "tb": 208, "sb": 41, "obp": 0.325, "zTotal": 1.63}, {"name": "Zach Neto", "pa": 638, "r": 86, "hr": 27, "rbi": 77, "so": 159, "tb": 256, "sb": 27, "obp": 0.318, "zTotal": 1.61}, {"name": "Nick Kurtz", "pa": 625, "r": 95, "hr": 39, "rbi": 100, "so": 189, "tb": 285, "sb": 4, "obp": 0.353, "zTotal": 1.61}, {"name": "Shea Langeliers", "pa": 625, "r": 85, "hr": 34, "rbi": 91, "so": 144, "tb": 280, "sb": 8, "obp": 0.316, "zTotal": 1.61}, {"name": "Brent Rooker", "pa": 640, "r": 89, "hr": 34, "rbi": 93, "so": 162, "tb": 284, "sb": 7, "obp": 0.341, "zTotal": 1.61}, {"name": "Maikel Garcia", "pa": 638, "r": 82, "hr": 13, "rbi": 65, "so": 93, "tb": 230, "sb": 26, "obp": 0.327, "zTotal": 1.61}, {"name": "Vinnie Pasquantino", "pa": 625, "r": 76, "hr": 27, "rbi": 92, "so": 91, "tb": 261, "sb": 1, "obp": 0.327, "zTotal": 1.61}, {"name": "Cody Bellinger", "pa": 625, "r": 78, "hr": 25, "rbi": 77, "so": 96, "tb": 249, "sb": 12, "obp": 0.318, "zTotal": 1.6}, {"name": "Byron Buxton", "pa": 625, "r": 89, "hr": 32, "rbi": 89, "so": 167, "tb": 273, "sb": 16, "obp": 0.318, "zTotal": 1.59}, {"name": "Pete Crow-Armstrong", "pa": 625, "r": 88, "hr": 23, "rbi": 71, "so": 154, "tb": 249, "sb": 33, "obp": 0.298, "zTotal": 1.58}, {"name": "Freddie Freeman", "pa": 625, "r": 85, "hr": 21, "rbi": 81, "so": 113, "tb": 251, "sb": 9, "obp": 0.353, "zTotal": 1.58}, {"name": "Luis Arraez", "pa": 625, "r": 72, "hr": 7, "rbi": 66, "so": 33, "tb": 231, "sb": 8, "obp": 0.348, "zTotal": 1.58}, {"name": "CJ Abrams", "pa": 625, "r": 79, "hr": 19, "rbi": 69, "so": 122, "tb": 235, "sb": 31, "obp": 0.309, "zTotal": 1.57}, {"name": "Rafael Devers", "pa": 657, "r": 88, "hr": 33, "rbi": 95, "so": 160, "tb": 274, "sb": 2, "obp": 0.354, "zTotal": 1.56}, {"name": "Nico Hoerner", "pa": 625, "r": 76, "hr": 7, "rbi": 57, "so": 64, "tb": 210, "sb": 26, "obp": 0.327, "zTotal": 1.55}, {"name": "Jacob Wilson", "pa": 625, "r": 76, "hr": 13, "rbi": 69, "so": 60, "tb": 244, "sb": 6, "obp": 0.344, "zTotal": 1.54}, {"name": "Luke Keaschall", "pa": 625, "r": 81, "hr": 16, "rbi": 68, "so": 112, "tb": 233, "sb": 21, "obp": 0.341, "zTotal": 1.52}, {"name": "Jose Altuve", "pa": 625, "r": 80, "hr": 23, "rbi": 75, "so": 110, "tb": 243, "sb": 12, "obp": 0.327, "zTotal": 1.52}, {"name": "George Springer", "pa": 625, "r": 84, "hr": 24, "rbi": 75, "so": 122, "tb": 239, "sb": 14, "obp": 0.331, "zTotal": 1.52}, {"name": "Geraldo Perdomo", "pa": 645, "r": 83, "hr": 13, "rbi": 59, "so": 88, "tb": 216, "sb": 18, "obp": 0.349, "zTotal": 1.51}, {"name": "Wyatt Langford", "pa": 625, "r": 86, "hr": 23, "rbi": 73, "so": 147, "tb": 239, "sb": 20, "obp": 0.341, "zTotal": 1.5}, {"name": "Will Smith", "pa": 625, "r": 84, "hr": 25, "rbi": 82, "so": 121, "tb": 242, "sb": 5, "obp": 0.346, "zTotal": 1.49}, {"name": "Jeremy Pe\u00f1a", "pa": 633, "r": 82, "hr": 18, "rbi": 70, "so": 114, "tb": 244, "sb": 17, "obp": 0.327, "zTotal": 1.49}, {"name": "Steven Kwan", "pa": 641, "r": 74, "hr": 8, "rbi": 58, "so": 55, "tb": 212, "sb": 16, "obp": 0.342, "zTotal": 1.49}, {"name": "Manny Machado", "pa": 630, "r": 78, "hr": 26, "rbi": 83, "so": 123, "tb": 253, "sb": 9, "obp": 0.32, "zTotal": 1.48}, {"name": "Jackson Merrill", "pa": 625, "r": 78, "hr": 23, "rbi": 81, "so": 123, "tb": 260, "sb": 9, "obp": 0.318, "zTotal": 1.45}, {"name": "Michael Harris II", "pa": 625, "r": 80, "hr": 20, "rbi": 75, "so": 126, "tb": 246, "sb": 19, "obp": 0.303, "zTotal": 1.45}, {"name": "Alex Bregman", "pa": 637, "r": 76, "hr": 21, "rbi": 78, "so": 89, "tb": 235, "sb": 2, "obp": 0.332, "zTotal": 1.44}, {"name": "Ben Rice", "pa": 625, "r": 81, "hr": 28, "rbi": 80, "so": 131, "tb": 249, "sb": 6, "obp": 0.325, "zTotal": 1.43}, {"name": "Isaac Paredes", "pa": 625, "r": 79, "hr": 26, "rbi": 79, "so": 112, "tb": 236, "sb": 4, "obp": 0.334, "zTotal": 1.43}, {"name": "Caleb Durbin", "pa": 625, "r": 71, "hr": 13, "rbi": 64, "so": 78, "tb": 208, "sb": 21, "obp": 0.312, "zTotal": 1.43}, {"name": "Willy Adames", "pa": 656, "r": 87, "hr": 31, "rbi": 86, "so": 172, "tb": 259, "sb": 11, "obp": 0.32, "zTotal": 1.42}, {"name": "Tyler Freeman", "pa": 625, "r": 78, "hr": 14, "rbi": 65, "so": 106, "tb": 222, "sb": 20, "obp": 0.334, "zTotal": 1.42}, {"name": "Randy Arozarena", "pa": 658, "r": 88, "hr": 23, "rbi": 73, "so": 172, "tb": 233, "sb": 25, "obp": 0.33, "zTotal": 1.41}, {"name": "Matt Olson", "pa": 675, "r": 86, "hr": 30, "rbi": 94, "so": 159, "tb": 263, "sb": 1, "obp": 0.341, "zTotal": 1.41}, {"name": "Yandy D\u00edaz", "pa": 625, "r": 74, "hr": 17, "rbi": 78, "so": 92, "tb": 238, "sb": 2, "obp": 0.352, "zTotal": 1.41}, {"name": "Andy Pages", "pa": 625, "r": 82, "hr": 25, "rbi": 84, "so": 139, "tb": 254, "sb": 10, "obp": 0.308, "zTotal": 1.4}, {"name": "Luis Robert Jr.", "pa": 625, "r": 84, "hr": 23, "rbi": 69, "so": 170, "tb": 232, "sb": 32, "obp": 0.301, "zTotal": 1.4}, {"name": "Luis Garc\u00eda Jr.", "pa": 625, "r": 72, "hr": 18, "rbi": 75, "so": 107, "tb": 237, "sb": 16, "obp": 0.305, "zTotal": 1.4}, {"name": "Teoscar Hern\u00e1ndez", "pa": 625, "r": 85, "hr": 28, "rbi": 88, "so": 158, "tb": 265, "sb": 7, "obp": 0.314, "zTotal": 1.39}, {"name": "Bo Bichette", "pa": 625, "r": 76, "hr": 17, "rbi": 74, "so": 102, "tb": 249, "sb": 7, "obp": 0.33, "zTotal": 1.38}, {"name": "Hunter Goodman", "pa": 625, "r": 79, "hr": 31, "rbi": 96, "so": 161, "tb": 277, "sb": 3, "obp": 0.307, "zTotal": 1.37}, {"name": "James Wood", "pa": 641, "r": 86, "hr": 25, "rbi": 83, "so": 189, "tb": 255, "sb": 17, "obp": 0.348, "zTotal": 1.37}, {"name": "Bryson Stott", "pa": 625, "r": 75, "hr": 14, "rbi": 62, "so": 109, "tb": 214, "sb": 23, "obp": 0.317, "zTotal": 1.37}, {"name": "Sal Stewart", "pa": 625, "r": 75, "hr": 23, "rbi": 82, "so": 126, "tb": 246, "sb": 7, "obp": 0.324, "zTotal": 1.37}, {"name": "Jarren Duran", "pa": 625, "r": 82, "hr": 16, "rbi": 66, "so": 145, "tb": 236, "sb": 24, "obp": 0.325, "zTotal": 1.36}, {"name": "Christian Yelich", "pa": 625, "r": 80, "hr": 21, "rbi": 78, "so": 152, "tb": 230, "sb": 17, "obp": 0.34, "zTotal": 1.36}, {"name": "Cedric Mullins", "pa": 625, "r": 79, "hr": 21, "rbi": 68, "so": 139, "tb": 224, "sb": 24, "obp": 0.307, "zTotal": 1.36}, {"name": "Alec Burleson", "pa": 625, "r": 71, "hr": 19, "rbi": 76, "so": 93, "tb": 235, "sb": 6, "obp": 0.316, "zTotal": 1.36}, {"name": "William Contreras", "pa": 625, "r": 76, "hr": 20, "rbi": 80, "so": 123, "tb": 231, "sb": 6, "obp": 0.35, "zTotal": 1.35}, {"name": "Jordan Westburg", "pa": 625, "r": 82, "hr": 25, "rbi": 80, "so": 143, "tb": 259, "sb": 8, "obp": 0.314, "zTotal": 1.35}, {"name": "Xander Bogaerts", "pa": 625, "r": 76, "hr": 15, "rbi": 66, "so": 115, "tb": 221, "sb": 19, "obp": 0.326, "zTotal": 1.35}, {"name": "Iv\u00e1n Herrera", "pa": 625, "r": 79, "hr": 20, "rbi": 74, "so": 126, "tb": 233, "sb": 9, "obp": 0.343, "zTotal": 1.35}, {"name": "Jurickson Profar", "pa": 625, "r": 77, "hr": 18, "rbi": 68, "so": 104, "tb": 216, "sb": 9, "obp": 0.339, "zTotal": 1.35}, {"name": "Kerry Carpenter", "pa": 625, "r": 78, "hr": 29, "rbi": 87, "so": 146, "tb": 260, "sb": 5, "obp": 0.309, "zTotal": 1.35}, {"name": "Mickey Moniak", "pa": 625, "r": 80, "hr": 25, "rbi": 84, "so": 151, "tb": 260, "sb": 12, "obp": 0.305, "zTotal": 1.35}, {"name": "Max Muncy", "pa": 625, "r": 83, "hr": 28, "rbi": 84, "so": 147, "tb": 232, "sb": 5, "obp": 0.331, "zTotal": 1.34}, {"name": "Seiya Suzuki", "pa": 625, "r": 83, "hr": 25, "rbi": 81, "so": 158, "tb": 244, "sb": 10, "obp": 0.333, "zTotal": 1.34}, {"name": "Brice Turang", "pa": 629, "r": 77, "hr": 13, "rbi": 62, "so": 133, "tb": 212, "sb": 30, "obp": 0.32, "zTotal": 1.34}, {"name": "Salvador Perez", "pa": 625, "r": 70, "hr": 29, "rbi": 97, "so": 129, "tb": 257, "sb": 1, "obp": 0.301, "zTotal": 1.34}, {"name": "Trevor Story", "pa": 625, "r": 80, "hr": 23, "rbi": 76, "so": 168, "tb": 243, "sb": 24, "obp": 0.303, "zTotal": 1.33}, {"name": "Jung Hoo Lee", "pa": 625, "r": 75, "hr": 11, "rbi": 63, "so": 77, "tb": 229, "sb": 9, "obp": 0.327, "zTotal": 1.33}, {"name": "Kazuma Okamoto", "pa": 625, "r": 78, "hr": 28, "rbi": 85, "so": 137, "tb": 244, "sb": 3, "obp": 0.318, "zTotal": 1.33}, {"name": "Otto Lopez", "pa": 625, "r": 72, "hr": 13, "rbi": 64, "so": 102, "tb": 223, "sb": 18, "obp": 0.317, "zTotal": 1.33}, {"name": "Xavier Edwards", "pa": 625, "r": 73, "hr": 5, "rbi": 49, "so": 93, "tb": 202, "sb": 28, "obp": 0.335, "zTotal": 1.33}, {"name": "Wilyer Abreu", "pa": 625, "r": 77, "hr": 26, "rbi": 84, "so": 152, "tb": 246, "sb": 11, "obp": 0.319, "zTotal": 1.33}, {"name": "Jorge Polanco", "pa": 625, "r": 76, "hr": 25, "rbi": 80, "so": 130, "tb": 240, "sb": 7, "obp": 0.315, "zTotal": 1.33}, {"name": "Oneil Cruz", "pa": 625, "r": 86, "hr": 24, "rbi": 73, "so": 181, "tb": 236, "sb": 26, "obp": 0.314, "zTotal": 1.32}, {"name": "Ozzie Albies", "pa": 625, "r": 72, "hr": 18, "rbi": 72, "so": 96, "tb": 227, "sb": 10, "obp": 0.305, "zTotal": 1.32}, {"name": "Matt Chapman", "pa": 625, "r": 85, "hr": 27, "rbi": 76, "so": 156, "tb": 242, "sb": 9, "obp": 0.33, "zTotal": 1.31}, {"name": "Anthony Santander", "pa": 625, "r": 77, "hr": 30, "rbi": 85, "so": 138, "tb": 245, "sb": 3, "obp": 0.307, "zTotal": 1.31}, {"name": "Jos\u00e9 Caballero", "pa": 625, "r": 80, "hr": 16, "rbi": 56, "so": 153, "tb": 202, "sb": 38, "obp": 0.304, "zTotal": 1.31}, {"name": "Lourdes Gurriel Jr.", "pa": 625, "r": 74, "hr": 20, "rbi": 77, "so": 120, "tb": 236, "sb": 10, "obp": 0.313, "zTotal": 1.31}, {"name": "Alejandro Kirk", "pa": 625, "r": 73, "hr": 18, "rbi": 72, "so": 90, "tb": 224, "sb": 3, "obp": 0.332, "zTotal": 1.3}, {"name": "Gleyber Torres", "pa": 635, "r": 76, "hr": 17, "rbi": 69, "so": 110, "tb": 220, "sb": 8, "obp": 0.343, "zTotal": 1.3}, {"name": "Brandon Nimmo", "pa": 633, "r": 83, "hr": 22, "rbi": 72, "so": 137, "tb": 241, "sb": 8, "obp": 0.333, "zTotal": 1.3}, {"name": "Marcus Semien", "pa": 625, "r": 74, "hr": 21, "rbi": 72, "so": 108, "tb": 227, "sb": 9, "obp": 0.309, "zTotal": 1.3}, {"name": "Agust\u00edn Ram\u00edrez", "pa": 625, "r": 74, "hr": 21, "rbi": 78, "so": 127, "tb": 237, "sb": 12, "obp": 0.308, "zTotal": 1.3}, {"name": "Tyler Soderstrom", "pa": 625, "r": 80, "hr": 26, "rbi": 81, "so": 150, "tb": 253, "sb": 6, "obp": 0.321, "zTotal": 1.3}, {"name": "Ha-Seong Kim", "pa": 625, "r": 78, "hr": 18, "rbi": 66, "so": 128, "tb": 219, "sb": 18, "obp": 0.317, "zTotal": 1.3}, {"name": "Tommy Edman", "pa": 625, "r": 78, "hr": 19, "rbi": 71, "so": 115, "tb": 227, "sb": 13, "obp": 0.3, "zTotal": 1.3}, {"name": "Sal Frelick", "pa": 625, "r": 72, "hr": 10, "rbi": 61, "so": 93, "tb": 209, "sb": 18, "obp": 0.324, "zTotal": 1.3}, {"name": "Jake McCarthy", "pa": 625, "r": 78, "hr": 15, "rbi": 63, "so": 123, "tb": 222, "sb": 21, "obp": 0.315, "zTotal": 1.3}, {"name": "Brendan Donovan", "pa": 625, "r": 72, "hr": 13, "rbi": 68, "so": 88, "tb": 221, "sb": 6, "obp": 0.341, "zTotal": 1.29}, {"name": "Jo Adell", "pa": 625, "r": 79, "hr": 32, "rbi": 84, "so": 168, "tb": 255, "sb": 11, "obp": 0.296, "zTotal": 1.29}, {"name": "Nolan Schanuel", "pa": 625, "r": 73, "hr": 14, "rbi": 61, "so": 87, "tb": 210, "sb": 7, "obp": 0.354, "zTotal": 1.29}, {"name": "Javier Sanoja", "pa": 625, "r": 73, "hr": 17, "rbi": 69, "so": 111, "tb": 228, "sb": 14, "obp": 0.31, "zTotal": 1.29}, {"name": "Trent Grisham", "pa": 625, "r": 81, "hr": 28, "rbi": 77, "so": 152, "tb": 230, "sb": 7, "obp": 0.327, "zTotal": 1.28}, {"name": "Mike Trout", "pa": 625, "r": 82, "hr": 31, "rbi": 86, "so": 180, "tb": 248, "sb": 5, "obp": 0.345, "zTotal": 1.28}, {"name": "Daulton Varsho", "pa": 625, "r": 80, "hr": 29, "rbi": 81, "so": 159, "tb": 244, "sb": 11, "obp": 0.294, "zTotal": 1.28}, {"name": "Nolan Arenado", "pa": 625, "r": 68, "hr": 18, "rbi": 78, "so": 91, "tb": 230, "sb": 4, "obp": 0.308, "zTotal": 1.28}, {"name": "Lane Thomas", "pa": 625, "r": 79, "hr": 20, "rbi": 71, "so": 149, "tb": 227, "sb": 21, "obp": 0.307, "zTotal": 1.28}, {"name": "Royce Lewis", "pa": 625, "r": 75, "hr": 22, "rbi": 75, "so": 134, "tb": 236, "sb": 13, "obp": 0.301, "zTotal": 1.27}, {"name": "Luis Matos", "pa": 625, "r": 73, "hr": 20, "rbi": 71, "so": 113, "tb": 230, "sb": 10, "obp": 0.302, "zTotal": 1.27}, {"name": "Gabriel Moreno", "pa": 625, "r": 75, "hr": 16, "rbi": 73, "so": 115, "tb": 229, "sb": 7, "obp": 0.334, "zTotal": 1.26}, {"name": "Taylor Ward", "pa": 625, "r": 80, "hr": 27, "rbi": 81, "so": 154, "tb": 242, "sb": 5, "obp": 0.329, "zTotal": 1.26}, {"name": "Evan Carter", "pa": 625, "r": 78, "hr": 18, "rbi": 66, "so": 137, "tb": 224, "sb": 18, "obp": 0.318, "zTotal": 1.26}, {"name": "Brenton Doyle", "pa": 625, "r": 80, "hr": 21, "rbi": 72, "so": 165, "tb": 241, "sb": 22, "obp": 0.303, "zTotal": 1.26}, {"name": "Adley Rutschman", "pa": 625, "r": 74, "hr": 19, "rbi": 72, "so": 103, "tb": 225, "sb": 2, "obp": 0.333, "zTotal": 1.25}, {"name": "Austin Riley", "pa": 625, "r": 80, "hr": 27, "rbi": 88, "so": 161, "tb": 258, "sb": 2, "obp": 0.323, "zTotal": 1.25}, {"name": "Brandon Lowe", "pa": 625, "r": 77, "hr": 28, "rbi": 87, "so": 158, "tb": 249, "sb": 6, "obp": 0.313, "zTotal": 1.25}, {"name": "Willson Contreras", "pa": 625, "r": 79, "hr": 25, "rbi": 82, "so": 156, "tb": 238, "sb": 6, "obp": 0.338, "zTotal": 1.25}, {"name": "Kevin McGonigle", "pa": 625, "r": 74, "hr": 16, "rbi": 66, "so": 111, "tb": 221, "sb": 13, "obp": 0.314, "zTotal": 1.25}, {"name": "Eugenio Su\u00e1rez", "pa": 625, "r": 79, "hr": 34, "rbi": 96, "so": 183, "tb": 257, "sb": 4, "obp": 0.306, "zTotal": 1.24}, {"name": "Jeff McNeil", "pa": 625, "r": 72, "hr": 15, "rbi": 66, "so": 91, "tb": 224, "sb": 4, "obp": 0.325, "zTotal": 1.24}, {"name": "Willi Castro", "pa": 625, "r": 78, "hr": 16, "rbi": 67, "so": 140, "tb": 227, "sb": 17, "obp": 0.327, "zTotal": 1.24}, {"name": "David Hamilton", "pa": 625, "r": 76, "hr": 20, "rbi": 70, "so": 144, "tb": 224, "sb": 19, "obp": 0.306, "zTotal": 1.24}, {"name": "Riley Greene", "pa": 625, "r": 83, "hr": 29, "rbi": 86, "so": 179, "tb": 261, "sb": 4, "obp": 0.328, "zTotal": 1.23}, {"name": "Yainer Diaz", "pa": 625, "r": 71, "hr": 21, "rbi": 78, "so": 114, "tb": 246, "sb": 3, "obp": 0.302, "zTotal": 1.23}, {"name": "Andr\u00e9s Gim\u00e9nez", "pa": 625, "r": 74, "hr": 13, "rbi": 57, "so": 114, "tb": 205, "sb": 24, "obp": 0.305, "zTotal": 1.23}, {"name": "Tyler O'Neill", "pa": 625, "r": 79, "hr": 27, "rbi": 80, "so": 160, "tb": 238, "sb": 9, "obp": 0.316, "zTotal": 1.23}, {"name": "Daylen Lile", "pa": 625, "r": 73, "hr": 13, "rbi": 67, "so": 117, "tb": 231, "sb": 14, "obp": 0.317, "zTotal": 1.23}, {"name": "Esteury Ruiz", "pa": 625, "r": 76, "hr": 19, "rbi": 70, "so": 141, "tb": 225, "sb": 17, "obp": 0.309, "zTotal": 1.23}, {"name": "Masataka Yoshida", "pa": 625, "r": 73, "hr": 18, "rbi": 73, "so": 118, "tb": 227, "sb": 9, "obp": 0.318, "zTotal": 1.23}, {"name": "Roman Anthony", "pa": 625, "r": 80, "hr": 18, "rbi": 72, "so": 153, "tb": 233, "sb": 11, "obp": 0.349, "zTotal": 1.22}, {"name": "TJ Friedl", "pa": 625, "r": 73, "hr": 16, "rbi": 60, "so": 107, "tb": 206, "sb": 12, "obp": 0.329, "zTotal": 1.22}, {"name": "Joc Pederson", "pa": 625, "r": 76, "hr": 24, "rbi": 76, "so": 140, "tb": 228, "sb": 7, "obp": 0.322, "zTotal": 1.22}, {"name": "Sam Haggerty", "pa": 625, "r": 77, "hr": 17, "rbi": 65, "so": 137, "tb": 219, "sb": 20, "obp": 0.314, "zTotal": 1.22}, {"name": "Jorge Mateo", "pa": 625, "r": 79, "hr": 19, "rbi": 66, "so": 150, "tb": 222, "sb": 23, "obp": 0.298, "zTotal": 1.22}, {"name": "Dairon Blanco", "pa": 625, "r": 76, "hr": 20, "rbi": 71, "so": 141, "tb": 226, "sb": 15, "obp": 0.309, "zTotal": 1.22}, {"name": "Jackson Holliday", "pa": 625, "r": 79, "hr": 17, "rbi": 65, "so": 139, "tb": 222, "sb": 16, "obp": 0.326, "zTotal": 1.21}, {"name": "Lawrence Butler", "pa": 625, "r": 81, "hr": 23, "rbi": 72, "so": 165, "tb": 235, "sb": 17, "obp": 0.307, "zTotal": 1.21}, {"name": "Kyle Manzardo", "pa": 625, "r": 73, "hr": 27, "rbi": 85, "so": 145, "tb": 242, "sb": 3, "obp": 0.313, "zTotal": 1.21}, {"name": "Ceddanne Rafaela", "pa": 625, "r": 74, "hr": 17, "rbi": 67, "so": 138, "tb": 231, "sb": 22, "obp": 0.288, "zTotal": 1.21}, {"name": "Jasson Dom\u00ednguez", "pa": 625, "r": 78, "hr": 19, "rbi": 67, "so": 153, "tb": 223, "sb": 20, "obp": 0.312, "zTotal": 1.21}, {"name": "Dylan Moore", "pa": 625, "r": 79, "hr": 21, "rbi": 70, "so": 160, "tb": 223, "sb": 20, "obp": 0.306, "zTotal": 1.21}, {"name": "Matt Shaw", "pa": 625, "r": 76, "hr": 19, "rbi": 70, "so": 138, "tb": 224, "sb": 16, "obp": 0.307, "zTotal": 1.21}, {"name": "Warming Bernabel", "pa": 625, "r": 74, "hr": 20, "rbi": 75, "so": 133, "tb": 232, "sb": 10, "obp": 0.312, "zTotal": 1.21}, {"name": "Michael Busch", "pa": 625, "r": 78, "hr": 26, "rbi": 85, "so": 157, "tb": 243, "sb": 4, "obp": 0.323, "zTotal": 1.2}, {"name": "Ram\u00f3n Laureano", "pa": 625, "r": 80, "hr": 24, "rbi": 77, "so": 161, "tb": 241, "sb": 11, "obp": 0.31, "zTotal": 1.2}, {"name": "Marcell Ozuna", "pa": 625, "r": 76, "hr": 26, "rbi": 82, "so": 150, "tb": 235, "sb": 3, "obp": 0.328, "zTotal": 1.2}, {"name": "Justin Crawford", "pa": 625, "r": 75, "hr": 13, "rbi": 62, "so": 131, "tb": 220, "sb": 21, "obp": 0.308, "zTotal": 1.2}, {"name": "Walker Jenkins", "pa": 625, "r": 75, "hr": 19, "rbi": 72, "so": 133, "tb": 228, "sb": 11, "obp": 0.313, "zTotal": 1.2}, {"name": "Jesus Rodriguez", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 138, "tb": 230, "sb": 11, "obp": 0.312, "zTotal": 1.2}, {"name": "James Triantos", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 138, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.2}, {"name": "Tre' Morgan", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 135, "tb": 229, "sb": 11, "obp": 0.313, "zTotal": 1.2}, {"name": "Eliezer Alfonzo", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.2}, {"name": "H\u00e9ctor Rodr\u00edguez", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 138, "tb": 230, "sb": 11, "obp": 0.311, "zTotal": 1.2}, {"name": "Ian Happ", "pa": 641, "r": 80, "hr": 21, "rbi": 74, "so": 151, "tb": 226, "sb": 8, "obp": 0.336, "zTotal": 1.19}, {"name": "Thairo Estrada", "pa": 625, "r": 73, "hr": 19, "rbi": 71, "so": 130, "tb": 228, "sb": 12, "obp": 0.303, "zTotal": 1.19}, {"name": "Austin Martin", "pa": 625, "r": 75, "hr": 13, "rbi": 60, "so": 123, "tb": 209, "sb": 18, "obp": 0.323, "zTotal": 1.19}, {"name": "Dylan Crews", "pa": 625, "r": 74, "hr": 18, "rbi": 66, "so": 143, "tb": 217, "sb": 23, "obp": 0.295, "zTotal": 1.19}, {"name": "Spencer Steer", "pa": 625, "r": 73, "hr": 21, "rbi": 73, "so": 136, "tb": 224, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Jonny DeLuca", "pa": 625, "r": 74, "hr": 19, "rbi": 70, "so": 134, "tb": 224, "sb": 15, "obp": 0.302, "zTotal": 1.19}, {"name": "Jahmai Jones", "pa": 625, "r": 76, "hr": 21, "rbi": 72, "so": 141, "tb": 228, "sb": 11, "obp": 0.314, "zTotal": 1.19}, {"name": "Leo De Vries", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 230, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Jared Serna", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Hao-Yu  Lee", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Enrique Bradfield Jr.", "pa": 625, "r": 75, "hr": 20, "rbi": 72, "so": 138, "tb": 227, "sb": 12, "obp": 0.311, "zTotal": 1.19}, {"name": "Gabriel Gonzalez", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 138, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Gustavo Campero", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 139, "tb": 228, "sb": 12, "obp": 0.311, "zTotal": 1.19}, {"name": "Nate Furman", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 228, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Jonatan Clase", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 142, "tb": 228, "sb": 12, "obp": 0.311, "zTotal": 1.19}, {"name": "Ben Cowles", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Matthew Wood", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Brett Sullivan", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Steward Berroa", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 12, "obp": 0.311, "zTotal": 1.19}, {"name": "Jonathon Long", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Donovan Walton", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Vinny Capra", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Jack Winkler", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Tyler Black", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Abraham Toro", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 138, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Carlos Correa", "pa": 625, "r": 75, "hr": 20, "rbi": 75, "so": 127, "tb": 234, "sb": 2, "obp": 0.332, "zTotal": 1.18}, {"name": "Jes\u00fas S\u00e1nchez", "pa": 625, "r": 79, "hr": 21, "rbi": 70, "so": 147, "tb": 231, "sb": 12, "obp": 0.311, "zTotal": 1.18}, {"name": "Andrew Benintendi", "pa": 625, "r": 69, "hr": 20, "rbi": 72, "so": 113, "tb": 225, "sb": 6, "obp": 0.313, "zTotal": 1.18}, {"name": "Miguel Andujar", "pa": 625, "r": 71, "hr": 17, "rbi": 72, "so": 114, "tb": 229, "sb": 8, "obp": 0.309, "zTotal": 1.18}, {"name": "Jake Fraley", "pa": 625, "r": 74, "hr": 17, "rbi": 68, "so": 136, "tb": 217, "sb": 17, "obp": 0.312, "zTotal": 1.18}, {"name": "Maximo Acosta", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 138, "tb": 228, "sb": 12, "obp": 0.31, "zTotal": 1.18}, {"name": "Starling Marte", "pa": 625, "r": 76, "hr": 17, "rbi": 68, "so": 137, "tb": 224, "sb": 15, "obp": 0.314, "zTotal": 1.18}, {"name": "Michael Arroyo", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Cooper Kinney", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 230, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Manuel Margot", "pa": 625, "r": 74, "hr": 19, "rbi": 73, "so": 135, "tb": 227, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Christian Encarnacion-Strand", "pa": 625, "r": 74, "hr": 22, "rbi": 77, "so": 143, "tb": 234, "sb": 9, "obp": 0.308, "zTotal": 1.18}, {"name": "Kahlil Watson", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Weston Wilson", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.18}, {"name": "Emmanuel Rivera", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Max Anderson", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Jason Delay", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Collin Price", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Maverick Handley", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Nick Morabito", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 140, "tb": 228, "sb": 12, "obp": 0.312, "zTotal": 1.18}, {"name": "Nick Raposo", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Shane McGuire", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Stuart Fairchild", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Eduardo Valencia", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Dom Nu\u00f1ez", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Jos\u00e9 Barrero", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Rodolfo Dur\u00e1n", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.31, "zTotal": 1.18}, {"name": "Blake Hunt", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.31, "zTotal": 1.18}, {"name": "Luken Baker", "pa": 625, "r": 75, "hr": 21, "rbi": 75, "so": 141, "tb": 229, "sb": 10, "obp": 0.311, "zTotal": 1.18}, {"name": "Davis Wendzel", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Ji Hwan Bae", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 227, "sb": 12, "obp": 0.311, "zTotal": 1.18}, {"name": "Trey Lipscomb", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Dominic Fletcher", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Juan Yepez", "pa": 625, "r": 74, "hr": 21, "rbi": 74, "so": 138, "tb": 229, "sb": 10, "obp": 0.311, "zTotal": 1.18}, {"name": "Michael Siani", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 140, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Cristian Pache", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Kevin Newman", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Gabriel Rincones Jr.", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Ronny Simon", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Sterlin Thompson", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.18}, {"name": "Kemp Alderman", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Rhylan Thomas", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 137, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Zac Veen", "pa": 625, "r": 76, "hr": 19, "rbi": 71, "so": 144, "tb": 226, "sb": 14, "obp": 0.31, "zTotal": 1.18}, {"name": "Drake Baldwin", "pa": 625, "r": 72, "hr": 20, "rbi": 77, "so": 118, "tb": 228, "sb": 2, "obp": 0.318, "zTotal": 1.17}, {"name": "Miguel Vargas", "pa": 625, "r": 71, "hr": 19, "rbi": 69, "so": 119, "tb": 221, "sb": 8, "obp": 0.316, "zTotal": 1.17}, {"name": "Harrison Bader", "pa": 625, "r": 77, "hr": 20, "rbi": 69, "so": 151, "tb": 226, "sb": 18, "obp": 0.301, "zTotal": 1.17}, {"name": "Romy Gonzalez", "pa": 625, "r": 75, "hr": 19, "rbi": 72, "so": 150, "tb": 233, "sb": 15, "obp": 0.309, "zTotal": 1.17}, {"name": "Ryan O'Hearn", "pa": 625, "r": 72, "hr": 17, "rbi": 72, "so": 122, "tb": 226, "sb": 6, "obp": 0.33, "zTotal": 1.17}, {"name": "Josh Lowe", "pa": 625, "r": 77, "hr": 19, "rbi": 66, "so": 163, "tb": 225, "sb": 24, "obp": 0.301, "zTotal": 1.17}, {"name": "Triston Casas", "pa": 625, "r": 74, "hr": 22, "rbi": 78, "so": 146, "tb": 231, "sb": 7, "obp": 0.319, "zTotal": 1.17}, {"name": "Adael Amador", "pa": 625, "r": 73, "hr": 17, "rbi": 68, "so": 128, "tb": 217, "sb": 14, "obp": 0.311, "zTotal": 1.17}, {"name": "Jos\u00e9 Ferm\u00edn", "pa": 625, "r": 73, "hr": 19, "rbi": 70, "so": 131, "tb": 222, "sb": 12, "obp": 0.31, "zTotal": 1.17}, {"name": "Emmanuel Rodriguez", "pa": 625, "r": 76, "hr": 21, "rbi": 73, "so": 144, "tb": 228, "sb": 11, "obp": 0.313, "zTotal": 1.17}, {"name": "Brice Matthews", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 145, "tb": 228, "sb": 12, "obp": 0.31, "zTotal": 1.17}, {"name": "Drew Romo", "pa": 625, "r": 74, "hr": 20, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Blake Sabol", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Enmanuel Valdez", "pa": 625, "r": 74, "hr": 21, "rbi": 74, "so": 139, "tb": 228, "sb": 10, "obp": 0.31, "zTotal": 1.17}, {"name": "Eric Haase", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Nick Madrigal", "pa": 625, "r": 74, "hr": 19, "rbi": 71, "so": 132, "tb": 224, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Liover Peguero", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Petey Halpin", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Tommy Troy", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Jorbit Vivas", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 137, "tb": 226, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Brandon Valenzuela", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Shay Whitcomb", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 228, "sb": 11, "obp": 0.309, "zTotal": 1.17}, {"name": "Jhonny Pereda", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Hayden Senger", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Kristian Robinson", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 143, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Ryan Fitzgerald", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Tom\u00e1s Nido", "pa": 625, "r": 74, "hr": 20, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Trei Cruz", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Esmerlyn Valdez", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Christian Franklin", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 11, "obp": 0.312, "zTotal": 1.17}, {"name": "Vidal Bruj\u00e1n", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 139, "tb": 226, "sb": 12, "obp": 0.31, "zTotal": 1.17}, {"name": "Jared Young", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Jose Rojas", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Drew Waters", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 142, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Dustin Harris", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 227, "sb": 12, "obp": 0.31, "zTotal": 1.17}, {"name": "Aaron Schunk", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Matt Koperniak", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 139, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Jonah Bride", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.312, "zTotal": 1.17}, {"name": "A.J. Vukovich", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Akil Baddoo", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 142, "tb": 227, "sb": 12, "obp": 0.31, "zTotal": 1.17}, {"name": "Jhonkensy Noel", "pa": 625, "r": 75, "hr": 21, "rbi": 75, "so": 142, "tb": 230, "sb": 10, "obp": 0.309, "zTotal": 1.17}, {"name": "Vimael Mach\u00edn", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 138, "tb": 227, "sb": 10, "obp": 0.312, "zTotal": 1.17}, {"name": "Pedro Le\u00f3n", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Nicky Lopez", "pa": 625, "r": 74, "hr": 19, "rbi": 71, "so": 136, "tb": 224, "sb": 11, "obp": 0.312, "zTotal": 1.17}, {"name": "Jose Siri", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 144, "tb": 229, "sb": 11, "obp": 0.309, "zTotal": 1.17}, {"name": "T.J. Rumfield", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 139, "tb": 228, "sb": 10, "obp": 0.31, "zTotal": 1.17}, {"name": "Ryan Ward", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Justin Foscue", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 139, "tb": 227, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Alec Bohm", "pa": 625, "r": 70, "hr": 15, "rbi": 72, "so": 104, "tb": 229, "sb": 4, "obp": 0.317, "zTotal": 1.16}, {"name": "Jakob Marsee", "pa": 625, "r": 75, "hr": 14, "rbi": 58, "so": 140, "tb": 201, "sb": 24, "obp": 0.315, "zTotal": 1.16}, {"name": "Josh Bell", "pa": 625, "r": 73, "hr": 21, "rbi": 73, "so": 121, "tb": 222, "sb": 3, "obp": 0.32, "zTotal": 1.16}, {"name": "Ernie Clement", "pa": 625, "r": 67, "hr": 11, "rbi": 61, "so": 79, "tb": 212, "sb": 11, "obp": 0.29, "zTotal": 1.16}, {"name": "Isaac Collins", "pa": 625, "r": 76, "hr": 15, "rbi": 64, "so": 133, "tb": 213, "sb": 16, "obp": 0.322, "zTotal": 1.16}, {"name": "Victor Robles", "pa": 625, "r": 76, "hr": 14, "rbi": 58, "so": 138, "tb": 208, "sb": 24, "obp": 0.307, "zTotal": 1.16}, {"name": "JJ Bleday", "pa": 625, "r": 73, "hr": 23, "rbi": 78, "so": 142, "tb": 229, "sb": 7, "obp": 0.31, "zTotal": 1.16}, {"name": "Jeferson Quero", "pa": 625, "r": 73, "hr": 20, "rbi": 75, "so": 136, "tb": 228, "sb": 10, "obp": 0.307, "zTotal": 1.16}, {"name": "Noelvi Marte", "pa": 625, "r": 73, "hr": 20, "rbi": 72, "so": 149, "tb": 231, "sb": 17, "obp": 0.297, "zTotal": 1.16}, {"name": "Andy Ib\u00e1\u00f1ez", "pa": 625, "r": 74, "hr": 19, "rbi": 73, "so": 133, "tb": 226, "sb": 10, "obp": 0.306, "zTotal": 1.16}, {"name": "Miguel Rojas", "pa": 625, "r": 74, "hr": 17, "rbi": 70, "so": 125, "tb": 220, "sb": 10, "obp": 0.308, "zTotal": 1.16}, {"name": "Jett Williams", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 142, "tb": 226, "sb": 12, "obp": 0.311, "zTotal": 1.16}, {"name": "Juan Brito", "pa": 625, "r": 74, "hr": 19, "rbi": 72, "so": 135, "tb": 225, "sb": 10, "obp": 0.311, "zTotal": 1.16}, {"name": "Richie Palacios", "pa": 625, "r": 73, "hr": 18, "rbi": 69, "so": 132, "tb": 219, "sb": 13, "obp": 0.313, "zTotal": 1.16}, {"name": "Aidan Miller", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.16}, {"name": "Coby Mayo", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 144, "tb": 229, "sb": 10, "obp": 0.311, "zTotal": 1.16}, {"name": "Leody Taveras", "pa": 625, "r": 75, "hr": 20, "rbi": 71, "so": 141, "tb": 226, "sb": 13, "obp": 0.307, "zTotal": 1.16}, {"name": "Alejandro Osuna", "pa": 625, "r": 75, "hr": 19, "rbi": 71, "so": 140, "tb": 225, "sb": 12, "obp": 0.311, "zTotal": 1.16}, {"name": "Jorge Alfaro", "pa": 625, "r": 74, "hr": 20, "rbi": 74, "so": 142, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.16}, {"name": "Eli White", "pa": 625, "r": 76, "hr": 20, "rbi": 72, "so": 145, "tb": 228, "sb": 13, "obp": 0.308, "zTotal": 1.16}]
+    const HITTERS = [{"name": "Shohei Ohtani", "pa": 671, "r": 124, "hr": 48, "rbi": 118, "so": 158, "tb": 342, "sb": 23, "obp": 0.385, "zTotal": 2.73}, {"name": "Jos\u00e9 Ram\u00edrez", "pa": 658, "r": 95, "hr": 29, "rbi": 91, "so": 76, "tb": 290, "sb": 33, "obp": 0.348, "zTotal": 2.49}, {"name": "Aaron Judge", "pa": 646, "r": 106, "hr": 49, "rbi": 120, "so": 161, "tb": 325, "sb": 8, "obp": 0.414, "zTotal": 2.43}, {"name": "Juan Soto", "pa": 681, "r": 107, "hr": 37, "rbi": 97, "so": 122, "tb": 285, "sb": 17, "obp": 0.401, "zTotal": 2.36}, {"name": "Bobby Witt Jr.", "pa": 668, "r": 102, "hr": 27, "rbi": 92, "so": 115, "tb": 304, "sb": 35, "obp": 0.341, "zTotal": 2.34}, {"name": "Kyle Tucker", "pa": 625, "r": 97, "hr": 30, "rbi": 89, "so": 88, "tb": 267, "sb": 19, "obp": 0.369, "zTotal": 2.2}, {"name": "Corbin Carroll", "pa": 650, "r": 105, "hr": 26, "rbi": 80, "so": 139, "tb": 276, "sb": 36, "obp": 0.345, "zTotal": 2.11}, {"name": "Yordan Alvarez", "pa": 625, "r": 91, "hr": 33, "rbi": 97, "so": 106, "tb": 288, "sb": 4, "obp": 0.383, "zTotal": 2.03}, {"name": "Ronald Acu\u00f1a Jr.", "pa": 627, "r": 99, "hr": 28, "rbi": 82, "so": 137, "tb": 257, "sb": 28, "obp": 0.378, "zTotal": 2.03}, {"name": "Vladimir Guerrero Jr.", "pa": 672, "r": 94, "hr": 27, "rbi": 92, "so": 90, "tb": 286, "sb": 6, "obp": 0.376, "zTotal": 2.02}, {"name": "Julio Rodr\u00edguez", "pa": 663, "r": 95, "hr": 30, "rbi": 92, "so": 149, "tb": 292, "sb": 25, "obp": 0.338, "zTotal": 1.96}, {"name": "Francisco Lindor", "pa": 674, "r": 94, "hr": 29, "rbi": 86, "so": 126, "tb": 273, "sb": 24, "obp": 0.332, "zTotal": 1.95}, {"name": "Fernando Tatis Jr.", "pa": 643, "r": 95, "hr": 27, "rbi": 82, "so": 129, "tb": 264, "sb": 23, "obp": 0.35, "zTotal": 1.91}, {"name": "Junior Caminero", "pa": 632, "r": 83, "hr": 36, "rbi": 106, "so": 121, "tb": 295, "sb": 5, "obp": 0.322, "zTotal": 1.86}, {"name": "Gunnar Henderson", "pa": 658, "r": 97, "hr": 27, "rbi": 83, "so": 142, "tb": 278, "sb": 20, "obp": 0.346, "zTotal": 1.83}, {"name": "Ketel Marte", "pa": 625, "r": 87, "hr": 29, "rbi": 95, "so": 104, "tb": 271, "sb": 5, "obp": 0.358, "zTotal": 1.83}, {"name": "Mookie Betts", "pa": 629, "r": 87, "hr": 22, "rbi": 81, "so": 72, "tb": 250, "sb": 9, "obp": 0.346, "zTotal": 1.81}, {"name": "Kyle Schwarber", "pa": 667, "r": 99, "hr": 44, "rbi": 111, "so": 186, "tb": 284, "sb": 6, "obp": 0.352, "zTotal": 1.81}, {"name": "Jackson Chourio", "pa": 628, "r": 84, "hr": 23, "rbi": 87, "so": 126, "tb": 268, "sb": 25, "obp": 0.323, "zTotal": 1.79}, {"name": "Cal Raleigh", "pa": 629, "r": 87, "hr": 44, "rbi": 113, "so": 172, "tb": 284, "sb": 8, "obp": 0.331, "zTotal": 1.78}, {"name": "Jazz Chisholm Jr.", "pa": 625, "r": 93, "hr": 31, "rbi": 77, "so": 167, "tb": 253, "sb": 32, "obp": 0.315, "zTotal": 1.72}, {"name": "Bryce Harper", "pa": 625, "r": 87, "hr": 27, "rbi": 88, "so": 131, "tb": 263, "sb": 10, "obp": 0.366, "zTotal": 1.71}, {"name": "Corey Seager", "pa": 625, "r": 82, "hr": 30, "rbi": 95, "so": 119, "tb": 269, "sb": 3, "obp": 0.355, "zTotal": 1.7}, {"name": "Trea Turner", "pa": 625, "r": 86, "hr": 18, "rbi": 75, "so": 114, "tb": 254, "sb": 24, "obp": 0.333, "zTotal": 1.7}, {"name": "Josh Naylor", "pa": 625, "r": 76, "hr": 24, "rbi": 82, "so": 93, "tb": 244, "sb": 15, "obp": 0.327, "zTotal": 1.69}, {"name": "Elly De La Cruz", "pa": 640, "r": 92, "hr": 23, "rbi": 73, "so": 178, "tb": 256, "sb": 39, "obp": 0.327, "zTotal": 1.67}, {"name": "Pete Alonso", "pa": 662, "r": 89, "hr": 36, "rbi": 98, "so": 152, "tb": 281, "sb": 3, "obp": 0.332, "zTotal": 1.63}, {"name": "Chandler Simpson", "pa": 625, "r": 78, "hr": 7, "rbi": 52, "so": 86, "tb": 208, "sb": 41, "obp": 0.325, "zTotal": 1.63}, {"name": "Zach Neto", "pa": 638, "r": 86, "hr": 27, "rbi": 77, "so": 159, "tb": 256, "sb": 27, "obp": 0.318, "zTotal": 1.61}, {"name": "Nick Kurtz", "pa": 625, "r": 95, "hr": 39, "rbi": 100, "so": 189, "tb": 285, "sb": 4, "obp": 0.353, "zTotal": 1.61}, {"name": "Shea Langeliers", "pa": 625, "r": 85, "hr": 34, "rbi": 91, "so": 144, "tb": 280, "sb": 8, "obp": 0.316, "zTotal": 1.61}, {"name": "Brent Rooker", "pa": 640, "r": 89, "hr": 34, "rbi": 93, "so": 162, "tb": 284, "sb": 7, "obp": 0.341, "zTotal": 1.61}, {"name": "Maikel Garcia", "pa": 638, "r": 82, "hr": 13, "rbi": 65, "so": 93, "tb": 230, "sb": 26, "obp": 0.327, "zTotal": 1.61}, {"name": "Vinnie Pasquantino", "pa": 625, "r": 76, "hr": 27, "rbi": 92, "so": 91, "tb": 261, "sb": 1, "obp": 0.327, "zTotal": 1.61}, {"name": "Cody Bellinger", "pa": 625, "r": 78, "hr": 25, "rbi": 77, "so": 96, "tb": 249, "sb": 12, "obp": 0.318, "zTotal": 1.6}, {"name": "Byron Buxton", "pa": 625, "r": 89, "hr": 32, "rbi": 89, "so": 167, "tb": 273, "sb": 16, "obp": 0.318, "zTotal": 1.59}, {"name": "Pete Crow-Armstrong", "pa": 625, "r": 88, "hr": 23, "rbi": 71, "so": 154, "tb": 249, "sb": 33, "obp": 0.298, "zTotal": 1.58}, {"name": "Freddie Freeman", "pa": 625, "r": 85, "hr": 21, "rbi": 81, "so": 113, "tb": 251, "sb": 9, "obp": 0.353, "zTotal": 1.58}, {"name": "Luis Arraez", "pa": 625, "r": 72, "hr": 7, "rbi": 66, "so": 33, "tb": 231, "sb": 8, "obp": 0.348, "zTotal": 1.58}, {"name": "CJ Abrams", "pa": 625, "r": 79, "hr": 19, "rbi": 69, "so": 122, "tb": 235, "sb": 31, "obp": 0.309, "zTotal": 1.57}, {"name": "Rafael Devers", "pa": 657, "r": 88, "hr": 33, "rbi": 95, "so": 160, "tb": 274, "sb": 2, "obp": 0.354, "zTotal": 1.56}, {"name": "Nico Hoerner", "pa": 625, "r": 76, "hr": 7, "rbi": 57, "so": 64, "tb": 210, "sb": 26, "obp": 0.327, "zTotal": 1.55}, {"name": "Jacob Wilson", "pa": 625, "r": 76, "hr": 13, "rbi": 69, "so": 60, "tb": 244, "sb": 6, "obp": 0.344, "zTotal": 1.54}, {"name": "Luke Keaschall", "pa": 625, "r": 81, "hr": 16, "rbi": 68, "so": 112, "tb": 233, "sb": 21, "obp": 0.341, "zTotal": 1.52}, {"name": "Jose Altuve", "pa": 625, "r": 80, "hr": 23, "rbi": 75, "so": 110, "tb": 243, "sb": 12, "obp": 0.327, "zTotal": 1.52}, {"name": "George Springer", "pa": 625, "r": 84, "hr": 24, "rbi": 75, "so": 122, "tb": 239, "sb": 14, "obp": 0.331, "zTotal": 1.52}, {"name": "Geraldo Perdomo", "pa": 645, "r": 83, "hr": 13, "rbi": 59, "so": 88, "tb": 216, "sb": 18, "obp": 0.349, "zTotal": 1.51}, {"name": "Wyatt Langford", "pa": 625, "r": 86, "hr": 23, "rbi": 73, "so": 147, "tb": 239, "sb": 20, "obp": 0.341, "zTotal": 1.5}, {"name": "Will Smith", "pa": 625, "r": 84, "hr": 25, "rbi": 82, "so": 121, "tb": 242, "sb": 5, "obp": 0.346, "zTotal": 1.49}, {"name": "Jeremy Pe\u00f1a", "pa": 633, "r": 82, "hr": 18, "rbi": 70, "so": 114, "tb": 244, "sb": 17, "obp": 0.327, "zTotal": 1.49}, {"name": "Steven Kwan", "pa": 641, "r": 74, "hr": 8, "rbi": 58, "so": 55, "tb": 212, "sb": 16, "obp": 0.342, "zTotal": 1.49}, {"name": "Manny Machado", "pa": 630, "r": 78, "hr": 26, "rbi": 83, "so": 123, "tb": 253, "sb": 9, "obp": 0.32, "zTotal": 1.48}, {"name": "Jackson Merrill", "pa": 625, "r": 78, "hr": 23, "rbi": 81, "so": 123, "tb": 260, "sb": 9, "obp": 0.318, "zTotal": 1.45}, {"name": "Michael Harris II", "pa": 625, "r": 80, "hr": 20, "rbi": 75, "so": 126, "tb": 246, "sb": 19, "obp": 0.303, "zTotal": 1.45}, {"name": "Alex Bregman", "pa": 637, "r": 76, "hr": 21, "rbi": 78, "so": 89, "tb": 235, "sb": 2, "obp": 0.332, "zTotal": 1.44}, {"name": "Ben Rice", "pa": 625, "r": 81, "hr": 28, "rbi": 80, "so": 131, "tb": 249, "sb": 6, "obp": 0.325, "zTotal": 1.43}, {"name": "Isaac Paredes", "pa": 625, "r": 79, "hr": 26, "rbi": 79, "so": 112, "tb": 236, "sb": 4, "obp": 0.334, "zTotal": 1.43}, {"name": "Caleb Durbin", "pa": 625, "r": 71, "hr": 13, "rbi": 64, "so": 78, "tb": 208, "sb": 21, "obp": 0.312, "zTotal": 1.43}, {"name": "Willy Adames", "pa": 656, "r": 87, "hr": 31, "rbi": 86, "so": 172, "tb": 259, "sb": 11, "obp": 0.32, "zTotal": 1.42}, {"name": "Tyler Freeman", "pa": 625, "r": 78, "hr": 14, "rbi": 65, "so": 106, "tb": 222, "sb": 20, "obp": 0.334, "zTotal": 1.42}, {"name": "Randy Arozarena", "pa": 658, "r": 88, "hr": 23, "rbi": 73, "so": 172, "tb": 233, "sb": 25, "obp": 0.33, "zTotal": 1.41}, {"name": "Matt Olson", "pa": 675, "r": 86, "hr": 30, "rbi": 94, "so": 159, "tb": 263, "sb": 1, "obp": 0.341, "zTotal": 1.41}, {"name": "Yandy D\u00edaz", "pa": 625, "r": 74, "hr": 17, "rbi": 78, "so": 92, "tb": 238, "sb": 2, "obp": 0.352, "zTotal": 1.41}, {"name": "Andy Pages", "pa": 625, "r": 82, "hr": 25, "rbi": 84, "so": 139, "tb": 254, "sb": 10, "obp": 0.308, "zTotal": 1.4}, {"name": "Luis Robert Jr.", "pa": 625, "r": 84, "hr": 23, "rbi": 69, "so": 170, "tb": 232, "sb": 32, "obp": 0.301, "zTotal": 1.4}, {"name": "Luis Garc\u00eda Jr.", "pa": 625, "r": 72, "hr": 18, "rbi": 75, "so": 107, "tb": 237, "sb": 16, "obp": 0.305, "zTotal": 1.4}, {"name": "Teoscar Hern\u00e1ndez", "pa": 625, "r": 85, "hr": 28, "rbi": 88, "so": 158, "tb": 265, "sb": 7, "obp": 0.314, "zTotal": 1.39}, {"name": "Bo Bichette", "pa": 625, "r": 76, "hr": 17, "rbi": 74, "so": 102, "tb": 249, "sb": 7, "obp": 0.33, "zTotal": 1.38}, {"name": "Hunter Goodman", "pa": 625, "r": 79, "hr": 31, "rbi": 96, "so": 161, "tb": 277, "sb": 3, "obp": 0.307, "zTotal": 1.37}, {"name": "James Wood", "pa": 641, "r": 86, "hr": 25, "rbi": 83, "so": 189, "tb": 255, "sb": 17, "obp": 0.348, "zTotal": 1.37}, {"name": "Bryson Stott", "pa": 625, "r": 75, "hr": 14, "rbi": 62, "so": 109, "tb": 214, "sb": 23, "obp": 0.317, "zTotal": 1.37}, {"name": "Sal Stewart", "pa": 625, "r": 75, "hr": 23, "rbi": 82, "so": 126, "tb": 246, "sb": 7, "obp": 0.324, "zTotal": 1.37}, {"name": "Jarren Duran", "pa": 625, "r": 82, "hr": 16, "rbi": 66, "so": 145, "tb": 236, "sb": 24, "obp": 0.325, "zTotal": 1.36}, {"name": "Christian Yelich", "pa": 625, "r": 80, "hr": 21, "rbi": 78, "so": 152, "tb": 230, "sb": 17, "obp": 0.34, "zTotal": 1.36}, {"name": "Cedric Mullins", "pa": 625, "r": 79, "hr": 21, "rbi": 68, "so": 139, "tb": 224, "sb": 24, "obp": 0.307, "zTotal": 1.36}, {"name": "Alec Burleson", "pa": 625, "r": 71, "hr": 19, "rbi": 76, "so": 93, "tb": 235, "sb": 6, "obp": 0.316, "zTotal": 1.36}, {"name": "William Contreras", "pa": 625, "r": 76, "hr": 20, "rbi": 80, "so": 123, "tb": 231, "sb": 6, "obp": 0.35, "zTotal": 1.35}, {"name": "Jordan Westburg", "pa": 625, "r": 82, "hr": 25, "rbi": 80, "so": 143, "tb": 259, "sb": 8, "obp": 0.314, "zTotal": 1.35}, {"name": "Xander Bogaerts", "pa": 625, "r": 76, "hr": 15, "rbi": 66, "so": 115, "tb": 221, "sb": 19, "obp": 0.326, "zTotal": 1.35}, {"name": "Iv\u00e1n Herrera", "pa": 625, "r": 79, "hr": 20, "rbi": 74, "so": 126, "tb": 233, "sb": 9, "obp": 0.343, "zTotal": 1.35}, {"name": "Jurickson Profar", "pa": 625, "r": 77, "hr": 18, "rbi": 68, "so": 104, "tb": 216, "sb": 9, "obp": 0.339, "zTotal": 1.35}, {"name": "Kerry Carpenter", "pa": 625, "r": 78, "hr": 29, "rbi": 87, "so": 146, "tb": 260, "sb": 5, "obp": 0.309, "zTotal": 1.35}, {"name": "Mickey Moniak", "pa": 625, "r": 80, "hr": 25, "rbi": 84, "so": 151, "tb": 260, "sb": 12, "obp": 0.305, "zTotal": 1.35}, {"name": "Max Muncy", "pa": 625, "r": 83, "hr": 28, "rbi": 84, "so": 147, "tb": 232, "sb": 5, "obp": 0.331, "zTotal": 1.34}, {"name": "Seiya Suzuki", "pa": 625, "r": 83, "hr": 25, "rbi": 81, "so": 158, "tb": 244, "sb": 10, "obp": 0.333, "zTotal": 1.34}, {"name": "Brice Turang", "pa": 629, "r": 77, "hr": 13, "rbi": 62, "so": 133, "tb": 212, "sb": 30, "obp": 0.32, "zTotal": 1.34}, {"name": "Salvador Perez", "pa": 625, "r": 70, "hr": 29, "rbi": 97, "so": 129, "tb": 257, "sb": 1, "obp": 0.301, "zTotal": 1.34}, {"name": "Trevor Story", "pa": 625, "r": 80, "hr": 23, "rbi": 76, "so": 168, "tb": 243, "sb": 24, "obp": 0.303, "zTotal": 1.33}, {"name": "Jung Hoo Lee", "pa": 625, "r": 75, "hr": 11, "rbi": 63, "so": 77, "tb": 229, "sb": 9, "obp": 0.327, "zTotal": 1.33}, {"name": "Kazuma Okamoto", "pa": 625, "r": 78, "hr": 28, "rbi": 85, "so": 137, "tb": 244, "sb": 3, "obp": 0.318, "zTotal": 1.33}, {"name": "Otto Lopez", "pa": 625, "r": 72, "hr": 13, "rbi": 64, "so": 102, "tb": 223, "sb": 18, "obp": 0.317, "zTotal": 1.33}, {"name": "Xavier Edwards", "pa": 625, "r": 73, "hr": 5, "rbi": 49, "so": 93, "tb": 202, "sb": 28, "obp": 0.335, "zTotal": 1.33}, {"name": "Wilyer Abreu", "pa": 625, "r": 77, "hr": 26, "rbi": 84, "so": 152, "tb": 246, "sb": 11, "obp": 0.319, "zTotal": 1.33}, {"name": "Jorge Polanco", "pa": 625, "r": 76, "hr": 25, "rbi": 80, "so": 130, "tb": 240, "sb": 7, "obp": 0.315, "zTotal": 1.33}, {"name": "Oneil Cruz", "pa": 625, "r": 86, "hr": 24, "rbi": 73, "so": 181, "tb": 236, "sb": 26, "obp": 0.314, "zTotal": 1.32}, {"name": "Ozzie Albies", "pa": 625, "r": 72, "hr": 18, "rbi": 72, "so": 96, "tb": 227, "sb": 10, "obp": 0.305, "zTotal": 1.32}, {"name": "Matt Chapman", "pa": 625, "r": 85, "hr": 27, "rbi": 76, "so": 156, "tb": 242, "sb": 9, "obp": 0.33, "zTotal": 1.31}, {"name": "Anthony Santander", "pa": 625, "r": 77, "hr": 30, "rbi": 85, "so": 138, "tb": 245, "sb": 3, "obp": 0.307, "zTotal": 1.31}, {"name": "Jos\u00e9 Caballero", "pa": 625, "r": 80, "hr": 16, "rbi": 56, "so": 153, "tb": 202, "sb": 38, "obp": 0.304, "zTotal": 1.31}, {"name": "Lourdes Gurriel Jr.", "pa": 625, "r": 74, "hr": 20, "rbi": 77, "so": 120, "tb": 236, "sb": 10, "obp": 0.313, "zTotal": 1.31}, {"name": "Alejandro Kirk", "pa": 625, "r": 73, "hr": 18, "rbi": 72, "so": 90, "tb": 224, "sb": 3, "obp": 0.332, "zTotal": 1.3}, {"name": "Gleyber Torres", "pa": 635, "r": 76, "hr": 17, "rbi": 69, "so": 110, "tb": 220, "sb": 8, "obp": 0.343, "zTotal": 1.3}, {"name": "Brandon Nimmo", "pa": 633, "r": 83, "hr": 22, "rbi": 72, "so": 137, "tb": 241, "sb": 8, "obp": 0.333, "zTotal": 1.3}, {"name": "Marcus Semien", "pa": 625, "r": 74, "hr": 21, "rbi": 72, "so": 108, "tb": 227, "sb": 9, "obp": 0.309, "zTotal": 1.3}, {"name": "Agust\u00edn Ram\u00edrez", "pa": 625, "r": 74, "hr": 21, "rbi": 78, "so": 127, "tb": 237, "sb": 12, "obp": 0.308, "zTotal": 1.3}, {"name": "Tyler Soderstrom", "pa": 625, "r": 80, "hr": 26, "rbi": 81, "so": 150, "tb": 253, "sb": 6, "obp": 0.321, "zTotal": 1.3}, {"name": "Ha-Seong Kim", "pa": 625, "r": 78, "hr": 18, "rbi": 66, "so": 128, "tb": 219, "sb": 18, "obp": 0.317, "zTotal": 1.3}, {"name": "Tommy Edman", "pa": 625, "r": 78, "hr": 19, "rbi": 71, "so": 115, "tb": 227, "sb": 13, "obp": 0.3, "zTotal": 1.3}, {"name": "Sal Frelick", "pa": 625, "r": 72, "hr": 10, "rbi": 61, "so": 93, "tb": 209, "sb": 18, "obp": 0.324, "zTotal": 1.3}, {"name": "Jake McCarthy", "pa": 625, "r": 78, "hr": 15, "rbi": 63, "so": 123, "tb": 222, "sb": 21, "obp": 0.315, "zTotal": 1.3}, {"name": "Brendan Donovan", "pa": 625, "r": 72, "hr": 13, "rbi": 68, "so": 88, "tb": 221, "sb": 6, "obp": 0.341, "zTotal": 1.29}, {"name": "Jo Adell", "pa": 625, "r": 79, "hr": 32, "rbi": 84, "so": 168, "tb": 255, "sb": 11, "obp": 0.296, "zTotal": 1.29}, {"name": "Nolan Schanuel", "pa": 625, "r": 73, "hr": 14, "rbi": 61, "so": 87, "tb": 210, "sb": 7, "obp": 0.354, "zTotal": 1.29}, {"name": "Javier Sanoja", "pa": 625, "r": 73, "hr": 17, "rbi": 69, "so": 111, "tb": 228, "sb": 14, "obp": 0.31, "zTotal": 1.29}, {"name": "Trent Grisham", "pa": 625, "r": 81, "hr": 28, "rbi": 77, "so": 152, "tb": 230, "sb": 7, "obp": 0.327, "zTotal": 1.28}, {"name": "Mike Trout", "pa": 625, "r": 82, "hr": 31, "rbi": 86, "so": 180, "tb": 248, "sb": 5, "obp": 0.345, "zTotal": 1.28}, {"name": "Daulton Varsho", "pa": 625, "r": 80, "hr": 29, "rbi": 81, "so": 159, "tb": 244, "sb": 11, "obp": 0.294, "zTotal": 1.28}, {"name": "Nolan Arenado", "pa": 625, "r": 68, "hr": 18, "rbi": 78, "so": 91, "tb": 230, "sb": 4, "obp": 0.308, "zTotal": 1.28}, {"name": "Lane Thomas", "pa": 625, "r": 79, "hr": 20, "rbi": 71, "so": 149, "tb": 227, "sb": 21, "obp": 0.307, "zTotal": 1.28}, {"name": "Royce Lewis", "pa": 625, "r": 75, "hr": 22, "rbi": 75, "so": 134, "tb": 236, "sb": 13, "obp": 0.301, "zTotal": 1.27}, {"name": "Luis Matos", "pa": 625, "r": 73, "hr": 20, "rbi": 71, "so": 113, "tb": 230, "sb": 10, "obp": 0.302, "zTotal": 1.27}, {"name": "Gabriel Moreno", "pa": 625, "r": 75, "hr": 16, "rbi": 73, "so": 115, "tb": 229, "sb": 7, "obp": 0.334, "zTotal": 1.26}, {"name": "Taylor Ward", "pa": 625, "r": 80, "hr": 27, "rbi": 81, "so": 154, "tb": 242, "sb": 5, "obp": 0.329, "zTotal": 1.26}, {"name": "Evan Carter", "pa": 625, "r": 78, "hr": 18, "rbi": 66, "so": 137, "tb": 224, "sb": 18, "obp": 0.318, "zTotal": 1.26}, {"name": "Brenton Doyle", "pa": 625, "r": 80, "hr": 21, "rbi": 72, "so": 165, "tb": 241, "sb": 22, "obp": 0.303, "zTotal": 1.26}, {"name": "Adley Rutschman", "pa": 625, "r": 74, "hr": 19, "rbi": 72, "so": 103, "tb": 225, "sb": 2, "obp": 0.333, "zTotal": 1.25}, {"name": "Austin Riley", "pa": 625, "r": 80, "hr": 27, "rbi": 88, "so": 161, "tb": 258, "sb": 2, "obp": 0.323, "zTotal": 1.25}, {"name": "Brandon Lowe", "pa": 625, "r": 77, "hr": 28, "rbi": 87, "so": 158, "tb": 249, "sb": 6, "obp": 0.313, "zTotal": 1.25}, {"name": "Willson Contreras", "pa": 625, "r": 79, "hr": 25, "rbi": 82, "so": 156, "tb": 238, "sb": 6, "obp": 0.338, "zTotal": 1.25}, {"name": "Kevin McGonigle", "pa": 625, "r": 74, "hr": 16, "rbi": 66, "so": 111, "tb": 221, "sb": 13, "obp": 0.314, "zTotal": 1.25}, {"name": "Eugenio Su\u00e1rez", "pa": 625, "r": 79, "hr": 34, "rbi": 96, "so": 183, "tb": 257, "sb": 4, "obp": 0.306, "zTotal": 1.24}, {"name": "Jeff McNeil", "pa": 625, "r": 72, "hr": 15, "rbi": 66, "so": 91, "tb": 224, "sb": 4, "obp": 0.325, "zTotal": 1.24}, {"name": "Willi Castro", "pa": 625, "r": 78, "hr": 16, "rbi": 67, "so": 140, "tb": 227, "sb": 17, "obp": 0.327, "zTotal": 1.24}, {"name": "David Hamilton", "pa": 625, "r": 76, "hr": 20, "rbi": 70, "so": 144, "tb": 224, "sb": 19, "obp": 0.306, "zTotal": 1.24}, {"name": "Riley Greene", "pa": 625, "r": 83, "hr": 29, "rbi": 86, "so": 179, "tb": 261, "sb": 4, "obp": 0.328, "zTotal": 1.23}, {"name": "Yainer Diaz", "pa": 625, "r": 71, "hr": 21, "rbi": 78, "so": 114, "tb": 246, "sb": 3, "obp": 0.302, "zTotal": 1.23}, {"name": "Andr\u00e9s Gim\u00e9nez", "pa": 625, "r": 74, "hr": 13, "rbi": 57, "so": 114, "tb": 205, "sb": 24, "obp": 0.305, "zTotal": 1.23}, {"name": "Tyler O'Neill", "pa": 625, "r": 79, "hr": 27, "rbi": 80, "so": 160, "tb": 238, "sb": 9, "obp": 0.316, "zTotal": 1.23}, {"name": "Daylen Lile", "pa": 625, "r": 73, "hr": 13, "rbi": 67, "so": 117, "tb": 231, "sb": 14, "obp": 0.317, "zTotal": 1.23}, {"name": "Esteury Ruiz", "pa": 625, "r": 76, "hr": 19, "rbi": 70, "so": 141, "tb": 225, "sb": 17, "obp": 0.309, "zTotal": 1.23}, {"name": "Masataka Yoshida", "pa": 625, "r": 73, "hr": 18, "rbi": 73, "so": 118, "tb": 227, "sb": 9, "obp": 0.318, "zTotal": 1.23}, {"name": "Roman Anthony", "pa": 625, "r": 80, "hr": 18, "rbi": 72, "so": 153, "tb": 233, "sb": 11, "obp": 0.349, "zTotal": 1.22}, {"name": "TJ Friedl", "pa": 625, "r": 73, "hr": 16, "rbi": 60, "so": 107, "tb": 206, "sb": 12, "obp": 0.329, "zTotal": 1.22}, {"name": "Joc Pederson", "pa": 625, "r": 76, "hr": 24, "rbi": 76, "so": 140, "tb": 228, "sb": 7, "obp": 0.322, "zTotal": 1.22}, {"name": "Sam Haggerty", "pa": 625, "r": 77, "hr": 17, "rbi": 65, "so": 137, "tb": 219, "sb": 20, "obp": 0.314, "zTotal": 1.22}, {"name": "Jorge Mateo", "pa": 625, "r": 79, "hr": 19, "rbi": 66, "so": 150, "tb": 222, "sb": 23, "obp": 0.298, "zTotal": 1.22}, {"name": "Dairon Blanco", "pa": 625, "r": 76, "hr": 20, "rbi": 71, "so": 141, "tb": 226, "sb": 15, "obp": 0.309, "zTotal": 1.22}, {"name": "Jackson Holliday", "pa": 625, "r": 79, "hr": 17, "rbi": 65, "so": 139, "tb": 222, "sb": 16, "obp": 0.326, "zTotal": 1.21}, {"name": "Lawrence Butler", "pa": 625, "r": 81, "hr": 23, "rbi": 72, "so": 165, "tb": 235, "sb": 17, "obp": 0.307, "zTotal": 1.21}, {"name": "Kyle Manzardo", "pa": 625, "r": 73, "hr": 27, "rbi": 85, "so": 145, "tb": 242, "sb": 3, "obp": 0.313, "zTotal": 1.21}, {"name": "Ceddanne Rafaela", "pa": 625, "r": 74, "hr": 17, "rbi": 67, "so": 138, "tb": 231, "sb": 22, "obp": 0.288, "zTotal": 1.21}, {"name": "Jasson Dom\u00ednguez", "pa": 625, "r": 78, "hr": 19, "rbi": 67, "so": 153, "tb": 223, "sb": 20, "obp": 0.312, "zTotal": 1.21}, {"name": "Dylan Moore", "pa": 625, "r": 79, "hr": 21, "rbi": 70, "so": 160, "tb": 223, "sb": 20, "obp": 0.306, "zTotal": 1.21}, {"name": "Matt Shaw", "pa": 625, "r": 76, "hr": 19, "rbi": 70, "so": 138, "tb": 224, "sb": 16, "obp": 0.307, "zTotal": 1.21}, {"name": "Warming Bernabel", "pa": 625, "r": 74, "hr": 20, "rbi": 75, "so": 133, "tb": 232, "sb": 10, "obp": 0.312, "zTotal": 1.21}, {"name": "Michael Busch", "pa": 625, "r": 78, "hr": 26, "rbi": 85, "so": 157, "tb": 243, "sb": 4, "obp": 0.323, "zTotal": 1.2}, {"name": "Ram\u00f3n Laureano", "pa": 625, "r": 80, "hr": 24, "rbi": 77, "so": 161, "tb": 241, "sb": 11, "obp": 0.31, "zTotal": 1.2}, {"name": "Marcell Ozuna", "pa": 625, "r": 76, "hr": 26, "rbi": 82, "so": 150, "tb": 235, "sb": 3, "obp": 0.328, "zTotal": 1.2}, {"name": "Justin Crawford", "pa": 625, "r": 75, "hr": 13, "rbi": 62, "so": 131, "tb": 220, "sb": 21, "obp": 0.308, "zTotal": 1.2}, {"name": "Walker Jenkins", "pa": 625, "r": 75, "hr": 19, "rbi": 72, "so": 133, "tb": 228, "sb": 11, "obp": 0.313, "zTotal": 1.2}, {"name": "Jesus Rodriguez", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 138, "tb": 230, "sb": 11, "obp": 0.312, "zTotal": 1.2}, {"name": "James Triantos", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 138, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.2}, {"name": "Tre' Morgan", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 135, "tb": 229, "sb": 11, "obp": 0.313, "zTotal": 1.2}, {"name": "Eliezer Alfonzo", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.2}, {"name": "H\u00e9ctor Rodr\u00edguez", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 138, "tb": 230, "sb": 11, "obp": 0.311, "zTotal": 1.2}, {"name": "Ian Happ", "pa": 641, "r": 80, "hr": 21, "rbi": 74, "so": 151, "tb": 226, "sb": 8, "obp": 0.336, "zTotal": 1.19}, {"name": "Thairo Estrada", "pa": 625, "r": 73, "hr": 19, "rbi": 71, "so": 130, "tb": 228, "sb": 12, "obp": 0.303, "zTotal": 1.19}, {"name": "Austin Martin", "pa": 625, "r": 75, "hr": 13, "rbi": 60, "so": 123, "tb": 209, "sb": 18, "obp": 0.323, "zTotal": 1.19}, {"name": "Dylan Crews", "pa": 625, "r": 74, "hr": 18, "rbi": 66, "so": 143, "tb": 217, "sb": 23, "obp": 0.295, "zTotal": 1.19}, {"name": "Spencer Steer", "pa": 625, "r": 73, "hr": 21, "rbi": 73, "so": 136, "tb": 224, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Jonny DeLuca", "pa": 625, "r": 74, "hr": 19, "rbi": 70, "so": 134, "tb": 224, "sb": 15, "obp": 0.302, "zTotal": 1.19}, {"name": "Jahmai Jones", "pa": 625, "r": 76, "hr": 21, "rbi": 72, "so": 141, "tb": 228, "sb": 11, "obp": 0.314, "zTotal": 1.19}, {"name": "Leo De Vries", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 230, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Jared Serna", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Hao-Yu  Lee", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Enrique Bradfield Jr.", "pa": 625, "r": 75, "hr": 20, "rbi": 72, "so": 138, "tb": 227, "sb": 12, "obp": 0.311, "zTotal": 1.19}, {"name": "Gabriel Gonzalez", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 138, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Gustavo Campero", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 139, "tb": 228, "sb": 12, "obp": 0.311, "zTotal": 1.19}, {"name": "Nate Furman", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 228, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Jonatan Clase", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 142, "tb": 228, "sb": 12, "obp": 0.311, "zTotal": 1.19}, {"name": "Ben Cowles", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Matthew Wood", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Brett Sullivan", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Steward Berroa", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 12, "obp": 0.311, "zTotal": 1.19}, {"name": "Jonathon Long", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Donovan Walton", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Vinny Capra", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Jack Winkler", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Tyler Black", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.19}, {"name": "Abraham Toro", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 138, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.19}, {"name": "Carlos Correa", "pa": 625, "r": 75, "hr": 20, "rbi": 75, "so": 127, "tb": 234, "sb": 2, "obp": 0.332, "zTotal": 1.18}, {"name": "Jes\u00fas S\u00e1nchez", "pa": 625, "r": 79, "hr": 21, "rbi": 70, "so": 147, "tb": 231, "sb": 12, "obp": 0.311, "zTotal": 1.18}, {"name": "Andrew Benintendi", "pa": 625, "r": 69, "hr": 20, "rbi": 72, "so": 113, "tb": 225, "sb": 6, "obp": 0.313, "zTotal": 1.18}, {"name": "Miguel Andujar", "pa": 625, "r": 71, "hr": 17, "rbi": 72, "so": 114, "tb": 229, "sb": 8, "obp": 0.309, "zTotal": 1.18}, {"name": "Jake Fraley", "pa": 625, "r": 74, "hr": 17, "rbi": 68, "so": 136, "tb": 217, "sb": 17, "obp": 0.312, "zTotal": 1.18}, {"name": "Maximo Acosta", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 138, "tb": 228, "sb": 12, "obp": 0.31, "zTotal": 1.18}, {"name": "Starling Marte", "pa": 625, "r": 76, "hr": 17, "rbi": 68, "so": 137, "tb": 224, "sb": 15, "obp": 0.314, "zTotal": 1.18}, {"name": "Michael Arroyo", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Cooper Kinney", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 230, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Manuel Margot", "pa": 625, "r": 74, "hr": 19, "rbi": 73, "so": 135, "tb": 227, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Christian Encarnacion-Strand", "pa": 625, "r": 74, "hr": 22, "rbi": 77, "so": 143, "tb": 234, "sb": 9, "obp": 0.308, "zTotal": 1.18}, {"name": "Kahlil Watson", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Weston Wilson", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.18}, {"name": "Emmanuel Rivera", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Max Anderson", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Jason Delay", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Collin Price", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Maverick Handley", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Nick Morabito", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 140, "tb": 228, "sb": 12, "obp": 0.312, "zTotal": 1.18}, {"name": "Nick Raposo", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Shane McGuire", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Stuart Fairchild", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Eduardo Valencia", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Dom Nu\u00f1ez", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Jos\u00e9 Barrero", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Rodolfo Dur\u00e1n", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.31, "zTotal": 1.18}, {"name": "Blake Hunt", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.31, "zTotal": 1.18}, {"name": "Luken Baker", "pa": 625, "r": 75, "hr": 21, "rbi": 75, "so": 141, "tb": 229, "sb": 10, "obp": 0.311, "zTotal": 1.18}, {"name": "Davis Wendzel", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Ji Hwan Bae", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 227, "sb": 12, "obp": 0.311, "zTotal": 1.18}, {"name": "Trey Lipscomb", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Dominic Fletcher", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Juan Yepez", "pa": 625, "r": 74, "hr": 21, "rbi": 74, "so": 138, "tb": 229, "sb": 10, "obp": 0.311, "zTotal": 1.18}, {"name": "Michael Siani", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 140, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Cristian Pache", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Kevin Newman", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Gabriel Rincones Jr.", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Ronny Simon", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 139, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Sterlin Thompson", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 229, "sb": 11, "obp": 0.312, "zTotal": 1.18}, {"name": "Kemp Alderman", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Rhylan Thomas", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 137, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.18}, {"name": "Zac Veen", "pa": 625, "r": 76, "hr": 19, "rbi": 71, "so": 144, "tb": 226, "sb": 14, "obp": 0.31, "zTotal": 1.18}, {"name": "Drake Baldwin", "pa": 625, "r": 72, "hr": 20, "rbi": 77, "so": 118, "tb": 228, "sb": 2, "obp": 0.318, "zTotal": 1.17}, {"name": "Miguel Vargas", "pa": 625, "r": 71, "hr": 19, "rbi": 69, "so": 119, "tb": 221, "sb": 8, "obp": 0.316, "zTotal": 1.17}, {"name": "Harrison Bader", "pa": 625, "r": 77, "hr": 20, "rbi": 69, "so": 151, "tb": 226, "sb": 18, "obp": 0.301, "zTotal": 1.17}, {"name": "Romy Gonzalez", "pa": 625, "r": 75, "hr": 19, "rbi": 72, "so": 150, "tb": 233, "sb": 15, "obp": 0.309, "zTotal": 1.17}, {"name": "Ryan O'Hearn", "pa": 625, "r": 72, "hr": 17, "rbi": 72, "so": 122, "tb": 226, "sb": 6, "obp": 0.33, "zTotal": 1.17}, {"name": "Josh Lowe", "pa": 625, "r": 77, "hr": 19, "rbi": 66, "so": 163, "tb": 225, "sb": 24, "obp": 0.301, "zTotal": 1.17}, {"name": "Triston Casas", "pa": 625, "r": 74, "hr": 22, "rbi": 78, "so": 146, "tb": 231, "sb": 7, "obp": 0.319, "zTotal": 1.17}, {"name": "Adael Amador", "pa": 625, "r": 73, "hr": 17, "rbi": 68, "so": 128, "tb": 217, "sb": 14, "obp": 0.311, "zTotal": 1.17}, {"name": "Jos\u00e9 Ferm\u00edn", "pa": 625, "r": 73, "hr": 19, "rbi": 70, "so": 131, "tb": 222, "sb": 12, "obp": 0.31, "zTotal": 1.17}, {"name": "Emmanuel Rodriguez", "pa": 625, "r": 76, "hr": 21, "rbi": 73, "so": 144, "tb": 228, "sb": 11, "obp": 0.313, "zTotal": 1.17}, {"name": "Brice Matthews", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 145, "tb": 228, "sb": 12, "obp": 0.31, "zTotal": 1.17}, {"name": "Drew Romo", "pa": 625, "r": 74, "hr": 20, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Blake Sabol", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Enmanuel Valdez", "pa": 625, "r": 74, "hr": 21, "rbi": 74, "so": 139, "tb": 228, "sb": 10, "obp": 0.31, "zTotal": 1.17}, {"name": "Eric Haase", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Nick Madrigal", "pa": 625, "r": 74, "hr": 19, "rbi": 71, "so": 132, "tb": 224, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Liover Peguero", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Petey Halpin", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Tommy Troy", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Jorbit Vivas", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 137, "tb": 226, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Brandon Valenzuela", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Shay Whitcomb", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 228, "sb": 11, "obp": 0.309, "zTotal": 1.17}, {"name": "Jhonny Pereda", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Hayden Senger", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Kristian Robinson", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 143, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Ryan Fitzgerald", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Tom\u00e1s Nido", "pa": 625, "r": 74, "hr": 20, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Trei Cruz", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Esmerlyn Valdez", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Christian Franklin", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 11, "obp": 0.312, "zTotal": 1.17}, {"name": "Vidal Bruj\u00e1n", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 139, "tb": 226, "sb": 12, "obp": 0.31, "zTotal": 1.17}, {"name": "Jared Young", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Jose Rojas", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Drew Waters", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 142, "tb": 228, "sb": 11, "obp": 0.311, "zTotal": 1.17}, {"name": "Dustin Harris", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 141, "tb": 227, "sb": 12, "obp": 0.31, "zTotal": 1.17}, {"name": "Aaron Schunk", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 141, "tb": 229, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Matt Koperniak", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 139, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Jonah Bride", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 140, "tb": 228, "sb": 11, "obp": 0.312, "zTotal": 1.17}, {"name": "A.J. Vukovich", "pa": 625, "r": 75, "hr": 20, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Akil Baddoo", "pa": 625, "r": 75, "hr": 20, "rbi": 73, "so": 142, "tb": 227, "sb": 12, "obp": 0.31, "zTotal": 1.17}, {"name": "Jhonkensy Noel", "pa": 625, "r": 75, "hr": 21, "rbi": 75, "so": 142, "tb": 230, "sb": 10, "obp": 0.309, "zTotal": 1.17}, {"name": "Vimael Mach\u00edn", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 138, "tb": 227, "sb": 10, "obp": 0.312, "zTotal": 1.17}, {"name": "Pedro Le\u00f3n", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Nicky Lopez", "pa": 625, "r": 74, "hr": 19, "rbi": 71, "so": 136, "tb": 224, "sb": 11, "obp": 0.312, "zTotal": 1.17}, {"name": "Jose Siri", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 144, "tb": 229, "sb": 11, "obp": 0.309, "zTotal": 1.17}, {"name": "T.J. Rumfield", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 139, "tb": 228, "sb": 10, "obp": 0.31, "zTotal": 1.17}, {"name": "Ryan Ward", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 142, "tb": 229, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Justin Foscue", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 139, "tb": 227, "sb": 11, "obp": 0.31, "zTotal": 1.17}, {"name": "Alec Bohm", "pa": 625, "r": 70, "hr": 15, "rbi": 72, "so": 104, "tb": 229, "sb": 4, "obp": 0.317, "zTotal": 1.16}, {"name": "Jakob Marsee", "pa": 625, "r": 75, "hr": 14, "rbi": 58, "so": 140, "tb": 201, "sb": 24, "obp": 0.315, "zTotal": 1.16}, {"name": "Josh Bell", "pa": 625, "r": 73, "hr": 21, "rbi": 73, "so": 121, "tb": 222, "sb": 3, "obp": 0.32, "zTotal": 1.16}, {"name": "Ernie Clement", "pa": 625, "r": 67, "hr": 11, "rbi": 61, "so": 79, "tb": 212, "sb": 11, "obp": 0.29, "zTotal": 1.16}, {"name": "Isaac Collins", "pa": 625, "r": 76, "hr": 15, "rbi": 64, "so": 133, "tb": 213, "sb": 16, "obp": 0.322, "zTotal": 1.16}, {"name": "Victor Robles", "pa": 625, "r": 76, "hr": 14, "rbi": 58, "so": 138, "tb": 208, "sb": 24, "obp": 0.307, "zTotal": 1.16}, {"name": "JJ Bleday", "pa": 625, "r": 73, "hr": 23, "rbi": 78, "so": 142, "tb": 229, "sb": 7, "obp": 0.31, "zTotal": 1.16}, {"name": "Jeferson Quero", "pa": 625, "r": 73, "hr": 20, "rbi": 75, "so": 136, "tb": 228, "sb": 10, "obp": 0.307, "zTotal": 1.16}, {"name": "Noelvi Marte", "pa": 625, "r": 73, "hr": 20, "rbi": 72, "so": 149, "tb": 231, "sb": 17, "obp": 0.297, "zTotal": 1.16}, {"name": "Andy Ib\u00e1\u00f1ez", "pa": 625, "r": 74, "hr": 19, "rbi": 73, "so": 133, "tb": 226, "sb": 10, "obp": 0.306, "zTotal": 1.16}, {"name": "Miguel Rojas", "pa": 625, "r": 74, "hr": 17, "rbi": 70, "so": 125, "tb": 220, "sb": 10, "obp": 0.308, "zTotal": 1.16}, {"name": "Jett Williams", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 142, "tb": 226, "sb": 12, "obp": 0.311, "zTotal": 1.16}, {"name": "Juan Brito", "pa": 625, "r": 74, "hr": 19, "rbi": 72, "so": 135, "tb": 225, "sb": 10, "obp": 0.311, "zTotal": 1.16}, {"name": "Richie Palacios", "pa": 625, "r": 73, "hr": 18, "rbi": 69, "so": 132, "tb": 219, "sb": 13, "obp": 0.313, "zTotal": 1.16}, {"name": "Aidan Miller", "pa": 625, "r": 74, "hr": 20, "rbi": 73, "so": 141, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.16}, {"name": "Coby Mayo", "pa": 625, "r": 75, "hr": 21, "rbi": 74, "so": 144, "tb": 229, "sb": 10, "obp": 0.311, "zTotal": 1.16}, {"name": "Leody Taveras", "pa": 625, "r": 75, "hr": 20, "rbi": 71, "so": 141, "tb": 226, "sb": 13, "obp": 0.307, "zTotal": 1.16}, {"name": "Alejandro Osuna", "pa": 625, "r": 75, "hr": 19, "rbi": 71, "so": 140, "tb": 225, "sb": 12, "obp": 0.311, "zTotal": 1.16}, {"name": "Jorge Alfaro", "pa": 625, "r": 74, "hr": 20, "rbi": 74, "so": 142, "tb": 228, "sb": 11, "obp": 0.31, "zTotal": 1.16}, {"name": "Eli White", "pa": 625, "r": 76, "hr": 20, "rbi": 72, "so": 145, "tb": 228, "sb": 13, "obp": 0.308, "zTotal": 1.16}]
 ;
+
+    const PITCHERS = [{"name": "Tarik Skubal", "type": "SP", "ip_wk": 7.03, "l_wk": 0.259, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 8.48, "qs_wk": 0.673, "er_wk": 2.17, "wh_wk": 6.854, "era": 2.778, "whip": 0.975, "war": 5.8}, {"name": "Paul Skenes", "type": "SP", "ip_wk": 6.81, "l_wk": 0.298, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 8.19, "qs_wk": 0.643, "er_wk": 2.091, "wh_wk": 6.96, "era": 2.762, "whip": 1.022, "war": 5.74}, {"name": "Garrett Crochet", "type": "SP", "ip_wk": 6.77, "l_wk": 0.305, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 8.28, "qs_wk": 0.583, "er_wk": 2.312, "wh_wk": 7.197, "era": 3.074, "whip": 1.063, "war": 4.98}, {"name": "Logan Webb", "type": "SP", "ip_wk": 7.12, "l_wk": 0.369, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.69, "qs_wk": 0.626, "er_wk": 2.645, "wh_wk": 8.411, "era": 3.345, "whip": 1.182, "war": 4.79}, {"name": "Cristopher S\u00e1nchez", "type": "SP", "ip_wk": 7.03, "l_wk": 0.291, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.77, "qs_wk": 0.625, "er_wk": 2.491, "wh_wk": 8.102, "era": 3.191, "whip": 1.153, "war": 4.45}, {"name": "Chris Sale", "type": "SP", "ip_wk": 6.78, "l_wk": 0.283, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 8.35, "qs_wk": 0.609, "er_wk": 2.416, "wh_wk": 7.335, "era": 3.205, "whip": 1.081, "war": 3.98}, {"name": "Cole Ragans", "type": "SP", "ip_wk": 6.45, "l_wk": 0.337, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.95, "qs_wk": 0.547, "er_wk": 2.367, "wh_wk": 7.402, "era": 3.301, "whip": 1.147, "war": 3.7}, {"name": "Yoshinobu Yamamoto", "type": "SP", "ip_wk": 6.58, "l_wk": 0.274, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.07, "qs_wk": 0.566, "er_wk": 2.395, "wh_wk": 7.369, "era": 3.273, "whip": 1.119, "war": 3.63}, {"name": "Max Fried", "type": "SP", "ip_wk": 6.9, "l_wk": 0.307, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.51, "qs_wk": 0.602, "er_wk": 2.528, "wh_wk": 8.093, "era": 3.3, "whip": 1.174, "war": 3.61}, {"name": "Dylan Cease", "type": "SP", "ip_wk": 6.46, "l_wk": 0.36, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.62, "qs_wk": 0.476, "er_wk": 2.694, "wh_wk": 7.829, "era": 3.755, "whip": 1.213, "war": 3.59}, {"name": "Sonny Gray", "type": "SP", "ip_wk": 6.64, "l_wk": 0.342, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.97, "qs_wk": 0.526, "er_wk": 2.797, "wh_wk": 7.812, "era": 3.789, "whip": 1.176, "war": 3.58}, {"name": "Hunter Brown", "type": "SP", "ip_wk": 6.66, "l_wk": 0.333, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.22, "qs_wk": 0.585, "er_wk": 2.636, "wh_wk": 7.808, "era": 3.56, "whip": 1.172, "war": 3.55}, {"name": "Jes\u00fas Luzardo", "type": "SP", "ip_wk": 6.61, "l_wk": 0.34, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.28, "qs_wk": 0.533, "er_wk": 2.642, "wh_wk": 7.714, "era": 3.595, "whip": 1.166, "war": 3.53}, {"name": "Hunter Greene", "type": "SP", "ip_wk": 6.63, "l_wk": 0.341, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.92, "qs_wk": 0.552, "er_wk": 2.737, "wh_wk": 7.504, "era": 3.717, "whip": 1.132, "war": 3.51}, {"name": "Jacob deGrom", "type": "SP", "ip_wk": 6.56, "l_wk": 0.299, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.42, "qs_wk": 0.51, "er_wk": 2.477, "wh_wk": 6.836, "era": 3.398, "whip": 1.042, "war": 3.44}, {"name": "Bryan Woo", "type": "SP", "ip_wk": 6.85, "l_wk": 0.305, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.89, "qs_wk": 0.573, "er_wk": 2.607, "wh_wk": 7.084, "era": 3.425, "whip": 1.034, "war": 3.39}, {"name": "Logan Gilbert", "type": "SP", "ip_wk": 6.51, "l_wk": 0.337, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.27, "qs_wk": 0.527, "er_wk": 2.474, "wh_wk": 6.786, "era": 3.418, "whip": 1.042, "war": 3.3}, {"name": "Framber Valdez", "type": "SP", "ip_wk": 6.73, "l_wk": 0.37, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.35, "qs_wk": 0.596, "er_wk": 2.62, "wh_wk": 8.38, "era": 3.505, "whip": 1.245, "war": 3.23}, {"name": "Joe Ryan", "type": "SP", "ip_wk": 6.66, "l_wk": 0.369, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.29, "qs_wk": 0.533, "er_wk": 2.844, "wh_wk": 7.281, "era": 3.844, "whip": 1.094, "war": 3.2}, {"name": "Ranger Su\u00e1rez", "type": "SP", "ip_wk": 6.68, "l_wk": 0.354, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.99, "qs_wk": 0.547, "er_wk": 2.763, "wh_wk": 8.283, "era": 3.722, "whip": 1.24, "war": 3.19}, {"name": "Nathan Eovaldi", "type": "SP", "ip_wk": 6.78, "l_wk": 0.332, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.57, "qs_wk": 0.578, "er_wk": 2.699, "wh_wk": 7.51, "era": 3.585, "whip": 1.108, "war": 3.11}, {"name": "George Kirby", "type": "SP", "ip_wk": 6.55, "l_wk": 0.36, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.39, "qs_wk": 0.539, "er_wk": 2.629, "wh_wk": 7.207, "era": 3.613, "whip": 1.101, "war": 3.1}, {"name": "Kevin Gausman", "type": "SP", "ip_wk": 6.8, "l_wk": 0.375, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.65, "qs_wk": 0.52, "er_wk": 3.069, "wh_wk": 8.176, "era": 4.059, "whip": 1.202, "war": 3.08}, {"name": "Kyle Bradish", "type": "SP", "ip_wk": 6.23, "l_wk": 0.313, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.75, "qs_wk": 0.475, "er_wk": 2.498, "wh_wk": 7.303, "era": 3.612, "whip": 1.173, "war": 2.96}, {"name": "Chase Burns", "type": "SP", "ip_wk": 5.99, "l_wk": 0.332, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.07, "qs_wk": 0.422, "er_wk": 2.42, "wh_wk": 7.075, "era": 3.633, "whip": 1.18, "war": 2.94}, {"name": "Spencer Schwellenbach", "type": "SP", "ip_wk": 6.87, "l_wk": 0.317, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.68, "qs_wk": 0.594, "er_wk": 2.752, "wh_wk": 7.64, "era": 3.607, "whip": 1.113, "war": 2.91}, {"name": "Brandon Woodruff", "type": "SP", "ip_wk": 6.51, "l_wk": 0.315, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.96, "qs_wk": 0.486, "er_wk": 2.708, "wh_wk": 7.265, "era": 3.743, "whip": 1.116, "war": 2.89}, {"name": "Pablo L\u00f3pez", "type": "SP", "ip_wk": 6.57, "l_wk": 0.342, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.53, "qs_wk": 0.502, "er_wk": 2.796, "wh_wk": 7.792, "era": 3.832, "whip": 1.187, "war": 2.88}, {"name": "Freddy Peralta", "type": "SP", "ip_wk": 6.39, "l_wk": 0.319, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.13, "qs_wk": 0.478, "er_wk": 2.666, "wh_wk": 7.536, "era": 3.757, "whip": 1.18, "war": 2.88}, {"name": "Blake Snell", "type": "SP", "ip_wk": 6.41, "l_wk": 0.303, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.82, "qs_wk": 0.54, "er_wk": 2.447, "wh_wk": 7.661, "era": 3.436, "whip": 1.195, "war": 2.84}, {"name": "Michael King", "type": "SP", "ip_wk": 6.22, "l_wk": 0.334, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.46, "qs_wk": 0.441, "er_wk": 2.596, "wh_wk": 7.619, "era": 3.759, "whip": 1.226, "war": 2.79}, {"name": "Eury P\u00e9rez", "type": "SP", "ip_wk": 6.14, "l_wk": 0.36, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.88, "qs_wk": 0.385, "er_wk": 2.61, "wh_wk": 7.138, "era": 3.824, "whip": 1.162, "war": 2.74}, {"name": "Nick Pivetta", "type": "SP", "ip_wk": 6.56, "l_wk": 0.341, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.15, "qs_wk": 0.52, "er_wk": 2.879, "wh_wk": 7.569, "era": 3.947, "whip": 1.153, "war": 2.69}, {"name": "Jos\u00e9 Soriano", "type": "SP", "ip_wk": 6.26, "l_wk": 0.378, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.79, "qs_wk": 0.481, "er_wk": 2.585, "wh_wk": 8.271, "era": 3.717, "whip": 1.322, "war": 2.68}, {"name": "Zack Wheeler", "type": "SP", "ip_wk": 6.75, "l_wk": 0.283, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.73, "qs_wk": 0.603, "er_wk": 2.47, "wh_wk": 7.261, "era": 3.295, "whip": 1.076, "war": 2.67}, {"name": "Drew Rasmussen", "type": "SP", "ip_wk": 5.9, "l_wk": 0.306, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.35, "qs_wk": 0.388, "er_wk": 2.468, "wh_wk": 6.92, "era": 3.763, "whip": 1.172, "war": 2.65}, {"name": "Jack Flaherty", "type": "SP", "ip_wk": 6.27, "l_wk": 0.385, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.88, "qs_wk": 0.467, "er_wk": 2.805, "wh_wk": 7.753, "era": 4.024, "whip": 1.236, "war": 2.61}, {"name": "Kris Bubic", "type": "SP", "ip_wk": 6.55, "l_wk": 0.375, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.36, "qs_wk": 0.492, "er_wk": 2.717, "wh_wk": 8.069, "era": 3.732, "whip": 1.232, "war": 2.52}, {"name": "MacKenzie Gore", "type": "SP", "ip_wk": 6.16, "l_wk": 0.409, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.88, "qs_wk": 0.469, "er_wk": 2.667, "wh_wk": 7.799, "era": 3.9, "whip": 1.267, "war": 2.5}, {"name": "Tyler Glasnow", "type": "SP", "ip_wk": 6.36, "l_wk": 0.288, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.44, "qs_wk": 0.527, "er_wk": 2.584, "wh_wk": 7.421, "era": 3.654, "whip": 1.166, "war": 2.42}, {"name": "Tanner Bibee", "type": "SP", "ip_wk": 6.63, "l_wk": 0.375, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.17, "qs_wk": 0.462, "er_wk": 2.989, "wh_wk": 8.125, "era": 4.055, "whip": 1.225, "war": 2.41}, {"name": "Trevor Rogers", "type": "SP", "ip_wk": 6.55, "l_wk": 0.356, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.69, "qs_wk": 0.482, "er_wk": 2.944, "wh_wk": 8.338, "era": 4.046, "whip": 1.273, "war": 2.4}, {"name": "Spencer Strider", "type": "SP", "ip_wk": 6.5, "l_wk": 0.344, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.48, "qs_wk": 0.473, "er_wk": 2.805, "wh_wk": 7.893, "era": 3.886, "whip": 1.215, "war": 2.4}, {"name": "Matthew Boyd", "type": "SP", "ip_wk": 6.46, "l_wk": 0.363, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.88, "qs_wk": 0.496, "er_wk": 2.802, "wh_wk": 7.776, "era": 3.904, "whip": 1.204, "war": 2.37}, {"name": "Sandy Alcantara", "type": "SP", "ip_wk": 6.77, "l_wk": 0.431, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.69, "qs_wk": 0.474, "er_wk": 3.139, "wh_wk": 8.629, "era": 4.171, "whip": 1.274, "war": 2.35}, {"name": "Nick Lodolo", "type": "SP", "ip_wk": 6.22, "l_wk": 0.343, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.3, "qs_wk": 0.465, "er_wk": 2.783, "wh_wk": 7.422, "era": 4.027, "whip": 1.193, "war": 2.34}, {"name": "Shohei Ohtani", "type": "SP", "ip_wk": 5.66, "l_wk": 0.251, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.67, "qs_wk": 0.428, "er_wk": 2.125, "wh_wk": 6.27, "era": 3.379, "whip": 1.108, "war": 2.32}, {"name": "Aaron Nola", "type": "SP", "ip_wk": 6.65, "l_wk": 0.399, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.38, "qs_wk": 0.498, "er_wk": 3.147, "wh_wk": 8.261, "era": 4.258, "whip": 1.242, "war": 2.31}, {"name": "Mitch Keller", "type": "SP", "ip_wk": 6.55, "l_wk": 0.428, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.71, "qs_wk": 0.498, "er_wk": 3.209, "wh_wk": 8.452, "era": 4.411, "whip": 1.291, "war": 2.3}, {"name": "Brady Singer", "type": "SP", "ip_wk": 6.39, "l_wk": 0.415, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.87, "qs_wk": 0.454, "er_wk": 3.153, "wh_wk": 8.322, "era": 4.443, "whip": 1.303, "war": 2.29}, {"name": "David Peterson", "type": "SP", "ip_wk": 6.43, "l_wk": 0.291, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.71, "qs_wk": 0.514, "er_wk": 2.759, "wh_wk": 8.597, "era": 3.86, "whip": 1.336, "war": 2.28}, {"name": "Nolan McLean", "type": "SP", "ip_wk": 6.38, "l_wk": 0.321, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.3, "qs_wk": 0.47, "er_wk": 2.597, "wh_wk": 7.997, "era": 3.664, "whip": 1.254, "war": 2.27}, {"name": "Shane McClanahan", "type": "SP", "ip_wk": 6.45, "l_wk": 0.334, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.77, "qs_wk": 0.513, "er_wk": 2.6, "wh_wk": 7.568, "era": 3.629, "whip": 1.174, "war": 2.27}, {"name": "Luis Castillo", "type": "SP", "ip_wk": 6.65, "l_wk": 0.384, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.21, "qs_wk": 0.533, "er_wk": 2.896, "wh_wk": 7.934, "era": 3.916, "whip": 1.192, "war": 2.27}, {"name": "Andrew Abbott", "type": "SP", "ip_wk": 6.5, "l_wk": 0.377, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.94, "qs_wk": 0.43, "er_wk": 3.125, "wh_wk": 8.253, "era": 4.33, "whip": 1.271, "war": 2.26}, {"name": "Merrill Kelly", "type": "SP", "ip_wk": 6.71, "l_wk": 0.331, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.01, "qs_wk": 0.52, "er_wk": 3.083, "wh_wk": 8.37, "era": 4.133, "whip": 1.247, "war": 2.23}, {"name": "Emmet Sheehan", "type": "SP", "ip_wk": 6.67, "l_wk": 0.287, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.52, "qs_wk": 0.362, "er_wk": 2.89, "wh_wk": 7.637, "era": 3.901, "whip": 1.145, "war": 2.19}, {"name": "Casey Mize", "type": "SP", "ip_wk": 6.15, "l_wk": 0.355, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.3, "qs_wk": 0.409, "er_wk": 2.828, "wh_wk": 7.719, "era": 4.142, "whip": 1.256, "war": 2.17}, {"name": "Yusei Kikuchi", "type": "SP", "ip_wk": 6.39, "l_wk": 0.383, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.45, "qs_wk": 0.441, "er_wk": 2.988, "wh_wk": 8.254, "era": 4.212, "whip": 1.293, "war": 2.17}, {"name": "Shane Bieber", "type": "SP", "ip_wk": 6.56, "l_wk": 0.323, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.03, "qs_wk": 0.478, "er_wk": 2.779, "wh_wk": 7.801, "era": 3.814, "whip": 1.19, "war": 2.15}, {"name": "Bubba Chandler", "type": "SP", "ip_wk": 6.49, "l_wk": 0.344, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.13, "qs_wk": 0.413, "er_wk": 3.048, "wh_wk": 8.305, "era": 4.23, "whip": 1.281, "war": 2.13}, {"name": "Michael Wacha", "type": "SP", "ip_wk": 6.57, "l_wk": 0.409, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.04, "qs_wk": 0.467, "er_wk": 3.212, "wh_wk": 8.468, "era": 4.401, "whip": 1.289, "war": 2.12}, {"name": "Reese Olson", "type": "SP", "ip_wk": 6.12, "l_wk": 0.349, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.66, "qs_wk": 0.407, "er_wk": 2.642, "wh_wk": 7.624, "era": 3.885, "whip": 1.246, "war": 2.12}, {"name": "Joe Musgrove", "type": "SP", "ip_wk": 6.38, "l_wk": 0.367, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.04, "qs_wk": 0.498, "er_wk": 2.789, "wh_wk": 7.677, "era": 3.936, "whip": 1.204, "war": 2.11}, {"name": "Trey Yesavage", "type": "SP", "ip_wk": 6.2, "l_wk": 0.317, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.8, "qs_wk": 0.398, "er_wk": 2.678, "wh_wk": 7.715, "era": 3.889, "whip": 1.245, "war": 2.11}, {"name": "Shane Baz", "type": "SP", "ip_wk": 6.37, "l_wk": 0.373, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.3, "qs_wk": 0.466, "er_wk": 2.928, "wh_wk": 7.955, "era": 4.139, "whip": 1.249, "war": 2.05}, {"name": "Clay Holmes", "type": "SP", "ip_wk": 5.99, "l_wk": 0.348, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.91, "qs_wk": 0.353, "er_wk": 2.621, "wh_wk": 7.971, "era": 3.934, "whip": 1.33, "war": 2.01}, {"name": "Cody Ponce", "type": "SP", "ip_wk": 6.71, "l_wk": 0.376, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.84, "qs_wk": 0.454, "er_wk": 3.019, "wh_wk": 8.429, "era": 4.048, "whip": 1.256, "war": 1.98}, {"name": "Zac Gallen", "type": "SP", "ip_wk": 6.39, "l_wk": 0.404, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.1, "qs_wk": 0.487, "er_wk": 3.031, "wh_wk": 8.232, "era": 4.271, "whip": 1.289, "war": 1.98}, {"name": "Robbie Ray", "type": "SP", "ip_wk": 6.52, "l_wk": 0.398, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.82, "qs_wk": 0.457, "er_wk": 3.088, "wh_wk": 8.357, "era": 4.261, "whip": 1.281, "war": 1.97}, {"name": "Braxton Ashcraft", "type": "SP", "ip_wk": 6.76, "l_wk": 0.357, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.96, "qs_wk": 0.327, "er_wk": 2.967, "wh_wk": 8.714, "era": 3.95, "whip": 1.289, "war": 1.95}, {"name": "Grayson Rodriguez", "type": "SP", "ip_wk": 6.38, "l_wk": 0.383, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.7, "qs_wk": 0.486, "er_wk": 2.796, "wh_wk": 7.931, "era": 3.941, "whip": 1.242, "war": 1.94}, {"name": "Shota Imanaga", "type": "SP", "ip_wk": 6.65, "l_wk": 0.333, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.02, "qs_wk": 0.512, "er_wk": 2.981, "wh_wk": 7.587, "era": 4.037, "whip": 1.142, "war": 1.93}, {"name": "Gavin Williams", "type": "SP", "ip_wk": 6.33, "l_wk": 0.349, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.42, "qs_wk": 0.437, "er_wk": 2.865, "wh_wk": 8.19, "era": 4.071, "whip": 1.293, "war": 1.9}, {"name": "Braxton Garrett", "type": "SP", "ip_wk": 6.54, "l_wk": 0.355, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.81, "qs_wk": 0.413, "er_wk": 2.931, "wh_wk": 7.944, "era": 4.034, "whip": 1.215, "war": 1.88}, {"name": "Edward Cabrera", "type": "SP", "ip_wk": 6.02, "l_wk": 0.346, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.38, "qs_wk": 0.391, "er_wk": 2.694, "wh_wk": 7.592, "era": 4.029, "whip": 1.262, "war": 1.86}, {"name": "Chris Bassitt", "type": "SP", "ip_wk": 6.16, "l_wk": 0.375, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.64, "qs_wk": 0.453, "er_wk": 2.868, "wh_wk": 8.062, "era": 4.192, "whip": 1.31, "war": 1.86}, {"name": "Quinn Priester", "type": "SP", "ip_wk": 6.4, "l_wk": 0.355, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.17, "qs_wk": 0.429, "er_wk": 2.956, "wh_wk": 8.342, "era": 4.158, "whip": 1.304, "war": 1.83}, {"name": "Ryan Pepiot", "type": "SP", "ip_wk": 6.22, "l_wk": 0.375, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.27, "qs_wk": 0.444, "er_wk": 2.891, "wh_wk": 7.632, "era": 4.183, "whip": 1.227, "war": 1.83}, {"name": "Cam Schlittler", "type": "SP", "ip_wk": 6.19, "l_wk": 0.347, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.14, "qs_wk": 0.431, "er_wk": 2.697, "wh_wk": 7.872, "era": 3.92, "whip": 1.271, "war": 1.8}, {"name": "Carlos Rod\u00f3n", "type": "SP", "ip_wk": 6.56, "l_wk": 0.387, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.97, "qs_wk": 0.499, "er_wk": 2.985, "wh_wk": 8.02, "era": 4.094, "whip": 1.222, "war": 1.79}, {"name": "Sean Manaea", "type": "SP", "ip_wk": 6.53, "l_wk": 0.361, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.77, "qs_wk": 0.416, "er_wk": 2.975, "wh_wk": 7.75, "era": 4.103, "whip": 1.187, "war": 1.79}, {"name": "Cade Cavalli", "type": "SP", "ip_wk": 6.39, "l_wk": 0.394, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.36, "qs_wk": 0.428, "er_wk": 2.932, "wh_wk": 8.57, "era": 4.127, "whip": 1.34, "war": 1.78}, {"name": "Bailey Ober", "type": "SP", "ip_wk": 6.48, "l_wk": 0.378, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.9, "qs_wk": 0.445, "er_wk": 3.177, "wh_wk": 7.735, "era": 4.413, "whip": 1.194, "war": 1.78}, {"name": "Brayan Bello", "type": "SP", "ip_wk": 6.37, "l_wk": 0.38, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.2, "qs_wk": 0.46, "er_wk": 3.055, "wh_wk": 8.494, "era": 4.318, "whip": 1.334, "war": 1.77}, {"name": "Jacob Misiorowski", "type": "SP", "ip_wk": 6.17, "l_wk": 0.322, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.99, "qs_wk": 0.386, "er_wk": 2.752, "wh_wk": 7.823, "era": 4.017, "whip": 1.269, "war": 1.77}, {"name": "Jack Leiter", "type": "SP", "ip_wk": 6.05, "l_wk": 0.388, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.8, "qs_wk": 0.359, "er_wk": 2.92, "wh_wk": 7.778, "era": 4.343, "whip": 1.285, "war": 1.76}, {"name": "Logan Henderson", "type": "SP", "ip_wk": 6.61, "l_wk": 0.352, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.68, "qs_wk": 0.413, "er_wk": 2.976, "wh_wk": 7.86, "era": 4.053, "whip": 1.189, "war": 1.74}, {"name": "Foster Griffin", "type": "SP", "ip_wk": 6.54, "l_wk": 0.36, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.93, "qs_wk": 0.469, "er_wk": 2.95, "wh_wk": 8.286, "era": 4.059, "whip": 1.267, "war": 1.72}, {"name": "Brandon Pfaadt", "type": "SP", "ip_wk": 6.45, "l_wk": 0.388, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.6, "qs_wk": 0.437, "er_wk": 3.282, "wh_wk": 8.164, "era": 4.581, "whip": 1.266, "war": 1.7}, {"name": "Michael McGreevy", "type": "SP", "ip_wk": 6.7, "l_wk": 0.366, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.51, "qs_wk": 0.47, "er_wk": 3.102, "wh_wk": 8.579, "era": 4.168, "whip": 1.281, "war": 1.7}, {"name": "Shane Smith", "type": "SP", "ip_wk": 6.21, "l_wk": 0.377, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.02, "qs_wk": 0.392, "er_wk": 2.887, "wh_wk": 7.827, "era": 4.185, "whip": 1.261, "war": 1.7}, {"name": "Jameson Taillon", "type": "SP", "ip_wk": 6.55, "l_wk": 0.396, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.05, "qs_wk": 0.49, "er_wk": 3.221, "wh_wk": 8.077, "era": 4.427, "whip": 1.233, "war": 1.69}, {"name": "Tatsuya Imai", "type": "SP", "ip_wk": 6.57, "l_wk": 0.361, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.47, "qs_wk": 0.468, "er_wk": 3.11, "wh_wk": 8.575, "era": 4.259, "whip": 1.305, "war": 1.68}, {"name": "Reid Detmers", "type": "SP", "ip_wk": 6.71, "l_wk": 0.432, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.32, "qs_wk": 0.341, "er_wk": 3.195, "wh_wk": 8.657, "era": 4.285, "whip": 1.29, "war": 1.65}, {"name": "Cade Horton", "type": "SP", "ip_wk": 6.11, "l_wk": 0.312, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.25, "qs_wk": 0.369, "er_wk": 2.742, "wh_wk": 7.503, "era": 4.042, "whip": 1.229, "war": 1.65}, {"name": "Zebby Matthews", "type": "SP", "ip_wk": 6.54, "l_wk": 0.405, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.32, "qs_wk": 0.367, "er_wk": 3.012, "wh_wk": 8.06, "era": 4.147, "whip": 1.233, "war": 1.64}, {"name": "Tyler Mahle", "type": "SP", "ip_wk": 6.26, "l_wk": 0.372, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.2, "qs_wk": 0.411, "er_wk": 2.87, "wh_wk": 7.969, "era": 4.124, "whip": 1.272, "war": 1.62}, {"name": "Jeffrey Springs", "type": "SP", "ip_wk": 6.28, "l_wk": 0.368, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.47, "qs_wk": 0.423, "er_wk": 3.224, "wh_wk": 8.128, "era": 4.617, "whip": 1.293, "war": 1.61}, {"name": "Noah Cameron", "type": "SP", "ip_wk": 6.36, "l_wk": 0.359, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.37, "qs_wk": 0.455, "er_wk": 2.984, "wh_wk": 8.244, "era": 4.221, "whip": 1.296, "war": 1.6}, {"name": "Gerrit Cole", "type": "SP", "ip_wk": 6.57, "l_wk": 0.309, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.64, "qs_wk": 0.5, "er_wk": 2.892, "wh_wk": 7.869, "era": 3.959, "whip": 1.197, "war": 1.59}, {"name": "Ryne Nelson", "type": "SP", "ip_wk": 6.29, "l_wk": 0.305, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.13, "qs_wk": 0.456, "er_wk": 3.057, "wh_wk": 8.012, "era": 4.375, "whip": 1.274, "war": 1.58}, {"name": "Seth Lugo", "type": "SP", "ip_wk": 6.55, "l_wk": 0.365, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.54, "qs_wk": 0.508, "er_wk": 3.204, "wh_wk": 8.559, "era": 4.401, "whip": 1.307, "war": 1.57}, {"name": "Landen Roupp", "type": "SP", "ip_wk": 5.98, "l_wk": 0.357, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.53, "qs_wk": 0.367, "er_wk": 2.748, "wh_wk": 8.049, "era": 4.138, "whip": 1.347, "war": 1.56}, {"name": "Zack Littell", "type": "SP", "ip_wk": 6.23, "l_wk": 0.362, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.77, "qs_wk": 0.453, "er_wk": 3.069, "wh_wk": 7.752, "era": 4.432, "whip": 1.244, "war": 1.55}, {"name": "Matthew Liberatore", "type": "SP", "ip_wk": 5.98, "l_wk": 0.384, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.87, "qs_wk": 0.395, "er_wk": 2.952, "wh_wk": 7.861, "era": 4.442, "whip": 1.314, "war": 1.53}, {"name": "Dustin May", "type": "SP", "ip_wk": 6.48, "l_wk": 0.434, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.81, "qs_wk": 0.43, "er_wk": 3.093, "wh_wk": 8.48, "era": 4.294, "whip": 1.308, "war": 1.53}, {"name": "Joey Cantillo", "type": "SP", "ip_wk": 7.23, "l_wk": 0.446, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.51, "qs_wk": 0.365, "er_wk": 3.175, "wh_wk": 9.453, "era": 3.952, "whip": 1.308, "war": 1.5}, {"name": "Chad Patrick", "type": "SP", "ip_wk": 5.92, "l_wk": 0.348, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.57, "qs_wk": 0.357, "er_wk": 2.842, "wh_wk": 7.613, "era": 4.322, "whip": 1.286, "war": 1.5}, {"name": "Steven Matz", "type": "SP", "ip_wk": 6.81, "l_wk": 0.33, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.49, "qs_wk": 0.357, "er_wk": 3.261, "wh_wk": 8.774, "era": 4.308, "whip": 1.288, "war": 1.49}, {"name": "Bryce Miller", "type": "SP", "ip_wk": 6.27, "l_wk": 0.367, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.59, "qs_wk": 0.396, "er_wk": 2.966, "wh_wk": 7.637, "era": 4.256, "whip": 1.218, "war": 1.49}, {"name": "Kyle Freeland", "type": "SP", "ip_wk": 6.42, "l_wk": 0.489, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.67, "qs_wk": 0.419, "er_wk": 3.703, "wh_wk": 9.094, "era": 5.191, "whip": 1.416, "war": 1.49}, {"name": "Adrian Houser", "type": "SP", "ip_wk": 6.17, "l_wk": 0.336, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.43, "qs_wk": 0.403, "er_wk": 3.033, "wh_wk": 8.535, "era": 4.424, "whip": 1.383, "war": 1.49}, {"name": "Eduardo Rodriguez", "type": "SP", "ip_wk": 6.17, "l_wk": 0.398, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.44, "qs_wk": 0.384, "er_wk": 3.087, "wh_wk": 8.4, "era": 4.502, "whip": 1.361, "war": 1.48}, {"name": "Parker Messick", "type": "SP", "ip_wk": 6.01, "l_wk": 0.323, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.38, "qs_wk": 0.432, "er_wk": 2.69, "wh_wk": 7.709, "era": 4.026, "whip": 1.282, "war": 1.47}, {"name": "Kodai Senga", "type": "SP", "ip_wk": 6.41, "l_wk": 0.325, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.55, "qs_wk": 0.384, "er_wk": 2.835, "wh_wk": 8.307, "era": 3.982, "whip": 1.296, "war": 1.45}, {"name": "Dean Kremer", "type": "SP", "ip_wk": 6.33, "l_wk": 0.37, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.32, "qs_wk": 0.401, "er_wk": 3.162, "wh_wk": 8.131, "era": 4.499, "whip": 1.285, "war": 1.44}, {"name": "Mason Miller", "type": "RP", "ip_wk": 2.63, "l_wk": 0.097, "sv_wk": 1.285, "hld_wk": 0.148, "k_wk": 4.06, "qs_wk": 0.0, "er_wk": 0.737, "wh_wk": 2.593, "era": 2.519, "whip": 0.984, "war": 1.44}, {"name": "Nick Martinez", "type": "SP", "ip_wk": 6.37, "l_wk": 0.384, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.79, "qs_wk": 0.459, "er_wk": 3.166, "wh_wk": 8.225, "era": 4.473, "whip": 1.291, "war": 1.41}, {"name": "Luis Severino", "type": "SP", "ip_wk": 6.54, "l_wk": 0.407, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.24, "qs_wk": 0.442, "er_wk": 3.387, "wh_wk": 8.735, "era": 4.661, "whip": 1.336, "war": 1.41}, {"name": "Andre Pallante", "type": "SP", "ip_wk": 6.16, "l_wk": 0.424, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.22, "qs_wk": 0.401, "er_wk": 3.012, "wh_wk": 8.718, "era": 4.4, "whip": 1.415, "war": 1.4}, {"name": "Justin Verlander", "type": "SP", "ip_wk": 5.97, "l_wk": 0.388, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.09, "qs_wk": 0.411, "er_wk": 2.969, "wh_wk": 7.763, "era": 4.473, "whip": 1.299, "war": 1.39}, {"name": "Reynaldo L\u00f3pez", "type": "SP", "ip_wk": 6.6, "l_wk": 0.321, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.46, "qs_wk": 0.438, "er_wk": 2.947, "wh_wk": 8.445, "era": 4.017, "whip": 1.279, "war": 1.38}, {"name": "Zach Eflin", "type": "SP", "ip_wk": 6.34, "l_wk": 0.364, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.9, "qs_wk": 0.454, "er_wk": 3.13, "wh_wk": 7.861, "era": 4.44, "whip": 1.239, "war": 1.37}, {"name": "Hunter Barco", "type": "SP", "ip_wk": 7.8, "l_wk": 0.388, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.99, "qs_wk": 0.42, "er_wk": 3.534, "wh_wk": 10.284, "era": 4.08, "whip": 1.319, "war": 1.36}, {"name": "Mike Burrows", "type": "SP", "ip_wk": 6.04, "l_wk": 0.372, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.79, "qs_wk": 0.332, "er_wk": 2.788, "wh_wk": 7.683, "era": 4.153, "whip": 1.271, "war": 1.36}, {"name": "Taj Bradley", "type": "SP", "ip_wk": 6.78, "l_wk": 0.428, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.65, "qs_wk": 0.461, "er_wk": 3.296, "wh_wk": 8.752, "era": 4.373, "whip": 1.29, "war": 1.35}, {"name": "Jared Jones", "type": "SP", "ip_wk": 6.36, "l_wk": 0.383, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.55, "qs_wk": 0.484, "er_wk": 2.84, "wh_wk": 7.812, "era": 4.017, "whip": 1.228, "war": 1.34}, {"name": "Jacob Lopez", "type": "SP", "ip_wk": 6.0, "l_wk": 0.345, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.09, "qs_wk": 0.423, "er_wk": 2.909, "wh_wk": 7.661, "era": 4.364, "whip": 1.277, "war": 1.34}, {"name": "Cade Smith", "type": "RP", "ip_wk": 2.81, "l_wk": 0.143, "sv_wk": 1.22, "hld_wk": 0.169, "k_wk": 3.62, "qs_wk": 0.0, "er_wk": 0.929, "wh_wk": 2.959, "era": 2.978, "whip": 1.054, "war": 1.34}, {"name": "Justin Steele", "type": "SP", "ip_wk": 6.27, "l_wk": 0.333, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.89, "qs_wk": 0.494, "er_wk": 2.562, "wh_wk": 7.336, "era": 3.679, "whip": 1.171, "war": 1.33}, {"name": "Max Meyer", "type": "SP", "ip_wk": 6.51, "l_wk": 0.393, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.95, "qs_wk": 0.418, "er_wk": 3.088, "wh_wk": 8.54, "era": 4.27, "whip": 1.312, "war": 1.32}, {"name": "Michael Soroka", "type": "SP", "ip_wk": 6.84, "l_wk": 0.424, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.67, "qs_wk": 0.326, "er_wk": 3.274, "wh_wk": 8.722, "era": 4.306, "whip": 1.274, "war": 1.31}, {"name": "Simeon Woods Richardson", "type": "SP", "ip_wk": 6.28, "l_wk": 0.339, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.72, "qs_wk": 0.321, "er_wk": 3.25, "wh_wk": 8.44, "era": 4.655, "whip": 1.343, "war": 1.3}, {"name": "Robby Snelling", "type": "SP", "ip_wk": 6.41, "l_wk": 0.412, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.52, "qs_wk": 0.52, "er_wk": 2.919, "wh_wk": 8.614, "era": 4.099, "whip": 1.344, "war": 1.27}, {"name": "Will Warren", "type": "SP", "ip_wk": 6.49, "l_wk": 0.42, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.45, "qs_wk": 0.351, "er_wk": 3.058, "wh_wk": 8.522, "era": 4.239, "whip": 1.312, "war": 1.27}, {"name": "Ryan Weathers", "type": "SP", "ip_wk": 6.56, "l_wk": 0.373, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.23, "qs_wk": 0.388, "er_wk": 2.898, "wh_wk": 8.213, "era": 3.978, "whip": 1.253, "war": 1.25}, {"name": "Brad Lord", "type": "SP", "ip_wk": 6.68, "l_wk": 0.447, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.2, "qs_wk": 0.436, "er_wk": 3.23, "wh_wk": 8.936, "era": 4.353, "whip": 1.338, "war": 1.24}, {"name": "Roki Sasaki", "type": "SP", "ip_wk": 7.45, "l_wk": 0.364, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.09, "qs_wk": 0.484, "er_wk": 3.467, "wh_wk": 9.827, "era": 4.191, "whip": 1.32, "war": 1.22}, {"name": "Lucas Giolito", "type": "SP", "ip_wk": 6.06, "l_wk": 0.348, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.46, "qs_wk": 0.447, "er_wk": 3.066, "wh_wk": 8.232, "era": 4.551, "whip": 1.358, "war": 1.18}, {"name": "Connelly Early", "type": "SP", "ip_wk": 8.31, "l_wk": 0.511, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 8.59, "qs_wk": 0.419, "er_wk": 3.324, "wh_wk": 10.204, "era": 3.6, "whip": 1.228, "war": 1.16}, {"name": "Troy Melton", "type": "SP", "ip_wk": 7.29, "l_wk": 0.407, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.23, "qs_wk": 0.419, "er_wk": 3.363, "wh_wk": 9.267, "era": 4.154, "whip": 1.272, "war": 1.14}, {"name": "Jhoan Duran", "type": "RP", "ip_wk": 2.71, "l_wk": 0.165, "sv_wk": 1.301, "hld_wk": 0.127, "k_wk": 3.12, "qs_wk": 0.0, "er_wk": 0.883, "wh_wk": 3.056, "era": 2.927, "whip": 1.126, "war": 1.14}, {"name": "Ian Seymour", "type": "SP", "ip_wk": 6.94, "l_wk": 0.406, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.56, "qs_wk": 0.384, "er_wk": 3.273, "wh_wk": 8.641, "era": 4.246, "whip": 1.245, "war": 1.1}, {"name": "Jos\u00e9 Berr\u00edos", "type": "SP", "ip_wk": 7.48, "l_wk": 0.417, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.38, "qs_wk": 0.469, "er_wk": 3.585, "wh_wk": 9.509, "era": 4.315, "whip": 1.272, "war": 1.1}, {"name": "Grant Taylor", "type": "RP", "ip_wk": 2.97, "l_wk": 0.132, "sv_wk": 0.36, "hld_wk": 0.362, "k_wk": 3.56, "qs_wk": 0.0, "er_wk": 1.134, "wh_wk": 3.634, "era": 3.43, "whip": 1.222, "war": 1.09}, {"name": "Griffin Jax", "type": "RP", "ip_wk": 2.66, "l_wk": 0.17, "sv_wk": 0.612, "hld_wk": 0.555, "k_wk": 3.33, "qs_wk": 0.0, "er_wk": 0.965, "wh_wk": 2.933, "era": 3.265, "whip": 1.102, "war": 1.08}, {"name": "Edwin D\u00edaz", "type": "RP", "ip_wk": 2.66, "l_wk": 0.125, "sv_wk": 1.472, "hld_wk": 0.099, "k_wk": 3.63, "qs_wk": 0.0, "er_wk": 0.904, "wh_wk": 2.835, "era": 3.059, "whip": 1.065, "war": 1.08}, {"name": "Cristian Javier", "type": "SP", "ip_wk": 6.08, "l_wk": 0.386, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.48, "qs_wk": 0.388, "er_wk": 3.256, "wh_wk": 8.187, "era": 4.816, "whip": 1.346, "war": 1.07}, {"name": "Hurston Waldrep", "type": "SP", "ip_wk": 6.17, "l_wk": 0.325, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.39, "qs_wk": 0.415, "er_wk": 3.028, "wh_wk": 8.68, "era": 4.418, "whip": 1.407, "war": 1.07}, {"name": "Andrew Alvarez", "type": "SP", "ip_wk": 7.86, "l_wk": 0.401, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.88, "qs_wk": 0.427, "er_wk": 3.579, "wh_wk": 10.674, "era": 4.097, "whip": 1.358, "war": 1.06}, {"name": "Kumar Rocker", "type": "SP", "ip_wk": 5.98, "l_wk": 0.379, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.2, "qs_wk": 0.335, "er_wk": 2.878, "wh_wk": 7.695, "era": 4.328, "whip": 1.286, "war": 1.06}, {"name": "Drew Anderson", "type": "SP", "ip_wk": 8.4, "l_wk": 0.494, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 9.1, "qs_wk": 0.504, "er_wk": 3.825, "wh_wk": 11.051, "era": 4.097, "whip": 1.315, "war": 1.06}, {"name": "Ryan Feltner", "type": "SP", "ip_wk": 6.37, "l_wk": 0.38, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.21, "qs_wk": 0.367, "er_wk": 3.626, "wh_wk": 9.183, "era": 5.125, "whip": 1.442, "war": 1.05}, {"name": "Aaron Civale", "type": "SP", "ip_wk": 5.89, "l_wk": 0.375, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.12, "qs_wk": 0.334, "er_wk": 2.991, "wh_wk": 7.73, "era": 4.569, "whip": 1.312, "war": 1.04}, {"name": "Slade Cecconi", "type": "SP", "ip_wk": 6.14, "l_wk": 0.386, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.04, "qs_wk": 0.4, "er_wk": 3.162, "wh_wk": 7.769, "era": 4.633, "whip": 1.265, "war": 1.03}, {"name": "Bryan Abreu", "type": "RP", "ip_wk": 2.73, "l_wk": 0.11, "sv_wk": 0.301, "hld_wk": 0.896, "k_wk": 3.62, "qs_wk": 0.0, "er_wk": 0.971, "wh_wk": 3.193, "era": 3.198, "whip": 1.169, "war": 1.0}, {"name": "Jacob Latz", "type": "SP", "ip_wk": 7.86, "l_wk": 0.302, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.24, "qs_wk": 0.379, "er_wk": 3.66, "wh_wk": 10.618, "era": 4.192, "whip": 1.351, "war": 0.99}, {"name": "Anthony Kay", "type": "SP", "ip_wk": 6.28, "l_wk": 0.423, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.99, "qs_wk": 0.442, "er_wk": 3.079, "wh_wk": 8.664, "era": 4.414, "whip": 1.38, "war": 0.99}, {"name": "Aroldis Chapman", "type": "RP", "ip_wk": 2.34, "l_wk": 0.14, "sv_wk": 1.208, "hld_wk": 0.116, "k_wk": 3.23, "qs_wk": 0.0, "er_wk": 0.793, "wh_wk": 2.66, "era": 3.043, "whip": 1.135, "war": 0.99}, {"name": "Patrick Sandoval", "type": "SP", "ip_wk": 7.71, "l_wk": 0.504, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.26, "qs_wk": 0.411, "er_wk": 3.48, "wh_wk": 10.571, "era": 4.063, "whip": 1.371, "war": 0.98}, {"name": "Hunter Dobbins", "type": "SP", "ip_wk": 6.99, "l_wk": 0.399, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.19, "qs_wk": 0.38, "er_wk": 3.377, "wh_wk": 9.301, "era": 4.351, "whip": 1.331, "war": 0.97}, {"name": "Johan Oviedo", "type": "SP", "ip_wk": 7.34, "l_wk": 0.402, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.98, "qs_wk": 0.347, "er_wk": 3.461, "wh_wk": 9.717, "era": 4.243, "whip": 1.324, "war": 0.97}, {"name": "Max Scherzer", "type": "SP", "ip_wk": 5.86, "l_wk": 0.384, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.6, "qs_wk": 0.383, "er_wk": 3.062, "wh_wk": 7.313, "era": 4.699, "whip": 1.247, "war": 0.97}, {"name": "Logan Allen", "type": "SP", "ip_wk": 6.08, "l_wk": 0.388, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.88, "qs_wk": 0.333, "er_wk": 3.075, "wh_wk": 8.44, "era": 4.554, "whip": 1.389, "war": 0.96}, {"name": "J.T. Ginn", "type": "SP", "ip_wk": 6.61, "l_wk": 0.383, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.05, "qs_wk": 0.281, "er_wk": 3.095, "wh_wk": 8.709, "era": 4.213, "whip": 1.317, "war": 0.96}, {"name": "Patrick Corbin", "type": "SP", "ip_wk": 5.9, "l_wk": 0.397, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.69, "qs_wk": 0.351, "er_wk": 3.139, "wh_wk": 8.218, "era": 4.785, "whip": 1.392, "war": 0.94}, {"name": "Michael Lorenzen", "type": "SP", "ip_wk": 7.04, "l_wk": 0.505, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.59, "qs_wk": 0.384, "er_wk": 4.131, "wh_wk": 10.207, "era": 5.283, "whip": 1.45, "war": 0.93}, {"name": "Mart\u00edn P\u00e9rez", "type": "SP", "ip_wk": 6.12, "l_wk": 0.376, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.71, "qs_wk": 0.377, "er_wk": 3.092, "wh_wk": 8.546, "era": 4.548, "whip": 1.397, "war": 0.93}, {"name": "Kyle Wright", "type": "SP", "ip_wk": 6.34, "l_wk": 0.361, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.31, "qs_wk": 0.376, "er_wk": 3.143, "wh_wk": 8.642, "era": 4.459, "whip": 1.362, "war": 0.93}, {"name": "Miles Mikolas", "type": "SP", "ip_wk": 5.9, "l_wk": 0.391, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.02, "qs_wk": 0.363, "er_wk": 3.167, "wh_wk": 7.752, "era": 4.832, "whip": 1.314, "war": 0.92}, {"name": "Jeremiah Estrada", "type": "RP", "ip_wk": 2.74, "l_wk": 0.123, "sv_wk": 0.135, "hld_wk": 1.001, "k_wk": 3.6, "qs_wk": 0.0, "er_wk": 1.025, "wh_wk": 3.176, "era": 3.371, "whip": 1.16, "war": 0.92}, {"name": "Abner Uribe", "type": "RP", "ip_wk": 2.72, "l_wk": 0.116, "sv_wk": 0.699, "hld_wk": 0.649, "k_wk": 3.18, "qs_wk": 0.0, "er_wk": 0.956, "wh_wk": 3.296, "era": 3.168, "whip": 1.214, "war": 0.91}, {"name": "Devin Williams", "type": "RP", "ip_wk": 2.61, "l_wk": 0.175, "sv_wk": 1.217, "hld_wk": 0.184, "k_wk": 3.38, "qs_wk": 0.0, "er_wk": 0.942, "wh_wk": 3.033, "era": 3.243, "whip": 1.16, "war": 0.9}, {"name": "Davis Martin", "type": "SP", "ip_wk": 6.2, "l_wk": 0.427, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.78, "qs_wk": 0.381, "er_wk": 3.216, "wh_wk": 8.461, "era": 4.671, "whip": 1.365, "war": 0.89}, {"name": "Kyle Leahy", "type": "SP", "ip_wk": 7.57, "l_wk": 0.391, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.08, "qs_wk": 0.365, "er_wk": 3.904, "wh_wk": 10.604, "era": 4.642, "whip": 1.401, "war": 0.88}, {"name": "Rhett Lowder", "type": "SP", "ip_wk": 8.03, "l_wk": 0.446, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.46, "qs_wk": 0.405, "er_wk": 3.818, "wh_wk": 10.564, "era": 4.281, "whip": 1.316, "war": 0.87}, {"name": "Andrew Painter", "type": "SP", "ip_wk": 6.42, "l_wk": 0.415, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.45, "qs_wk": 0.407, "er_wk": 3.254, "wh_wk": 8.956, "era": 4.559, "whip": 1.394, "war": 0.87}, {"name": "JP Sears", "type": "SP", "ip_wk": 6.14, "l_wk": 0.417, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.14, "qs_wk": 0.364, "er_wk": 3.135, "wh_wk": 7.75, "era": 4.598, "whip": 1.263, "war": 0.87}, {"name": "Josh Hader", "type": "RP", "ip_wk": 2.5, "l_wk": 0.146, "sv_wk": 1.362, "hld_wk": 0.11, "k_wk": 3.4, "qs_wk": 0.0, "er_wk": 0.904, "wh_wk": 2.675, "era": 3.248, "whip": 1.068, "war": 0.87}, {"name": "Garrett Whitlock", "type": "RP", "ip_wk": 2.62, "l_wk": 0.125, "sv_wk": 0.162, "hld_wk": 0.791, "k_wk": 2.89, "qs_wk": 0.0, "er_wk": 0.982, "wh_wk": 2.999, "era": 3.379, "whip": 1.146, "war": 0.85}, {"name": "Chris Paddack", "type": "SP", "ip_wk": 6.04, "l_wk": 0.335, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.73, "qs_wk": 0.297, "er_wk": 3.228, "wh_wk": 7.949, "era": 4.809, "whip": 1.316, "war": 0.84}, {"name": "Alex Cobb", "type": "SP", "ip_wk": 6.17, "l_wk": 0.352, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.0, "qs_wk": 0.439, "er_wk": 2.727, "wh_wk": 8.026, "era": 3.974, "whip": 1.3, "war": 0.84}, {"name": "Brandon Sproat", "type": "SP", "ip_wk": 7.29, "l_wk": 0.407, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.16, "qs_wk": 0.429, "er_wk": 3.406, "wh_wk": 9.525, "era": 4.202, "whip": 1.306, "war": 0.83}, {"name": "Griffin Canning", "type": "SP", "ip_wk": 5.88, "l_wk": 0.378, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.08, "qs_wk": 0.336, "er_wk": 2.956, "wh_wk": 8.137, "era": 4.522, "whip": 1.383, "war": 0.81}, {"name": "Jose Quintana", "type": "SP", "ip_wk": 6.08, "l_wk": 0.405, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.39, "qs_wk": 0.399, "er_wk": 3.19, "wh_wk": 8.857, "era": 4.723, "whip": 1.457, "war": 0.81}, {"name": "Carmen Mlodzinski", "type": "SP", "ip_wk": 9.4, "l_wk": 0.529, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 8.15, "qs_wk": 0.217, "er_wk": 4.176, "wh_wk": 12.229, "era": 4.0, "whip": 1.301, "war": 0.8}, {"name": "Tanner Gordon", "type": "SP", "ip_wk": 6.16, "l_wk": 0.467, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.37, "qs_wk": 0.354, "er_wk": 3.856, "wh_wk": 8.818, "era": 5.638, "whip": 1.433, "war": 0.8}, {"name": "Grant Holmes", "type": "SP", "ip_wk": 7.61, "l_wk": 0.407, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.68, "qs_wk": 0.435, "er_wk": 3.494, "wh_wk": 10.002, "era": 4.13, "whip": 1.314, "war": 0.8}, {"name": "David Bednar", "type": "RP", "ip_wk": 2.58, "l_wk": 0.175, "sv_wk": 1.235, "hld_wk": 0.153, "k_wk": 3.05, "qs_wk": 0.0, "er_wk": 0.975, "wh_wk": 2.93, "era": 3.407, "whip": 1.137, "war": 0.8}, {"name": "Matt Strahm", "type": "RP", "ip_wk": 2.64, "l_wk": 0.123, "sv_wk": 0.105, "hld_wk": 0.813, "k_wk": 2.89, "qs_wk": 0.0, "er_wk": 1.04, "wh_wk": 2.989, "era": 3.544, "whip": 1.132, "war": 0.8}, {"name": "Andr\u00e9s Mu\u00f1oz", "type": "RP", "ip_wk": 2.51, "l_wk": 0.136, "sv_wk": 1.335, "hld_wk": 0.135, "k_wk": 3.12, "qs_wk": 0.0, "er_wk": 0.812, "wh_wk": 2.835, "era": 2.906, "whip": 1.127, "war": 0.8}, {"name": "Lance McCullers Jr.", "type": "SP", "ip_wk": 6.09, "l_wk": 0.366, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.78, "qs_wk": 0.376, "er_wk": 3.107, "wh_wk": 8.728, "era": 4.593, "whip": 1.434, "war": 0.79}, {"name": "Luis Morales", "type": "SP", "ip_wk": 6.12, "l_wk": 0.348, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 5.25, "qs_wk": 0.389, "er_wk": 3.184, "wh_wk": 8.251, "era": 4.682, "whip": 1.348, "war": 0.79}, {"name": "Joe Boyle", "type": "SP", "ip_wk": 6.4, "l_wk": 0.381, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.79, "qs_wk": 0.32, "er_wk": 3.097, "wh_wk": 8.815, "era": 4.356, "whip": 1.378, "war": 0.79}, {"name": "Janson Junk", "type": "SP", "ip_wk": 9.0, "l_wk": 0.434, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 6.48, "qs_wk": 0.356, "er_wk": 4.713, "wh_wk": 11.838, "era": 4.715, "whip": 1.316, "war": 0.78}, {"name": "Will Vest", "type": "RP", "ip_wk": 2.65, "l_wk": 0.144, "sv_wk": 0.314, "hld_wk": 0.588, "k_wk": 2.68, "qs_wk": 0.0, "er_wk": 0.983, "wh_wk": 3.176, "era": 3.346, "whip": 1.201, "war": 0.78}, {"name": "Ben Brown", "type": "RP", "ip_wk": 2.19, "l_wk": 0.127, "sv_wk": 0.001, "hld_wk": 0.044, "k_wk": 2.45, "qs_wk": 0.0, "er_wk": 0.893, "wh_wk": 2.606, "era": 3.672, "whip": 1.19, "war": 0.78}, {"name": "Jordan Montgomery", "type": "SP", "ip_wk": 6.07, "l_wk": 0.38, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 4.61, "qs_wk": 0.411, "er_wk": 3.107, "wh_wk": 8.366, "era": 4.602, "whip": 1.377, "war": 0.77}, {"name": "Luis Gil", "type": "SP", "ip_wk": 7.99, "l_wk": 0.406, "sv_wk": 0.0, "hld_wk": 0.0, "k_wk": 7.89, "qs_wk": 0.451, "er_wk": 3.72, "wh_wk": 10.631, "era": 4.19, "whip": 1.331, "war": 0.76}]
 ;
 
     // =============================================================================
     // CONSTANTS
     // =============================================================================
     const NUM_WEEKS = 25;
-    const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'UTIL'];
+    const HITTER_POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'UTIL'];
+    const SP_SLOTS = 6;  // Max SPs to roster
+    const RP_SLOTS = 4;  // Max RPs to roster
+    const SP_STARTS_PER_WEEK = 1.1;  // Each SP contributes 1.1 starts/week
+    const TOTAL_STARTS_PER_WEEK = 7;  // Total starts we want per week
     const TEAM_NAMES = ['My Team', 'JDM', 'Calabria', 'Ferrante', 'Prut', 'Gwon', 'Bish', 'Jerik', 'Buster', 'Triz', 'Fanning', 'B Smith', 'Der', 'Wes', 'Derek', 'Mende'];
 
     // Weekly standard deviations from 2024 league data
-    const WEEKLY_SD = { R: 6.03, HR: 2.93, RBI: 6.72, SB: 2.57, SO: 7.45, TB: 15.94, OBP: 0.04 };
+    const HITTING_SD = { R: 6.03, HR: 2.93, RBI: 6.72, SB: 2.57, SO: 7.45, TB: 15.94, OBP: 0.04 };
+    const PITCHING_SD = { L: 1.8346, SV: 1.5362, K: 11.7861, HLD: 1.6383, ERA: 1.3141, WHIP: 0.2057, QS: 1.4012 };
 
-    // League average weekly totals
-    const LEAGUE_AVG = { R: 28.96, HR: 8.02, RBI: 27.86, SB: 4.74, SO: 50.11, TB: 88.87, OBP: 0.32 };
+    // League averages
+    const HITTING_AVG = { R: 28.96, HR: 8.02, RBI: 27.86, SB: 4.74, SO: 50.11, TB: 88.87, OBP: 0.32 };
+    const PITCHING_AVG = { L: 3.08, SV: 2.27, K: 50.90, HLD: 2.30, ERA: 3.79, WHIP: 1.20, QS: 3.25 };
 
-    // Replacement level: 625 PA of replacement-level production
-    // All players in the CSV are supplemented to 625 PA with replacement production
-    // so this baseline is consistent with how players are valued
-    const TARGET_PA = 625;
-    const REP_PA_BASE = 505.5;
-    const REPLACEMENT = {
+    // Hitter replacement level (625 PA)
+    const HITTER_REP = {
         name: 'Replacement',
-        pa: TARGET_PA,
-        r: Math.round(60.8 / REP_PA_BASE * TARGET_PA),   // 75
-        hr: Math.round(16.8 / REP_PA_BASE * TARGET_PA),  // 21
-        rbi: Math.round(60.1 / REP_PA_BASE * TARGET_PA), // 74
-        so: Math.round(113.1 / REP_PA_BASE * TARGET_PA), // 140
-        tb: Math.round(185.9 / REP_PA_BASE * TARGET_PA), // 230
-        sb: Math.round(8.8 / REP_PA_BASE * TARGET_PA),   // 11
-        obp: 0.312,
-        zTotal: 0
+        type: 'H',
+        pa: 625,
+        r: 75, hr: 21, rbi: 74, so: 140, tb: 230, sb: 11, obp: 0.312
+    };
+
+    // SP replacement per-start rates
+    const SP_REP_PER_START = {
+        ip: 5.756, l: 0.3379, qs: 0.3797, k: 5.187, er: 2.688, wh: 7.448
+    };
+
+    // RP replacement per-slot weekly rates
+    const RP_REP_PER_SLOT = {
+        ip_wk: 2.480, l_wk: 0.1180, sv_wk: 0.1208, hld_wk: 0.8484, k_wk: 2.693, er_wk: 0.963, wh_wk: 2.852
     };
 
     // =============================================================================
     // STATE
     // =============================================================================
-    // All teams have position-based rosters
     let allTeams = {};
     TEAM_NAMES.forEach(name => {
-        allTeams[name] = POSITIONS.map(pos => ({ position: pos, player: null }));
+        allTeams[name] = {
+            hitters: HITTER_POSITIONS.map(pos => ({ position: pos, player: null })),
+            sps: Array(SP_SLOTS).fill(null),
+            rps: Array(RP_SLOTS).fill(null)
+        };
     });
 
     let draftLog = [];
@@ -499,6 +487,7 @@
     let selectedPlayer = null;
     let selectedTeam = null;
     let selectedSlotIndex = null;
+    let selectedSlotType = null;
 
     // =============================================================================
     // MATH FUNCTIONS
@@ -527,56 +516,152 @@
     // =============================================================================
     // ROSTER CALCULATIONS
     // =============================================================================
-    function getPlayerOrReplacement(slot) {
-        return slot.player || REPLACEMENT;
-    }
-
-    function getWeeklyProjections(teamName) {
-        const roster = allTeams[teamName];
-        const players = roster.map(getPlayerOrReplacement);
+    function getHittingProjections(teamName) {
+        const roster = allTeams[teamName].hitters;
+        const players = roster.map(slot => slot.player || HITTER_REP);
         const proj = {};
 
-        ['R', 'HR', 'RBI', 'SB', 'SO', 'TB'].forEach(cat => {
-            const key = cat.toLowerCase();
-            proj[cat] = players.reduce((sum, p) => sum + p[key] / NUM_WEEKS, 0);
+        ['r', 'hr', 'rbi', 'sb', 'so', 'tb'].forEach(cat => {
+            proj[cat.toUpperCase()] = players.reduce((sum, p) => sum + p[cat] / NUM_WEEKS, 0);
         });
-
         proj['OBP'] = players.reduce((sum, p) => sum + p.obp, 0) / players.length;
 
         return proj;
     }
 
+    function getPitchingProjections(teamName) {
+        const team = allTeams[teamName];
+        const sps = team.sps.filter(p => p !== null);
+        const rps = team.rps.filter(p => p !== null);
+
+        // SP contribution: each drafted SP contributes 1.1 starts
+        const spStarts = Math.min(sps.length * SP_STARTS_PER_WEEK, TOTAL_STARTS_PER_WEEK);
+        const repStarts = TOTAL_STARTS_PER_WEEK - spStarts;
+
+        // Calculate SP totals
+        let sp_ip = 0, sp_l = 0, sp_qs = 0, sp_k = 0, sp_er = 0, sp_wh = 0;
+
+        if (sps.length > 0) {
+            // Average the per-start rates of drafted SPs, then multiply by their starts
+            sps.forEach(sp => {
+                sp_ip += sp.ip_wk;  // Already scaled to 1.1 starts
+                sp_l += sp.l_wk;
+                sp_qs += sp.qs_wk;
+                sp_k += sp.k_wk;
+                sp_er += sp.er_wk;
+                sp_wh += sp.wh_wk;
+            });
+        }
+
+        // Add replacement starts
+        sp_ip += repStarts * SP_REP_PER_START.ip;
+        sp_l += repStarts * SP_REP_PER_START.l;
+        sp_qs += repStarts * SP_REP_PER_START.qs;
+        sp_k += repStarts * SP_REP_PER_START.k;
+        sp_er += repStarts * SP_REP_PER_START.er;
+        sp_wh += repStarts * SP_REP_PER_START.wh;
+
+        // RP contribution: each drafted RP fills 1 slot
+        const rpSlotsFilled = rps.length;
+        const repRpSlots = RP_SLOTS - rpSlotsFilled;
+
+        let rp_ip = 0, rp_l = 0, rp_sv = 0, rp_hld = 0, rp_k = 0, rp_er = 0, rp_wh = 0;
+
+        rps.forEach(rp => {
+            rp_ip += rp.ip_wk;
+            rp_l += rp.l_wk;
+            rp_sv += rp.sv_wk;
+            rp_hld += rp.hld_wk;
+            rp_k += rp.k_wk;
+            rp_er += rp.er_wk;
+            rp_wh += rp.wh_wk;
+        });
+
+        // Add replacement RP slots
+        rp_ip += repRpSlots * RP_REP_PER_SLOT.ip_wk;
+        rp_l += repRpSlots * RP_REP_PER_SLOT.l_wk;
+        rp_sv += repRpSlots * RP_REP_PER_SLOT.sv_wk;
+        rp_hld += repRpSlots * RP_REP_PER_SLOT.hld_wk;
+        rp_k += repRpSlots * RP_REP_PER_SLOT.k_wk;
+        rp_er += repRpSlots * RP_REP_PER_SLOT.er_wk;
+        rp_wh += repRpSlots * RP_REP_PER_SLOT.wh_wk;
+
+        // Total pitching
+        const total_ip = sp_ip + rp_ip;
+        const total_er = sp_er + rp_er;
+        const total_wh = sp_wh + rp_wh;
+
+        return {
+            L: sp_l + rp_l,
+            SV: rp_sv,  // Only RPs get saves
+            K: sp_k + rp_k,
+            HLD: rp_hld,  // Only RPs get holds
+            ERA: total_ip > 0 ? (total_er * 9 / total_ip) : 4.5,
+            WHIP: total_ip > 0 ? (total_wh / total_ip) : 1.3,
+            QS: sp_qs  // Only SPs get QS
+        };
+    }
+
     function getExpectedWins(teamName) {
-        const proj = getWeeklyProjections(teamName);
-        const wins = {};
+        const hittingProj = getHittingProjections(teamName);
+        const pitchingProj = getPitchingProjections(teamName);
+        const wins = { hitting: {}, pitching: {} };
         let total = 0;
 
+        // Hitting categories
         ['R', 'HR', 'RBI', 'SB', 'TB', 'OBP'].forEach(cat => {
-            const pWin = winProbability(proj[cat], LEAGUE_AVG[cat], WEEKLY_SD[cat]);
-            wins[cat] = pWin;
+            const pWin = winProbability(hittingProj[cat], HITTING_AVG[cat], HITTING_SD[cat]);
+            wins.hitting[cat] = pWin;
+            total += pWin;
+        });
+        // SO is lower is better for hitters
+        wins.hitting['SO'] = winProbability(hittingProj['SO'], HITTING_AVG['SO'], HITTING_SD['SO'], true);
+        total += wins.hitting['SO'];
+
+        // Pitching categories
+        ['SV', 'K', 'HLD', 'QS'].forEach(cat => {
+            const pWin = winProbability(pitchingProj[cat], PITCHING_AVG[cat], PITCHING_SD[cat]);
+            wins.pitching[cat] = pWin;
+            total += pWin;
+        });
+        // L, ERA, WHIP are lower is better
+        ['L', 'ERA', 'WHIP'].forEach(cat => {
+            const pWin = winProbability(pitchingProj[cat], PITCHING_AVG[cat], PITCHING_SD[cat], true);
+            wins.pitching[cat] = pWin;
             total += pWin;
         });
 
-        // SO is lower is better
-        wins['SO'] = winProbability(proj['SO'], LEAGUE_AVG['SO'], WEEKLY_SD['SO'], true);
-        total += wins['SO'];
-
-        wins['TOTAL'] = total;
-        return { projections: proj, wins };
+        wins.TOTAL = total;
+        return { hittingProj, pitchingProj, wins };
     }
 
     function calculateMarginalValue(player) {
-        const myRoster = allTeams['My Team'];
-        // Find first empty slot or return 0 if roster full
-        const emptySlotIdx = myRoster.findIndex(s => s.player === null);
-        if (emptySlotIdx === -1) return 0;
-
+        const team = allTeams['My Team'];
         const currentWins = getExpectedWins('My Team').wins.TOTAL;
+        let newWins;
 
-        // Temporarily add player
-        myRoster[emptySlotIdx].player = player;
-        const newWins = getExpectedWins('My Team').wins.TOTAL;
-        myRoster[emptySlotIdx].player = null;
+        if (player.type === 'H') {
+            // Hitter: find first empty slot
+            const emptyIdx = team.hitters.findIndex(s => s.player === null);
+            if (emptyIdx === -1) return -999;
+            team.hitters[emptyIdx].player = player;
+            newWins = getExpectedWins('My Team').wins.TOTAL;
+            team.hitters[emptyIdx].player = null;
+        } else if (player.type === 'SP') {
+            // SP: find first empty slot
+            const emptyIdx = team.sps.findIndex(p => p === null);
+            if (emptyIdx === -1) return -999;
+            team.sps[emptyIdx] = player;
+            newWins = getExpectedWins('My Team').wins.TOTAL;
+            team.sps[emptyIdx] = null;
+        } else if (player.type === 'RP') {
+            // RP: find first empty slot
+            const emptyIdx = team.rps.findIndex(p => p === null);
+            if (emptyIdx === -1) return -999;
+            team.rps[emptyIdx] = player;
+            newWins = getExpectedWins('My Team').wins.TOTAL;
+            team.rps[emptyIdx] = null;
+        }
 
         return newWins - currentWins;
     }
@@ -585,13 +670,14 @@
     // UI RENDERING
     // =============================================================================
     function renderRoster() {
-        const myRoster = allTeams['My Team'];
-        const grid = document.getElementById('roster-grid');
-        grid.innerHTML = myRoster.map((slot, idx) => {
+        const team = allTeams['My Team'];
+
+        // Hitters
+        document.getElementById('hitter-roster').innerHTML = team.hitters.map((slot, idx) => {
             const player = slot.player;
             const filled = player !== null;
             return `
-                <div class="roster-slot ${filled ? 'filled' : ''}" onclick="openSlotModal(${idx})">
+                <div class="roster-slot ${filled ? 'filled' : ''}">
                     <div class="position">${slot.position}</div>
                     <div class="player-name">${filled ? player.name : 'Replacement'}</div>
                     ${filled ? `<div class="player-stats">R:${player.r} HR:${player.hr} RBI:${player.rbi} SB:${player.sb}</div>` : ''}
@@ -599,23 +685,51 @@
             `;
         }).join('');
 
-        // Update category table
-        const { projections, wins } = getExpectedWins('My Team');
-        const tbody = document.getElementById('category-tbody');
-        const cats = ['R', 'HR', 'RBI', 'SO', 'TB', 'SB', 'OBP'];
-        tbody.innerHTML = cats.map(cat => {
-            const pWin = wins[cat];
-            const colorClass = pWin >= 0.55 ? 'good' : pWin >= 0.45 ? 'neutral' : 'bad';
-            const myVal = cat === 'OBP' ? projections[cat].toFixed(3) : projections[cat].toFixed(1);
-            const lgVal = cat === 'OBP' ? LEAGUE_AVG[cat].toFixed(3) : LEAGUE_AVG[cat].toFixed(1);
+        // SPs
+        document.getElementById('sp-roster').innerHTML = team.sps.map((player, idx) => {
+            const filled = player !== null;
             return `
-                <tr>
-                    <td>${cat}</td>
-                    <td>${myVal}</td>
-                    <td>${lgVal}</td>
-                    <td class="win-prob ${colorClass}">${(pWin * 100).toFixed(1)}%</td>
-                </tr>
+                <div class="roster-slot ${filled ? 'filled' : ''}">
+                    <div class="position">SP${idx + 1}</div>
+                    <div class="player-name">${filled ? player.name : 'Replacement'}</div>
+                    ${filled ? `<div class="player-stats">K:${player.k_wk.toFixed(1)} ERA:${player.era.toFixed(2)}</div>` : ''}
+                </div>
             `;
+        }).join('');
+
+        // RPs
+        document.getElementById('rp-roster').innerHTML = team.rps.map((player, idx) => {
+            const filled = player !== null;
+            return `
+                <div class="roster-slot ${filled ? 'filled' : ''}">
+                    <div class="position">RP${idx + 1}</div>
+                    <div class="player-name">${filled ? player.name : 'Replacement'}</div>
+                    ${filled ? `<div class="player-stats">SV:${player.sv_wk.toFixed(2)} HLD:${player.hld_wk.toFixed(2)}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        // Category tables
+        const { hittingProj, pitchingProj, wins } = getExpectedWins('My Team');
+
+        // Hitting categories
+        const hittingCats = ['R', 'HR', 'RBI', 'SO', 'TB', 'SB', 'OBP'];
+        document.getElementById('hitting-category-tbody').innerHTML = hittingCats.map(cat => {
+            const pWin = wins.hitting[cat];
+            const colorClass = pWin >= 0.55 ? 'good' : pWin >= 0.45 ? 'neutral' : 'bad';
+            const myVal = cat === 'OBP' ? hittingProj[cat].toFixed(3) : hittingProj[cat].toFixed(1);
+            const lgVal = cat === 'OBP' ? HITTING_AVG[cat].toFixed(3) : HITTING_AVG[cat].toFixed(1);
+            return `<tr><td>${cat}</td><td>${myVal}</td><td>${lgVal}</td><td class="win-prob ${colorClass}">${(pWin * 100).toFixed(1)}%</td></tr>`;
+        }).join('');
+
+        // Pitching categories
+        const pitchingCats = ['L', 'SV', 'K', 'HLD', 'ERA', 'WHIP', 'QS'];
+        document.getElementById('pitching-category-tbody').innerHTML = pitchingCats.map(cat => {
+            const pWin = wins.pitching[cat];
+            const colorClass = pWin >= 0.55 ? 'good' : pWin >= 0.45 ? 'neutral' : 'bad';
+            const myVal = ['ERA', 'WHIP'].includes(cat) ? pitchingProj[cat].toFixed(3) : pitchingProj[cat].toFixed(2);
+            const lgVal = ['ERA', 'WHIP'].includes(cat) ? PITCHING_AVG[cat].toFixed(3) : PITCHING_AVG[cat].toFixed(2);
+            return `<tr><td>${cat}</td><td>${myVal}</td><td>${lgVal}</td><td class="win-prob ${colorClass}">${(pWin * 100).toFixed(1)}%</td></tr>`;
         }).join('');
 
         document.getElementById('expected-wins').textContent = wins.TOTAL.toFixed(2);
@@ -625,46 +739,83 @@
         const list = document.getElementById('player-list');
         const filterLower = filter.toLowerCase();
 
-        // Calculate marginal values
-        const playersWithMV = PLAYERS
+        // Combine hitters and pitchers, add type field to hitters
+        const allPlayers = [
+            ...HITTERS.map(h => ({ ...h, type: 'H' })),
+            ...PITCHERS
+        ];
+
+        // Calculate marginal values and filter
+        const playersWithMV = allPlayers
             .filter(p => !draftedPlayers.has(p.name))
             .filter(p => p.name.toLowerCase().includes(filterLower))
             .map(p => ({ ...p, mv: calculateMarginalValue(p) }))
+            .filter(p => p.mv > -900)  // Filter out full roster positions
             .sort((a, b) => b.mv - a.mv);
 
         const header = `
             <div class="player-row header">
                 <div>#</div>
                 <div>Name</div>
-                <div>PA</div>
-                <div>R</div>
-                <div>HR</div>
-                <div>RBI</div>
-                <div>SO</div>
-                <div>TB</div>
-                <div>SB</div>
-                <div>OBP</div>
+                <div>Type</div>
+                <div>Stat1</div>
+                <div>Stat2</div>
+                <div>Stat3</div>
+                <div>Stat4</div>
+                <div>Stat5</div>
+                <div>Stat6</div>
+                <div>Stat7</div>
+                <div>Stat8</div>
                 <div>MargVal</div>
-                <div>zTotal</div>
+                <div>WAR</div>
             </div>
         `;
 
-        const rows = playersWithMV.slice(0, 100).map((p, idx) => `
-            <div class="player-row" onclick="openDraftModal('${p.name.replace(/'/g, "\\'")}')">
-                <div>${idx + 1}</div>
-                <div>${p.name}</div>
-                <div>${p.pa}</div>
-                <div>${p.r}</div>
-                <div>${p.hr}</div>
-                <div>${p.rbi}</div>
-                <div>${p.so}</div>
-                <div>${p.tb}</div>
-                <div>${p.sb}</div>
-                <div>${p.obp.toFixed(3)}</div>
-                <div class="marginal-value">+${p.mv.toFixed(3)}</div>
-                <div class="z-total">${p.zTotal.toFixed(2)}</div>
-            </div>
-        `).join('');
+        const rows = playersWithMV.slice(0, 200).map((p, idx) => {
+            const isPitcher = p.type === 'SP' || p.type === 'RP';
+            const mvClass = p.mv >= 0 ? 'marginal-value' : 'marginal-value negative';
+            const mvText = p.mv >= 0 ? `+${p.mv.toFixed(3)}` : p.mv.toFixed(3);
+            const rowClass = isPitcher ? 'player-row pitcher' : 'player-row';
+            const typeBadge = p.type === 'H' ? 'hitter' : p.type.toLowerCase();
+
+            if (isPitcher) {
+                return `
+                    <div class="${rowClass}" onclick="openDraftModal('${p.name.replace(/'/g, "\\'")}', '${p.type}')">
+                        <div>${idx + 1}</div>
+                        <div>${p.name}</div>
+                        <div><span class="type-badge ${typeBadge}">${p.type}</span></div>
+                        <div>IP:${p.ip_wk.toFixed(1)}</div>
+                        <div>K:${p.k_wk.toFixed(1)}</div>
+                        <div>L:${p.l_wk.toFixed(2)}</div>
+                        <div>SV:${p.sv_wk.toFixed(2)}</div>
+                        <div>HLD:${p.hld_wk.toFixed(2)}</div>
+                        <div>QS:${p.qs_wk.toFixed(2)}</div>
+                        <div>ERA:${p.era.toFixed(2)}</div>
+                        <div>WHIP:${p.whip.toFixed(2)}</div>
+                        <div class="${mvClass}">${mvText}</div>
+                        <div>${p.war.toFixed(1)}</div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="${rowClass}" onclick="openDraftModal('${p.name.replace(/'/g, "\\'")}', 'H')">
+                        <div>${idx + 1}</div>
+                        <div>${p.name}</div>
+                        <div><span class="type-badge ${typeBadge}">H</span></div>
+                        <div>R:${p.r}</div>
+                        <div>HR:${p.hr}</div>
+                        <div>RBI:${p.rbi}</div>
+                        <div>SO:${p.so}</div>
+                        <div>TB:${p.tb}</div>
+                        <div>SB:${p.sb}</div>
+                        <div>OBP:${p.obp.toFixed(3)}</div>
+                        <div>PA:${p.pa}</div>
+                        <div class="${mvClass}">${mvText}</div>
+                        <div>${p.zTotal.toFixed(2)}</div>
+                    </div>
+                `;
+            }
+        }).join('');
 
         list.innerHTML = header + rows;
     }
@@ -672,30 +823,34 @@
     function renderOtherTeams() {
         const grid = document.getElementById('other-teams-grid');
         grid.innerHTML = TEAM_NAMES.map(teamName => {
-            const roster = allTeams[teamName];
-            const { projections } = getExpectedWins(teamName);
+            const team = allTeams[teamName];
+            const { hittingProj, pitchingProj } = getExpectedWins(teamName);
             const isMyTeam = teamName === 'My Team';
 
-            const rosterHtml = roster.map(slot => {
+            const hitterHtml = team.hitters.slice(0, 6).map(slot => {
                 const hasPlayer = slot.player !== null;
-                return `
-                    <div class="mini-slot">
-                        <span class="pos">${slot.position}:</span>
-                        <span class="name ${hasPlayer ? '' : 'empty'}">${hasPlayer ? slot.player.name.split(' ').pop() : '-'}</span>
-                    </div>
-                `;
+                return `<div class="mini-slot"><span class="pos">${slot.position}:</span><span class="name ${hasPlayer ? '' : 'empty'}">${hasPlayer ? slot.player.name.split(' ').pop() : '-'}</span></div>`;
             }).join('');
 
-            const projHtml = ['R', 'HR', 'RBI', 'SO', 'TB', 'SB', 'OBP'].map(cat => {
-                const val = cat === 'OBP' ? projections[cat].toFixed(3) : projections[cat].toFixed(1);
+            const spCount = team.sps.filter(p => p !== null).length;
+            const rpCount = team.rps.filter(p => p !== null).length;
+            const pitcherHtml = `<div class="mini-slot"><span class="pos">SP:</span><span class="name">${spCount}/6</span></div><div class="mini-slot"><span class="pos">RP:</span><span class="name">${rpCount}/4</span></div>`;
+
+            const hittingProjHtml = ['R', 'HR', 'RBI', 'SB'].map(cat => {
+                const val = hittingProj[cat].toFixed(1);
+                return `<div class="proj-row"><span class="cat">${cat}:</span><span class="val">${val}</span></div>`;
+            }).join('');
+
+            const pitchingProjHtml = ['K', 'SV', 'ERA', 'QS'].map(cat => {
+                const val = ['ERA'].includes(cat) ? pitchingProj[cat].toFixed(2) : pitchingProj[cat].toFixed(1);
                 return `<div class="proj-row"><span class="cat">${cat}:</span><span class="val">${val}</span></div>`;
             }).join('');
 
             return `
                 <div class="other-team-card ${isMyTeam ? 'my-team-card' : ''}">
                     <h4>${teamName}</h4>
-                    <div class="team-roster-mini">${rosterHtml}</div>
-                    <div class="team-projections">${projHtml}</div>
+                    <div class="team-roster-mini">${hitterHtml}${pitcherHtml}</div>
+                    <div class="team-projections">${hittingProjHtml}${pitchingProjHtml}</div>
                 </div>
             `;
         }).join('');
@@ -718,64 +873,100 @@
     // =============================================================================
     // MODAL FUNCTIONS
     // =============================================================================
-    function openDraftModal(playerName) {
-        selectedPlayer = PLAYERS.find(p => p.name === playerName);
+    function openDraftModal(playerName, playerType) {
+        if (playerType === 'H') {
+            selectedPlayer = HITTERS.find(p => p.name === playerName);
+            if (selectedPlayer) selectedPlayer.type = 'H';
+        } else {
+            selectedPlayer = PITCHERS.find(p => p.name === playerName);
+        }
         if (!selectedPlayer) return;
+
         selectedTeam = null;
+        selectedSlotIndex = null;
+        selectedSlotType = playerType;
 
         document.getElementById('modal-player-name').textContent = playerName;
-        document.getElementById('position-select-container').style.display = 'none';
-        document.getElementById('confirm-draft-btn').style.display = 'none';
+        document.getElementById('modal-player-type').textContent =
+            playerType === 'H' ? 'Hitter' : playerType === 'SP' ? 'Starting Pitcher' : 'Relief Pitcher';
 
-        const teamSelect = document.getElementById('team-select');
-        teamSelect.innerHTML = TEAM_NAMES.map(team => `
-            <button class="team-btn ${team === 'My Team' ? 'my-team' : ''}"
-                    onclick="selectTeam('${team.replace(/'/g, "\\'")}')">
-                ${team}
-            </button>
-        `).join('');
+        // Render team selection
+        document.getElementById('team-select').innerHTML = TEAM_NAMES.map(name =>
+            `<button class="team-btn" onclick="selectTeam('${name}')">${name}</button>`
+        ).join('');
 
+        document.getElementById('modal-step1').style.display = 'block';
+        document.getElementById('modal-step2').style.display = 'none';
+        document.getElementById('confirm-draft-btn').disabled = true;
         document.getElementById('draft-modal').classList.add('active');
     }
 
     function selectTeam(teamName) {
         selectedTeam = teamName;
-
-        // Update button styles
-        document.querySelectorAll('#team-select .team-btn').forEach(btn => {
-            btn.classList.remove('selected');
-            if (btn.textContent.trim() === teamName) {
-                btn.classList.add('selected');
-            }
+        document.querySelectorAll('.team-btn').forEach(btn => {
+            btn.classList.toggle('selected', btn.textContent === teamName);
         });
 
-        // Show position selection
-        const roster = allTeams[teamName];
-        const posSelect = document.getElementById('position-select');
-        posSelect.innerHTML = POSITIONS.map((pos, idx) => {
-            const filled = roster[idx].player !== null;
-            return `
-                <button class="position-btn ${filled ? 'filled' : ''}"
-                        onclick="${filled ? '' : `selectPosition(${idx})`}"
-                        ${filled ? 'disabled' : ''}>
-                    ${pos}${filled ? ' (taken)' : ''}
-                </button>
-            `;
-        }).join('');
+        // Show slot selection
+        const team = allTeams[teamName];
+        let slots;
 
-        document.getElementById('position-select-container').style.display = 'block';
+        if (selectedSlotType === 'H') {
+            slots = team.hitters.map((slot, idx) => ({
+                label: slot.position,
+                filled: slot.player !== null,
+                idx
+            }));
+        } else if (selectedSlotType === 'SP') {
+            slots = team.sps.map((player, idx) => ({
+                label: `SP${idx + 1}`,
+                filled: player !== null,
+                idx
+            }));
+        } else {
+            slots = team.rps.map((player, idx) => ({
+                label: `RP${idx + 1}`,
+                filled: player !== null,
+                idx
+            }));
+        }
+
+        document.getElementById('slot-select').innerHTML = slots.map(slot =>
+            `<button class="slot-btn ${slot.filled ? 'filled' : ''}" onclick="selectSlot(${slot.idx})" ${slot.filled ? 'disabled' : ''}>${slot.label}${slot.filled ? ' (filled)' : ''}</button>`
+        ).join('');
+
+        document.getElementById('modal-step2').style.display = 'block';
+        selectedSlotIndex = null;
+        document.getElementById('confirm-draft-btn').disabled = true;
     }
 
-    function selectPosition(posIdx) {
-        if (!selectedPlayer || !selectedTeam) return;
+    function selectSlot(idx) {
+        selectedSlotIndex = idx;
+        document.querySelectorAll('.slot-btn').forEach((btn, i) => {
+            btn.classList.toggle('selected', i === idx);
+        });
+        document.getElementById('confirm-draft-btn').disabled = false;
+    }
 
-        const roster = allTeams[selectedTeam];
-        const position = POSITIONS[posIdx];
+    function confirmDraft() {
+        if (!selectedPlayer || !selectedTeam || selectedSlotIndex === null) return;
 
-        // Add player to roster
-        roster[posIdx].player = selectedPlayer;
+        const team = allTeams[selectedTeam];
+        let position;
+
+        if (selectedSlotType === 'H') {
+            team.hitters[selectedSlotIndex].player = selectedPlayer;
+            position = team.hitters[selectedSlotIndex].position;
+        } else if (selectedSlotType === 'SP') {
+            team.sps[selectedSlotIndex] = selectedPlayer;
+            position = `SP${selectedSlotIndex + 1}`;
+        } else {
+            team.rps[selectedSlotIndex] = selectedPlayer;
+            position = `RP${selectedSlotIndex + 1}`;
+        }
+
         draftedPlayers.add(selectedPlayer.name);
-        draftLog.push({ team: selectedTeam, player: selectedPlayer.name, position: position });
+        draftLog.push({ team: selectedTeam, player: selectedPlayer.name, position });
 
         closeModal();
         renderAll();
@@ -785,130 +976,33 @@
         document.getElementById('draft-modal').classList.remove('active');
         selectedPlayer = null;
         selectedTeam = null;
-    }
-
-    function openSlotModal(slotIdx) {
-        selectedSlotIndex = slotIdx;
-        const slot = allTeams['My Team'][slotIdx];
-
-        document.getElementById('slot-modal-title').textContent = `${slot.position} Slot`;
-        document.getElementById('clear-slot-btn').style.display = slot.player ? 'inline-block' : 'none';
-        document.getElementById('slot-search').value = '';
-
-        renderSlotPlayerList('');
-        document.getElementById('slot-modal').classList.add('active');
-    }
-
-    function closeSlotModal() {
-        document.getElementById('slot-modal').classList.remove('active');
         selectedSlotIndex = null;
     }
 
-    function renderSlotPlayerList(filter) {
-        const list = document.getElementById('slot-player-list');
-        const filterLower = filter.toLowerCase();
-        const myRoster = allTeams['My Team'];
-
-        const available = PLAYERS
-            .filter(p => !draftedPlayers.has(p.name) ||
-                        (myRoster[selectedSlotIndex]?.player?.name === p.name))
-            .filter(p => p.name.toLowerCase().includes(filterLower))
-            .slice(0, 50);
-
-        list.innerHTML = available.map(p => `
-            <div class="player-row" onclick="assignToSlot('${p.name.replace(/'/g, "\\'")}')">
-                <div></div>
-                <div>${p.name}</div>
-                <div>${p.pa}</div>
-                <div>${p.r}</div>
-                <div>${p.hr}</div>
-                <div>${p.rbi}</div>
-                <div>${p.so}</div>
-                <div>${p.tb}</div>
-                <div>${p.sb}</div>
-                <div>${p.obp.toFixed(3)}</div>
-                <div></div>
-                <div class="z-total">${p.zTotal.toFixed(2)}</div>
-            </div>
-        `).join('');
-    }
-
-    function assignToSlot(playerName) {
-        const player = PLAYERS.find(p => p.name === playerName);
-        if (!player || selectedSlotIndex === null) return;
-
-        const myRoster = allTeams['My Team'];
-        const position = POSITIONS[selectedSlotIndex];
-
-        // Remove from drafted if switching within roster
-        const currentPlayer = myRoster[selectedSlotIndex].player;
-
-        // Check if player is already on roster in different slot
-        const existingSlot = myRoster.findIndex(s => s.player?.name === playerName);
-        if (existingSlot !== -1 && existingSlot !== selectedSlotIndex) {
-            myRoster[existingSlot].player = currentPlayer; // Swap
-        }
-
-        myRoster[selectedSlotIndex].player = player;
-
-        // Mark as drafted if not already
-        if (!draftedPlayers.has(playerName)) {
-            draftedPlayers.add(playerName);
-            draftLog.push({ team: 'My Team', player: playerName, position: position });
-        }
-
-        closeSlotModal();
-        renderAll();
-    }
-
-    function clearSlot() {
-        if (selectedSlotIndex === null) return;
-        const myRoster = allTeams['My Team'];
-        const player = myRoster[selectedSlotIndex].player;
-        if (player) {
-            // Keep in drafted set but remove from roster
-            myRoster[selectedSlotIndex].player = null;
-        }
-        closeSlotModal();
-        renderAll();
-    }
-
     // =============================================================================
-    // INITIALIZATION
+    // TAB NAVIGATION
     // =============================================================================
+    function showTab(tabName) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+
+        event.target.classList.add('active');
+        document.getElementById(tabName + '-panel').classList.add('active');
+
+        if (tabName === 'available') renderAvailablePlayers();
+        if (tabName === 'teams') renderOtherTeams();
+        if (tabName === 'log') renderDraftLog();
+    }
+
     function renderAll() {
         renderRoster();
-        renderAvailablePlayers(document.getElementById('player-search')?.value || '');
+        renderAvailablePlayers(document.querySelector('.search-box')?.value || '');
         renderOtherTeams();
         renderDraftLog();
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(`${tab.dataset.tab}-panel`).classList.add('active');
-            });
-        });
-
-        // Search boxes
-        document.getElementById('player-search').addEventListener('input', (e) => {
-            renderAvailablePlayers(e.target.value);
-        });
-
-        document.getElementById('slot-search').addEventListener('input', (e) => {
-            renderSlotPlayerList(e.target.value);
-        });
-
-        // Clear slot button
-        document.getElementById('clear-slot-btn').addEventListener('click', clearSlot);
-
-        // Initial render
-        renderAll();
-    });
+    // Initialize
+    renderAll();
     </script>
 </body>
 </html>
