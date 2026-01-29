@@ -20,7 +20,7 @@ AVG_OBP = 0.32
 NUM_WEEKS = 25
 
 # Target PA - all players supplemented to this level with replacement production
-TARGET_PA = 650
+TARGET_PA = 600
 
 # Replacement level per-PA rates (from ~145th ranked player baseline: 505.5 PA)
 # These are the rates for a replacement-level player
