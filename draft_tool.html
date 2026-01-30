@@ -485,6 +485,45 @@
     let selectedSlotType = null;
 
     // =============================================================================
+    // KEEPER INITIALIZATION
+    // =============================================================================
+    (function initKeepers() {
+        const keepers = [
+            { name: 'José Ramírez', type: 'H', position: '3B' },
+            { name: 'Corey Seager', type: 'H', position: 'SS' },
+            { name: 'Byron Buxton', type: 'H', position: 'CF' },
+            { name: 'Jacob deGrom', type: 'SP' },
+            { name: 'Jacob Misiorowski', type: 'SP' }
+        ];
+        
+        const team = allTeams['My Team'];
+        
+        keepers.forEach(keeper => {
+            if (keeper.type === 'H') {
+                const player = HITTERS.find(h => h.name === keeper.name);
+                if (player) {
+                    const slotIdx = team.hitters.findIndex(s => s.position === keeper.position && s.player === null);
+                    if (slotIdx !== -1) {
+                        team.hitters[slotIdx].player = { ...player, type: 'H' };
+                        draftedPlayers.add(player.name);
+                        draftLog.push({ player: player.name, team: 'My Team', type: 'H' });
+                    }
+                }
+            } else if (keeper.type === 'SP') {
+                const player = PITCHERS.find(p => p.name === keeper.name);
+                if (player) {
+                    const slotIdx = team.sps.findIndex(s => s === null);
+                    if (slotIdx !== -1) {
+                        team.sps[slotIdx] = player;
+                        draftedPlayers.add(player.name);
+                        draftLog.push({ player: player.name, team: 'My Team', type: 'SP' });
+                    }
+                }
+            }
+        });
+    })();
+
+    // =============================================================================
     // MATH FUNCTIONS
     // =============================================================================
     function normalCDF(x) {
