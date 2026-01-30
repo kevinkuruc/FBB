@@ -493,7 +493,8 @@
             { name: 'Corey Seager', type: 'H', position: 'SS' },
             { name: 'Byron Buxton', type: 'H', position: 'CF' },
             { name: 'Jacob deGrom', type: 'SP' },
-            { name: 'Jacob Misiorowski', type: 'SP' }
+            { name: 'Jacob Misiorowski', type: 'SP' },
+            { name: 'Edwin Díaz', type: 'RP' }
         ];
         
         const team = allTeams['My Team'];
@@ -517,6 +518,16 @@
                         team.sps[slotIdx] = player;
                         draftedPlayers.add(player.name);
                         draftLog.push({ player: player.name, team: 'My Team', type: 'SP' });
+                    }
+                }
+            } else if (keeper.type === 'RP') {
+                const player = PITCHERS.find(p => p.name === keeper.name);
+                if (player) {
+                    const slotIdx = team.rps.findIndex(s => s === null);
+                    if (slotIdx !== -1) {
+                        team.rps[slotIdx] = player;
+                        draftedPlayers.add(player.name);
+                        draftLog.push({ player: player.name, team: 'My Team', type: 'RP' });
                     }
                 }
             }
