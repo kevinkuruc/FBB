@@ -10,6 +10,23 @@ else:
     input_file = '/home/user/FBB/The_Bat_Raw_Jan_25.csv'
     output_file = '/home/user/FBB/fantasy_hitters_2026.csv'
 
+# Minimum PA filter - use Depth Charts PA projections as the source of truth
+# Players with < MIN_PA in Depth Charts are excluded from the pool
+MIN_PA = 300
+DC_FILE = '/home/user/FBB/DC_Raw_Jan_25.csv'
+
+# Build set of eligible players (those with >= MIN_PA in Depth Charts)
+eligible_players = set()
+with open(DC_FILE, 'r', encoding='utf-8-sig') as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+        try:
+            if float(row['PA']) >= MIN_PA:
+                eligible_players.add(row['Name'])
+        except (ValueError, KeyError):
+            pass
+print(f"Loaded {len(eligible_players)} eligible players with >= {MIN_PA} PA from Depth Charts")
+
 # Weekly standard deviations from 2024 league data
 SD_R = 6.03
 SD_HR = 2.93
@@ -49,6 +66,11 @@ with open(input_file, 'r', encoding='utf-8-sig') as infile:
         try:
             # Extract raw values
             name = row['Name']
+
+            # Skip players not in eligible pool (< MIN_PA in Depth Charts)
+            if name not in eligible_players:
+                continue
+
             pa = float(row['PA'])
             k_pct = float(row['K%'])
             singles = float(row['1B'])

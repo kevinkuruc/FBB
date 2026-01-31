@@ -18,7 +18,10 @@ thebat_file = '/home/user/FBB/The_Bat_Raw_Jan_25.csv'
 dc_file = '/home/user/FBB/DC_Raw_Jan_25.csv'
 output_file = '/home/user/FBB/The_Bat_Normalized_PA.csv'
 
-# Read Depth Charts to get PA by player name
+# Minimum PA filter - only include players with >= MIN_PA in Depth Charts
+MIN_PA = 300
+
+# Read Depth Charts to get PA by player name (only those meeting MIN_PA threshold)
 dc_pa = {}
 with open(dc_file, 'r', encoding='utf-8-sig') as f:
     reader = csv.DictReader(f)
@@ -26,11 +29,12 @@ with open(dc_file, 'r', encoding='utf-8-sig') as f:
         name = row['Name']
         try:
             pa = float(row['PA'])
-            dc_pa[name] = pa
+            if pa >= MIN_PA:
+                dc_pa[name] = pa
         except (ValueError, KeyError):
             continue
 
-print(f"Loaded {len(dc_pa)} players from Depth Charts")
+print(f"Loaded {len(dc_pa)} eligible players with >= {MIN_PA} PA from Depth Charts")
 
 # Read The Bat and normalize PA
 normalized_rows = []
@@ -71,8 +75,7 @@ with open(thebat_file, 'r', encoding='utf-8-sig') as f:
             normalized_rows.append(new_row)
             matched += 1
         else:
-            # Player not in DC - keep original
-            normalized_rows.append(row)
+            # Player not in DC eligible pool - skip them (don't include in output)
             unmatched += 1
 
 print(f"Matched {matched} players, {unmatched} unmatched (kept original)")
