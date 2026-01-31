@@ -65,7 +65,7 @@ REP_RBI_PER_PA = 0.120773  # 1243 RBI / 10292 PA
 REP_SO_PER_PA = 0.222623   # 2291 SO / 10292 PA
 REP_TB_PER_PA = 0.372522   # 3834 TB / 10292 PA
 REP_SB_PER_PA = 0.015157   # 156 SB / 10292 PA
-REP_OBP = 0.324            # Average OBP of replacement cohort
+REP_OBP = 0.320            # Capped at league average (2024: 0.320) to ensure replacement is OBP-neutral
 
 with open(input_file, 'r', encoding='utf-8-sig') as infile:
     reader = csv.DictReader(infile)
