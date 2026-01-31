@@ -45,16 +45,27 @@ NUM_WEEKS = 25
 # Target PA - all players supplemented to this level with replacement production
 TARGET_PA = 600
 
-# Replacement level per-PA rates (from ~145th ranked player baseline: 505.5 PA)
-# These are the rates for a replacement-level player
-REP_PA_BASE = 505.5
-REP_R_PER_PA = 60.8 / REP_PA_BASE      # 0.1202
-REP_HR_PER_PA = 16.8 / REP_PA_BASE     # 0.0332
-REP_RBI_PER_PA = 60.1 / REP_PA_BASE    # 0.1189
-REP_SO_PER_PA = 113.1 / REP_PA_BASE    # 0.2238
-REP_TB_PER_PA = 185.9 / REP_PA_BASE    # 0.3677
-REP_SB_PER_PA = 8.8 / REP_PA_BASE      # 0.0174
-REP_OBP = 0.312
+# Replacement level per-PA rates
+# Methodology: Using Depth Charts projections, players are ranked by zTotal.
+# Replacement level is defined as the average production of players ranked 155-175.
+# This represents the talent pool just beyond typical draft depth (16 teams x 9 hitters = 144).
+# These rates are used to supplement low-PA players to a 600 PA baseline.
+#
+# Cohort (ranks 155-175, Jan 2026 DC projections):
+# Spencer Steer, Miguel Andujar, Ezequiel Tovar, Jonathan Aranda, Addison Barger,
+# Nathan Lukes, Kyle Manzardo, Colt Keith, Josh Lowe, Romy Gonzalez, Samuel Basallo,
+# Francisco Alvarez, Lars Nootbaar, Joey Ortiz, Tyler O'Neill, Ryan O'Hearn,
+# Victor Robles, Jake Fraley, JJ Bleday, Munetaka Murakami, Chase Meidroth
+#
+# Cohort totals (21 players): 10292 PA, 1247 R, 340 HR, 1243 RBI, 2291 SO, 3834 TB, 156 SB
+# Average PA: 490.1, Average OBP: 0.324
+REP_R_PER_PA = 0.121162    # 1247 R / 10292 PA
+REP_HR_PER_PA = 0.033035   # 340 HR / 10292 PA
+REP_RBI_PER_PA = 0.120773  # 1243 RBI / 10292 PA
+REP_SO_PER_PA = 0.222623   # 2291 SO / 10292 PA
+REP_TB_PER_PA = 0.372522   # 3834 TB / 10292 PA
+REP_SB_PER_PA = 0.015157   # 156 SB / 10292 PA
+REP_OBP = 0.324            # Average OBP of replacement cohort
 
 with open(input_file, 'r', encoding='utf-8-sig') as infile:
     reader = csv.DictReader(infile)
