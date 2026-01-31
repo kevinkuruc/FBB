@@ -445,54 +445,24 @@
     
     function switchProjection(proj) {
         currentProjection = proj;
-        // Re-run keeper initialization with new projection data
-        reinitializeKeepers();
+        // Update hitter stats from new projection system (keep roster intact)
+        updateHitterStats();
         renderAll();
     }
     
-    function reinitializeKeepers() {
-        // Reset My Team roster
-        const team = allTeams['My Team'];
-        team.hitters = HITTER_POSITIONS.map(pos => ({ position: pos, player: null }));
-        team.sps = Array(SP_SLOTS).fill(null);
-        team.rps = Array(RP_SLOTS).fill(null);
-        
-        // Clear drafted players for My Team keepers (we'll re-add them)
-        const keeperNames = ['José Ramírez', 'Corey Seager', 'Byron Buxton', 'Jacob deGrom', 'Jacob Misiorowski'];
-        keeperNames.forEach(name => draftedPlayers.delete(name));
-        draftLog = draftLog.filter(entry => !(entry.team === 'My Team' && keeperNames.includes(entry.player)));
-        
-        // Re-initialize keepers with current projection data
-        const keepers = [
-            { name: 'José Ramírez', type: 'H', position: '3B' },
-            { name: 'Corey Seager', type: 'H', position: 'SS' },
-            { name: 'Byron Buxton', type: 'H', position: 'CF' },
-            { name: 'Jacob deGrom', type: 'SP' },
-            { name: 'Jacob Misiorowski', type: 'SP' }
-        ];
-        
-        keepers.forEach(keeper => {
-            if (keeper.type === 'H') {
-                const player = getHitters().find(h => h.name === keeper.name);
-                if (player) {
-                    const slotIdx = team.hitters.findIndex(s => s.position === keeper.position && s.player === null);
-                    if (slotIdx !== -1) {
-                        team.hitters[slotIdx].player = { ...player, type: 'H' };
-                        draftedPlayers.add(player.name);
-                        draftLog.push({ player: player.name, team: 'My Team', type: 'H' });
+    function updateHitterStats() {
+        // Update all rostered hitters with stats from current projection system
+        // Pitchers are unaffected (same data regardless of projection)
+        Object.values(allTeams).forEach(team => {
+            team.hitters.forEach(slot => {
+                if (slot.player && slot.player.type === 'H') {
+                    const updatedPlayer = getHitters().find(h => h.name === slot.player.name);
+                    if (updatedPlayer) {
+                        // Update stats but keep the player in the same slot
+                        slot.player = { ...updatedPlayer, type: 'H' };
                     }
                 }
-            } else if (keeper.type === 'SP') {
-                const player = PITCHERS.find(p => p.name === keeper.name);
-                if (player) {
-                    const slotIdx = team.sps.findIndex(s => s === null);
-                    if (slotIdx !== -1) {
-                        team.sps[slotIdx] = player;
-                        draftedPlayers.add(player.name);
-                        draftLog.push({ player: player.name, team: 'My Team', type: 'SP' });
-                    }
-                }
-            }
+            });
         });
     }
 ;
