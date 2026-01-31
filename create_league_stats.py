@@ -1,8 +1,14 @@
 import csv
+import sys
 
 # Read the raw data and create a clean CSV with only relevant fantasy categories
-input_file = '/home/user/FBB/The_Bat_Raw_Jan_25.csv'
-output_file = '/home/user/FBB/fantasy_hitters_2026.csv'
+# Can be overridden via command line: python create_league_stats.py <input_file> <output_file>
+if len(sys.argv) >= 3:
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
+else:
+    input_file = '/home/user/FBB/The_Bat_Raw_Jan_25.csv'
+    output_file = '/home/user/FBB/fantasy_hitters_2026.csv'
 
 # Weekly standard deviations from 2024 league data
 SD_R = 6.03
