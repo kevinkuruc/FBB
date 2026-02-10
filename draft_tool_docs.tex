@@ -307,11 +307,11 @@ Using $P(\text{win}) = \Phi\left(\frac{\text{diff}}{\sigma \sqrt{2}}\right)$:
 \toprule
 Category & Diff & SD & $z$ & $P(\text{win})$ \\
 \midrule
-R & $-2.68$ & 6.03 & $-0.31$ & 37.6\% \\
-HR & $-0.82$ & 2.93 & $-0.20$ & 42.1\% \\
-RBI & $-1.94$ & 6.72 & $-0.20$ & 42.0\% \\
-SO & $-1.87$ & 7.45 & $+0.18$ & 57.1\% \\
-TB & $-8.23$ & 15.94 & $-0.37$ & 35.7\% \\
+R & $-2.68$ & 6.03 & $-0.31$ & 37.7\% \\
+HR & $-0.82$ & 2.93 & $-0.20$ & 42.2\% \\
+RBI & $-1.94$ & 6.72 & $-0.20$ & 41.9\% \\
+SO & $+1.87$ & 7.45 & $+0.18$ & 57.0\% \\
+TB & $-8.23$ & 15.94 & $-0.37$ & 35.8\% \\
 SB & $-1.50$ & 2.57 & $-0.41$ & 34.0\% \\
 OBP & $0$ & 0.04 & $0$ & 50.0\% \\
 \bottomrule
@@ -319,7 +319,7 @@ OBP & $0$ & 0.04 & $0$ & 50.0\% \\
 \end{center}
 
 \vspace{0.2cm}
-\textbf{Expected category wins:} $0.376 + 0.421 + ... = 2.98$ out of 7.
+\textbf{Expected category wins:} $0.377 + 0.422 + ... = 2.99$ out of 7.
 \end{frame}
 
 \begin{frame}{Enter Jos\'{e} Ram\'{i}rez}
@@ -374,13 +374,13 @@ Note: OBP only shifts by $\frac{1}{9}$ of Ram\'{i}rez's OBP advantage because it
 \toprule
 Cat & Old Diff & New Diff & Old $P$ & New $P$ & $\Delta P$ \\
 \midrule
-R & $-2.68$ & $-1.68$ & 37.6\% & 40.2\% & $+2.6\%$ \\
-HR & $-0.82$ & $-0.42$ & 42.1\% & 45.0\% & $+2.9\%$ \\
-RBI & $-1.94$ & $-1.06$ & 42.0\% & 44.4\% & $+2.4\%$ \\
-SO & $+1.87$ & $+4.11$ & 57.1\% & 64.1\% & $+7.0\%$ \\
-TB & $-8.23$ & $-5.19$ & 35.7\% & 39.3\% & $+3.6\%$ \\
-SB & $-1.50$ & $-0.50$ & 34.0\% & 43.1\% & $+9.1\%$ \\
-OBP & $0$ & $+0.003$ & 50.0\% & 51.3\% & $+1.3\%$ \\
+R & $-2.68$ & $-1.68$ & 37.7\% & 42.2\% & $+4.5\%$ \\
+HR & $-0.82$ & $-0.42$ & 42.2\% & 46.0\% & $+3.8\%$ \\
+RBI & $-1.94$ & $-1.06$ & 41.9\% & 45.6\% & $+3.6\%$ \\
+SO & $+1.87$ & $+4.11$ & 57.0\% & 65.2\% & $+8.1\%$ \\
+TB & $-8.23$ & $-5.19$ & 35.8\% & 40.9\% & $+5.1\%$ \\
+SB & $-1.50$ & $-0.50$ & 34.0\% & 44.5\% & $+10.5\%$ \\
+OBP & $0$ & $+0.003$ & 50.0\% & 52.2\% & $+2.2\%$ \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -388,21 +388,21 @@ OBP & $0$ & $+0.003$ & 50.0\% & 51.3\% & $+1.3\%$ \\
 \vspace{0.3cm}
 \textbf{Ram\'{i}rez's marginal value:}
 \[
-\sum \Delta P = 2.6 + 2.9 + 2.4 + 7.0 + 3.6 + 9.1 + 1.3 = \mathbf{28.9\%}
+\sum \Delta P = 4.5 + 3.8 + 3.6 + 8.1 + 5.1 + 10.5 + 2.2 = \mathbf{37.8\%}
 \]
 
-Ram\'{i}rez adds 0.289 expected category wins per week vs replacement.
+Ram\'{i}rez adds 0.378 expected category wins per week vs replacement.
 \end{frame}
 
 \begin{frame}{Why SB and SO Dominate}
 Ram\'{i}rez's biggest impacts:
 \begin{itemize}
-    \item \textbf{SB: +9.1\%} from just +1.00 SB/week
-    \item \textbf{SO: +7.0\%} from $-2.24$ SO/week
+    \item \textbf{SB: +10.5\%} from just +1.00 SB/week
+    \item \textbf{SO: +8.1\%} from $-2.24$ SO/week
 \end{itemize}
 
 \vspace{0.3cm}
-Compare to HR: +2.9\% from +0.40 HR/week.
+Compare to HR: +3.8\% from +0.40 HR/week.
 
 \vspace{0.3cm}
 \textbf{The math:}
@@ -430,11 +430,11 @@ The steal is worth $0.275 / 0.097 = 2.8\times$ more in z-shift than the HR, desp
 \begin{itemize}
     \item My team mean: 4.24 SB/week
     \item Opponent mean: 4.74 SB/week
-    \item Difference: $-0.50$, so $z = -0.14$, $P(\text{win}) = 43\%$
+    \item Difference: $-0.50$, so $z = -0.14$, $P(\text{win}) = 44.5\%$
 \end{itemize}
 
 \vspace{0.3cm}
-The entire distribution of ``my SB $-$ opponent SB'' shifts right by 1.00 steals. Because SD is tight (2.57), this 1-steal shift moves us 9 percentage points in win probability.
+The entire distribution of ``my SB $-$ opponent SB'' shifts right by 1.00 steals. Because SD is tight (2.57), this 1-steal shift moves us \textbf{10.5 percentage points} in win probability.
 \end{frame}
 
 %=============================================================================
