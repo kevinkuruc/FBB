@@ -65,7 +65,7 @@ where:
 \begin{itemize}
     \item $\Phi$ = standard normal CDF
     \item $\sigma$ = weekly standard deviation for that category (from 2024 data)
-    \item The $\sqrt{2}$ comes from the variance of the difference of two normals
+    \item The $\sqrt{2}$ comes from $\text{Var}(X - Y) = \text{Var}(X) + \text{Var}(Y) = 2\sigma^2$
 \end{itemize}
 
 \vspace{0.3cm}
@@ -75,48 +75,73 @@ where:
 \begin{frame}{Weekly Standard Deviations (2024 League Data)}
 \textbf{Hitting Categories:}
 \begin{center}
-\begin{tabular}{lrrr}
+\begin{tabular}{lrrrr}
 \toprule
-Category & SD & Avg & Notes \\
+Category & SD & Mean & CV & 1/SD \\
 \midrule
-R & 6.03 & 28.96 & \\
-HR & 2.93 & 8.02 & \\
-RBI & 6.72 & 27.86 & \\
-SB & \textbf{2.57} & 4.74 & \textcolor{uncertain}{Tight -- high leverage} \\
-SO & 7.45 & 50.11 & Lower is better \\
-TB & 15.94 & 88.87 & \\
-OBP & 0.04 & 0.320 & \\
+R & 6.03 & 28.96 & 21\% & 0.17 \\
+HR & 2.93 & 8.02 & 37\% & 0.34 \\
+RBI & 6.72 & 27.86 & 24\% & 0.15 \\
+SB & 2.57 & 4.74 & \textbf{54\%} & \textbf{0.39} \\
+SO & 7.45 & 50.11 & 15\% & 0.13 \\
+TB & 15.94 & 88.87 & 18\% & 0.06 \\
+OBP & 0.04 & 0.320 & 13\% & 25.0 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\vspace{0.3cm}
-\textbf{Key insight:} Categories with tight SDs (SB, SV) have outsized impact.
+\vspace{0.2cm}
+\textbf{Two metrics:}
+\begin{itemize}
+    \item \textbf{1/SD}: Marginal value per unit (used for player valuation)
+    \item \textbf{CV = SD/Mean}: How luck-dependent the category is
+\end{itemize}
+\end{frame}
 
-A steal is worth $\frac{1}{2.57} = 0.39$ SDs. A strikeout is only $\frac{1}{7.45} = 0.13$ SDs.
+\begin{frame}{SD vs Coefficient of Variation}
+\textbf{Why does absolute SD matter for marginal value?}
+
+The win probability formula is:
+\[
+P(\text{win}) = \Phi\left(\frac{\mu_{me} - \mu_{opp}}{\sigma \sqrt{2}}\right)
+\]
+
+Adding +1 unit shifts numerator by +1. Denominator is $\sigma\sqrt{2}$.
+
+\textbf{The mean doesn't appear} -- only absolute SD matters for marginal impact.
+
+\vspace{0.3cm}
+\textbf{But CV tells us something different:}
+\begin{itemize}
+    \item SB has CV = 54\% $\rightarrow$ outcomes highly variable relative to baseline
+    \item SO has CV = 15\% $\rightarrow$ outcomes more predictable
+\end{itemize}
+
+\vspace{0.3cm}
+High CV means the category is ``noisy,'' but the marginal value of +1 unit is still determined by 1/SD.
 \end{frame}
 
 \begin{frame}{Pitching Standard Deviations}
 \begin{center}
-\begin{tabular}{lrrr}
+\begin{tabular}{lrrrr}
 \toprule
-Category & SD & Avg & Notes \\
+Category & SD & Mean & CV & 1/SD \\
 \midrule
-L & 1.83 & 3.08 & Lower is better \\
-SV & \textbf{1.54} & 2.27 & \textcolor{uncertain}{Very tight -- closers valuable} \\
-K & 11.79 & 50.90 & Wide -- less leverage \\
-HLD & 1.64 & 2.30 & Tight \\
-ERA & 1.31 & 3.79 & Lower is better \\
-WHIP & 0.21 & 1.20 & Lower is better \\
-QS & 1.40 & 3.25 & \\
+L & 1.83 & 3.08 & 59\% & 0.55 \\
+SV & 1.54 & 2.27 & \textbf{68\%} & \textbf{0.65} \\
+K & 11.79 & 50.90 & 23\% & 0.08 \\
+HLD & 1.64 & 2.30 & \textbf{71\%} & 0.61 \\
+ERA & 1.31 & 3.79 & 35\% & 0.76 \\
+WHIP & 0.21 & 1.20 & 17\% & 4.76 \\
+QS & 1.40 & 3.25 & 43\% & 0.71 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \vspace{0.3cm}
-\textbf{Why Edwin D\'{i}az matters:} +1.35 saves/week $\div$ 1.54 SD = \textbf{0.88 standard deviations}.
+SV and HLD have \textbf{both} high leverage (high 1/SD) \textbf{and} high noise (high CV).
 
-Compare: +0.94 K/week $\div$ 11.79 SD = 0.08 SDs. Saves are 11$\times$ more impactful.
+These categories are volatile but also where edges compound.
 \end{frame}
 
 %=============================================================================
@@ -135,13 +160,13 @@ z_{SO} = -\frac{\text{Season SO} / 25}{\text{SD}_{SO}}
 \]
 
 \vspace{0.3cm}
-\uncertain{For OBP, the formula is:}
+For \textbf{OBP} (rate stat):
 \[
 z_{OBP} = \frac{(\text{OBP} - 0.320)}{9 \times \text{SD}_{OBP}}
 \]
 
 \vspace{0.3cm}
-\textcolor{uncertain}{\textbf{Why divide by 9?}} I believe this is meant to scale OBP's contribution to match counting stats, but the factor of 9 is not obviously derived. This needs verification.
+\textbf{Why divide by 9?} OBP is a rate stat. A roster has 9 hitters, so one player's OBP contributes $\frac{1}{9}$ of team OBP. This scales OBP's contribution appropriately.
 \end{frame}
 
 \begin{frame}{Total Z-Score}
@@ -179,28 +204,28 @@ Both should \textit{mostly} agree on rankings, but the draft tool is more precis
 
 \vspace{0.3cm}
 \textbf{The cohort (21 players):}\\
-Spencer Steer, Miguel Andujar, Ezequiel Tovar, Jonathan Aranda, Addison Barger, Nathan Lukes, Kyle Manzardo, Colt Keith, Josh Lowe, Romy Gonzalez, Samuel Basallo, Francisco Alvarez, Lars Nootbaar, Joey Ortiz, Tyler O'Neill, Ryan O'Hearn, Victor Robles, Jake Fraley, JJ Bleday, Munetaka Murakami, Chase Meidroth
+{\small Spencer Steer, Miguel Andujar, Ezequiel Tovar, Jonathan Aranda, Addison Barger, Nathan Lukes, Kyle Manzardo, Colt Keith, Josh Lowe, Romy Gonzalez, Samuel Basallo, Francisco Alvarez, Lars Nootbaar, Joey Ortiz, Tyler O'Neill, Ryan O'Hearn, Victor Robles, Jake Fraley, JJ Bleday, Munetaka Murakami, Chase Meidroth}
 \end{frame}
 
 \begin{frame}{Replacement Level Per-PA Rates}
 \begin{center}
-\begin{tabular}{lrr}
+\begin{tabular}{lrrr}
 \toprule
-Stat & Per-PA Rate & Full Season (600 PA) \\
+Stat & Per-PA Rate & Full Season (600 PA) & Weekly \\
 \midrule
-R & 0.1212 & 73 \\
-HR & 0.0330 & 20 \\
-RBI & 0.1208 & 72 \\
-SO & 0.2226 & 134 \\
-TB & 0.3725 & 224 \\
-SB & 0.0152 & 9 \\
-OBP & \textbf{0.320} & (capped at league avg) \\
+R & 0.1212 & 73 & 2.92 \\
+HR & 0.0330 & 20 & 0.80 \\
+RBI & 0.1208 & 72 & 2.88 \\
+SO & 0.2226 & 134 & 5.36 \\
+TB & 0.3725 & 224 & 8.96 \\
+SB & 0.0152 & 9 & 0.36 \\
+OBP & 0.320 & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \vspace{0.3cm}
-\uncertain{OBP was hardcoded to 0.320} because the cohort's actual OBP (0.324) was \textit{above} league average, which would make replacement players OBP-positive. This seemed wrong.
+\textbf{OBP is hardcoded to 0.320} (league average) because the cohort's actual OBP (0.324) exceeded league average. This would make replacement players OBP-positive, which is conceptually wrong---replacement should be neutral, not additive.
 \end{frame}
 
 \begin{frame}{PA Supplementation}
@@ -219,6 +244,197 @@ For a player with 450 PA:
 
 \vspace{0.3cm}
 \textbf{Interpretation:} ``What would this player produce if they played full-time, with a replacement-level player filling in the rest?''
+\end{frame}
+
+%=============================================================================
+\section{Detailed Example: Jos\'{e} Ram\'{i}rez}
+%=============================================================================
+
+\begin{frame}{Setup: A Team of Replacement Players}
+Consider a team with 9 replacement-level hitters.
+
+\vspace{0.3cm}
+\textbf{Each replacement hitter's weekly production:}
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Stat & Per Hitter/Week \\
+\midrule
+R & 2.92 \\
+HR & 0.80 \\
+RBI & 2.88 \\
+SO & 5.36 \\
+TB & 8.96 \\
+SB & 0.36 \\
+OBP & 0.320 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{Team totals} = 9 $\times$ individual = (26.3 R, 7.2 HR, 25.9 RBI, 48.2 SO, 80.6 TB, 3.2 SB, .320 OBP)
+\end{frame}
+
+\begin{frame}{Replacement Team vs League Average Opponent}
+\textbf{League averages} (expected opponent production):
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Category & My Team & Opponent & Diff \\
+\midrule
+R & 26.28 & 28.96 & $-2.68$ \\
+HR & 7.20 & 8.02 & $-0.82$ \\
+RBI & 25.92 & 27.86 & $-1.94$ \\
+SO & 48.24 & 50.11 & $-1.87$ (good!) \\
+TB & 80.64 & 88.87 & $-8.23$ \\
+SB & 3.24 & 4.74 & $-1.50$ \\
+OBP & 0.320 & 0.320 & 0 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+A replacement-level team is \textit{below average} in most categories.
+
+The exception: SO is below average (good, since lower is better).
+\end{frame}
+
+\begin{frame}{Win Probabilities: Replacement Team}
+Using $P(\text{win}) = \Phi\left(\frac{\text{diff}}{\sigma \sqrt{2}}\right)$:
+
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+Category & Diff & SD & $z$ & $P(\text{win})$ \\
+\midrule
+R & $-2.68$ & 6.03 & $-0.31$ & 37.6\% \\
+HR & $-0.82$ & 2.93 & $-0.20$ & 42.1\% \\
+RBI & $-1.94$ & 6.72 & $-0.20$ & 42.0\% \\
+SO & $-1.87$ & 7.45 & $+0.18$ & 57.1\% \\
+TB & $-8.23$ & 15.94 & $-0.37$ & 35.7\% \\
+SB & $-1.50$ & 2.57 & $-0.41$ & 34.0\% \\
+OBP & $0$ & 0.04 & $0$ & 50.0\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.2cm}
+\textbf{Expected category wins:} $0.376 + 0.421 + ... = 2.98$ out of 7.
+\end{frame}
+
+\begin{frame}{Enter Jos\'{e} Ram\'{i}rez}
+\textbf{Ram\'{i}rez's projected season line:}\\
+679 PA, 98 R, 30 HR, 94 RBI, 78 SO, 300 TB, 34 SB, .348 OBP
+
+\vspace{0.3cm}
+\textbf{Ram\'{i}rez's weekly production:}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Stat & Ram\'{i}rez & Replacement & Diff \\
+\midrule
+R/wk & 3.92 & 2.92 & $+1.00$ \\
+HR/wk & 1.20 & 0.80 & $+0.40$ \\
+RBI/wk & 3.76 & 2.88 & $+0.88$ \\
+SO/wk & 3.12 & 5.36 & $-2.24$ (good!) \\
+TB/wk & 12.00 & 8.96 & $+3.04$ \\
+SB/wk & 1.36 & 0.36 & $+1.00$ \\
+OBP & 0.348 & 0.320 & $+0.028$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}{Team After Adding Ram\'{i}rez}
+Replace one replacement hitter with Ram\'{i}rez:
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Category & Before & After & Change \\
+\midrule
+R & 26.28 & 27.28 & $+1.00$ \\
+HR & 7.20 & 7.60 & $+0.40$ \\
+RBI & 25.92 & 26.80 & $+0.88$ \\
+SO & 48.24 & 46.00 & $-2.24$ \\
+TB & 80.64 & 83.68 & $+3.04$ \\
+SB & 3.24 & 4.24 & $+1.00$ \\
+OBP & 0.320 & 0.323 & $+0.003$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+Note: OBP only shifts by $\frac{1}{9}$ of Ram\'{i}rez's OBP advantage because it's a rate stat averaged across 9 hitters.
+\end{frame}
+
+\begin{frame}{New Win Probabilities}
+\begin{center}
+\begin{tabular}{lrrrrr}
+\toprule
+Cat & Old Diff & New Diff & Old $P$ & New $P$ & $\Delta P$ \\
+\midrule
+R & $-2.68$ & $-1.68$ & 37.6\% & 40.2\% & $+2.6\%$ \\
+HR & $-0.82$ & $-0.42$ & 42.1\% & 45.0\% & $+2.9\%$ \\
+RBI & $-1.94$ & $-1.06$ & 42.0\% & 44.4\% & $+2.4\%$ \\
+SO & $+1.87$ & $+4.11$ & 57.1\% & 64.1\% & $+7.0\%$ \\
+TB & $-8.23$ & $-5.19$ & 35.7\% & 39.3\% & $+3.6\%$ \\
+SB & $-1.50$ & $-0.50$ & 34.0\% & 43.1\% & $+9.1\%$ \\
+OBP & $0$ & $+0.003$ & 50.0\% & 51.3\% & $+1.3\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{Ram\'{i}rez's marginal value:}
+\[
+\sum \Delta P = 2.6 + 2.9 + 2.4 + 7.0 + 3.6 + 9.1 + 1.3 = \mathbf{28.9\%}
+\]
+
+Ram\'{i}rez adds 0.289 expected category wins per week vs replacement.
+\end{frame}
+
+\begin{frame}{Why SB and SO Dominate}
+Ram\'{i}rez's biggest impacts:
+\begin{itemize}
+    \item \textbf{SB: +9.1\%} from just +1.00 SB/week
+    \item \textbf{SO: +7.0\%} from $-2.24$ SO/week
+\end{itemize}
+
+\vspace{0.3cm}
+Compare to HR: +2.9\% from +0.40 HR/week.
+
+\vspace{0.3cm}
+\textbf{The math:}
+\begin{align*}
+\text{SB impact} &: +1.00 / (2.57 \times \sqrt{2}) = +0.275 \text{ z-shift} \\
+\text{HR impact} &: +0.40 / (2.93 \times \sqrt{2}) = +0.097 \text{ z-shift}
+\end{align*}
+
+The steal is worth $0.275 / 0.097 = 2.8\times$ more in z-shift than the HR, despite both being ``+1 unit'' contributions (after scaling).
+
+\vspace{0.3cm}
+\textbf{Key insight:} Low absolute SD $\rightarrow$ high marginal leverage.
+\end{frame}
+
+\begin{frame}{Visualizing the Distribution Shift}
+\textbf{Before Ram\'{i}rez} (SB category):
+\begin{itemize}
+    \item My team mean: 3.24 SB/week
+    \item Opponent mean: 4.74 SB/week
+    \item Difference: $-1.50$, so $z = -0.41$, $P(\text{win}) = 34\%$
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{After Ram\'{i}rez}:
+\begin{itemize}
+    \item My team mean: 4.24 SB/week
+    \item Opponent mean: 4.74 SB/week
+    \item Difference: $-0.50$, so $z = -0.14$, $P(\text{win}) = 43\%$
+\end{itemize}
+
+\vspace{0.3cm}
+The entire distribution of ``my SB $-$ opponent SB'' shifts right by 1.00 steals. Because SD is tight (2.57), this 1-steal shift moves us 9 percentage points in win probability.
 \end{frame}
 
 %=============================================================================
@@ -248,33 +464,6 @@ WH/week & 2.85 \\
 Elite closers get saves but sacrifice holds. This creates an explicit tradeoff that the model captures.
 \end{frame}
 
-\begin{frame}{Case Study: Edwin D\'{i}az vs Replacement}
-\begin{center}
-\begin{tabular}{lrrr}
-\toprule
-Stat & D\'{i}az & Replacement & Diff \\
-\midrule
-SV/week & 1.472 & 0.121 & \textbf{+1.35} \\
-HLD/week & 0.099 & 0.848 & \textbf{-0.75} \\
-K/week & 3.63 & 2.69 & +0.94 \\
-ER/week & 0.90 & 0.96 & -0.06 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\vspace{0.3cm}
-\textbf{Win probability impact:}
-\begin{itemize}
-    \item Saves: \textbf{+20.9\%}
-    \item Holds: \textbf{-12.8\%}
-    \item Strikeouts: +1.9\%
-    \item ERA/WHIP: $<$1\% (diluted across 40 IP/week)
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Net marginal value: $\approx$ 0.11} (D\'{i}az adds 0.11 expected category wins/week)
-\end{frame}
-
 \begin{frame}{Why ERA/WHIP Don't Matter Much for RPs}
 \textbf{ERA/WHIP are innings-weighted ratio stats.}
 
@@ -286,12 +475,12 @@ Typical team: 40 IP/week total
 \end{itemize}
 
 \vspace{0.3cm}
-D\'{i}az contributes \textbf{2.66 IP / 40 IP = 6.7\%} of team innings.
+A reliever contributes $\approx$\textbf{6--7\%} of team innings.
 
 \vspace{0.3cm}
-Even if D\'{i}az has much better ERA than replacement (3.06 vs 3.50), the team ERA only improves by $\approx$0.02 points.
+Even if an elite RP has much better ERA than replacement (e.g., 3.06 vs 3.50), the team ERA only improves by $\approx$0.02 points.
 
-With ERA SD = 1.31, that's $0.02 / 1.31 = 0.015$ SDs $\rightarrow$ \textbf{+0.4\% win probability}.
+With ERA SD = 1.31, that's $0.02 / 1.31 = 0.015$ SDs $\rightarrow$ \textbf{$<$1\% win probability}.
 
 \vspace{0.3cm}
 \textbf{Conclusion:} RPs earn value through saves/holds/K, not ERA/WHIP.
@@ -338,7 +527,7 @@ Player B & 480 & 510 \\
 \end{enumerate}
 
 \vspace{0.5cm}
-\uncertain{Keeping rate stats unchanged assumes} that the rate estimates are independent of playing time. This is approximately true but not perfect (e.g., platoon players might have different rates in limited samples).
+Keeping rate stats unchanged is reasonable---the rate estimates reflect the projection system's view of player skill, independent of playing time.
 \end{frame}
 
 %=============================================================================
@@ -365,37 +554,18 @@ All three use:
 \end{frame}
 
 %=============================================================================
-\section{Uncertainties and Open Questions}
+\section{Remaining Questions}
 %=============================================================================
 
-\begin{frame}{Things I'm Uncertain About}
+\begin{frame}{Open Questions for Review}
 \begin{enumerate}
-    \item \uncertain{OBP z-score formula divides by 9} -- Why 9? This seems to arbitrarily scale down OBP's contribution. Should verify this is intentional.
-
-    \vspace{0.3cm}
-    \item \uncertain{Replacement OBP was hardcoded} -- The cohort (ranks 155-175) had OBP = 0.324, but I capped it at 0.320 to be OBP-neutral. Is this right?
-
-    \vspace{0.3cm}
     \item \uncertain{Choice of ranks 155-175} -- Why not 145-165 or 160-180? The exact cutoff affects replacement level.
 
     \vspace{0.3cm}
-    \item \uncertain{Rate stats in PA normalization} -- Should K\%, OBP stay fixed when scaling PA? Small sample effects might distort rates.
-\end{enumerate}
-\end{frame}
-
-\begin{frame}{Things I'm Uncertain About (continued)}
-\begin{enumerate}
-    \setcounter{enumi}{4}
     \item \uncertain{SP replacement level} -- I didn't examine this closely. Need to verify the methodology matches hitter replacement.
 
     \vspace{0.3cm}
-    \item \uncertain{Keepers integration} -- Keepers were added but I don't recall the full implementation details.
-
-    \vspace{0.3cm}
-    \item \uncertain{Weekly SD derivation} -- These come from 2024 league data. Are they calculated correctly? Do they need smoothing?
-
-    \vspace{0.3cm}
-    \item \uncertain{The $\sqrt{2}$ factor} -- The formula uses $\sigma \sqrt{2}$ for the difference of two normals, which is correct IF both teams have the same variance. Does this hold?
+    \item \uncertain{Variance equality assumption} -- The $\sqrt{2}$ assumes both teams draw from distributions with the same variance. In practice, team quality varies, but this is a reasonable simplification.
 \end{enumerate}
 \end{frame}
 
@@ -414,7 +584,6 @@ All three use:
     \item \textbf{Replacement recalibration} -- Ranks 155-175 cohort
     \item \textbf{OBP cap at league average} -- Prevent OBP-positive replacement
     \item \textbf{The BatX projection system} -- Third toggle option
-    \item \textbf{Keepers support} -- Pre-load owned players
 \end{enumerate}
 \end{frame}
 
@@ -445,22 +614,16 @@ All three use:
 \end{frame}
 
 \begin{frame}{Summary}
-\textbf{What the tool does well:}
+\textbf{What the tool does:}
 \begin{itemize}
-    \item Captures category leverage via weekly SDs
-    \item Models saves vs holds tradeoff for relievers
-    \item Accounts for PA differences via supplementation
-    \item Allows projection system comparison
+    \item Calculates marginal win probability for each player vs replacement
+    \item Uses weekly SDs from 2024 league data to weight categories
+    \item Normalizes PA across projection systems for fair comparison
+    \item Supplements low-PA players to 600 PA baseline
 \end{itemize}
 
 \vspace{0.5cm}
-\textbf{What needs review:}
-\begin{itemize}
-    \item OBP z-score formula (the $\div 9$)
-    \item Replacement level cohort selection
-    \item SP replacement methodology
-    \item Edge cases in keepers
-\end{itemize}
+\textbf{Key insight:} Categories with low absolute SD (SB, SV, HLD) have outsized marginal impact. A single steal shifts win probability more than a single HR because $\text{SD}_{SB} < \text{SD}_{HR}$.
 \end{frame}
 
 \end{document}
