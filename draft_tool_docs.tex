@@ -1,0 +1,466 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+% Custom colors for uncertainty highlighting
+\definecolor{uncertain}{RGB}{220,53,69}
+\definecolor{confident}{RGB}{40,167,69}
+
+\newcommand{\uncertain}[1]{\textcolor{uncertain}{\textbf{[?] #1}}}
+\newcommand{\confident}[1]{\textcolor{confident}{#1}}
+
+\title{Fantasy Baseball Draft Tool}
+\subtitle{Documentation and Methodology}
+\author{Claude + Kevin}
+\date{February 2026}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+%=============================================================================
+\section{System Overview}
+%=============================================================================
+
+\begin{frame}{What Does This Tool Do?}
+\textbf{Goal:} Rank players by their marginal contribution to winning H2H categories.
+
+\vspace{0.5cm}
+\textbf{Key Components:}
+\begin{enumerate}
+    \item \texttt{create\_league\_stats.py} -- Generates hitter CSVs with z-scores
+    \item \texttt{create\_pitching\_stats.py} -- Generates pitcher CSVs
+    \item \texttt{normalize\_pa.py} -- Aligns PA between projection systems
+    \item \texttt{draft\_tool.html} -- Interactive draft UI with real-time valuations
+\end{enumerate}
+
+\vspace{0.5cm}
+\textbf{League Format:} 14-category H2H weekly
+\begin{itemize}
+    \item Hitting: R, HR, RBI, SB, SO, TB, OBP
+    \item Pitching: W, SV, K, HLD, ERA, WHIP, QS
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Core Idea: Marginal Win Probability}
+In H2H, you win a category if your weekly total beats your opponent's.
+
+\vspace{0.3cm}
+Assuming team totals are normally distributed:
+\[
+P(\text{win category}) = \Phi\left(\frac{\mu_{\text{my team}} - \mu_{\text{opponent}}}{\sigma \cdot \sqrt{2}}\right)
+\]
+
+where:
+\begin{itemize}
+    \item $\Phi$ = standard normal CDF
+    \item $\sigma$ = weekly standard deviation for that category (from 2024 data)
+    \item The $\sqrt{2}$ comes from the variance of the difference of two normals
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{A player's value} = how much they move $P(\text{win})$ vs. replacement.
+\end{frame}
+
+\begin{frame}{Weekly Standard Deviations (2024 League Data)}
+\textbf{Hitting Categories:}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Category & SD & Avg & Notes \\
+\midrule
+R & 6.03 & 28.96 & \\
+HR & 2.93 & 8.02 & \\
+RBI & 6.72 & 27.86 & \\
+SB & \textbf{2.57} & 4.74 & \textcolor{uncertain}{Tight -- high leverage} \\
+SO & 7.45 & 50.11 & Lower is better \\
+TB & 15.94 & 88.87 & \\
+OBP & 0.04 & 0.320 & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{Key insight:} Categories with tight SDs (SB, SV) have outsized impact.
+
+A steal is worth $\frac{1}{2.57} = 0.39$ SDs. A strikeout is only $\frac{1}{7.45} = 0.13$ SDs.
+\end{frame}
+
+\begin{frame}{Pitching Standard Deviations}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Category & SD & Avg & Notes \\
+\midrule
+L & 1.83 & 3.08 & Lower is better \\
+SV & \textbf{1.54} & 2.27 & \textcolor{uncertain}{Very tight -- closers valuable} \\
+K & 11.79 & 50.90 & Wide -- less leverage \\
+HLD & 1.64 & 2.30 & Tight \\
+ERA & 1.31 & 3.79 & Lower is better \\
+WHIP & 0.21 & 1.20 & Lower is better \\
+QS & 1.40 & 3.25 & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{Why Edwin D\'{i}az matters:} +1.35 saves/week $\div$ 1.54 SD = \textbf{0.88 standard deviations}.
+
+Compare: +0.94 K/week $\div$ 11.79 SD = 0.08 SDs. Saves are 11$\times$ more impactful.
+\end{frame}
+
+%=============================================================================
+\section{Z-Score Calculation (CSV Generation)}
+%=============================================================================
+
+\begin{frame}{How Z-Scores Are Calculated in CSVs}
+For \textbf{counting stats} (R, HR, RBI, TB, SB):
+\[
+z = \frac{\text{Season Total} / 25}{\text{Weekly SD}}
+\]
+
+For \textbf{strikeouts} (lower is better):
+\[
+z_{SO} = -\frac{\text{Season SO} / 25}{\text{SD}_{SO}}
+\]
+
+\vspace{0.3cm}
+\uncertain{For OBP, the formula is:}
+\[
+z_{OBP} = \frac{(\text{OBP} - 0.320)}{9 \times \text{SD}_{OBP}}
+\]
+
+\vspace{0.3cm}
+\textcolor{uncertain}{\textbf{Why divide by 9?}} I believe this is meant to scale OBP's contribution to match counting stats, but the factor of 9 is not obviously derived. This needs verification.
+\end{frame}
+
+\begin{frame}{Total Z-Score}
+\[
+z_{\text{total}} = z_R + z_{HR} + z_{RBI} + z_{SB} + z_{TB} + z_{SO} + z_{OBP}
+\]
+
+\textbf{This is a simplified ranking metric} used to sort players in the CSV.
+
+\vspace{0.5cm}
+\textbf{Important distinction:}
+\begin{itemize}
+    \item \textbf{CSV z-scores}: Quick approximation for ranking
+    \item \textbf{Draft tool marginal value}: Exact calculation considering current roster
+\end{itemize}
+
+\vspace{0.3cm}
+Both should \textit{mostly} agree on rankings, but the draft tool is more precise because it accounts for your specific team composition.
+\end{frame}
+
+%=============================================================================
+\section{Replacement Level}
+%=============================================================================
+
+\begin{frame}{What Is Replacement Level?}
+\textbf{Definition:} The production available from freely available players (waiver wire).
+
+\vspace{0.3cm}
+\textbf{Methodology:}
+\begin{enumerate}
+    \item Rank all hitters by $z_{\text{total}}$ using Depth Charts projections
+    \item Take players ranked 155--175 (just beyond 16 teams $\times$ 9 hitters = 144)
+    \item Average their per-PA rates
+\end{enumerate}
+
+\vspace{0.3cm}
+\textbf{The cohort (21 players):}\\
+Spencer Steer, Miguel Andujar, Ezequiel Tovar, Jonathan Aranda, Addison Barger, Nathan Lukes, Kyle Manzardo, Colt Keith, Josh Lowe, Romy Gonzalez, Samuel Basallo, Francisco Alvarez, Lars Nootbaar, Joey Ortiz, Tyler O'Neill, Ryan O'Hearn, Victor Robles, Jake Fraley, JJ Bleday, Munetaka Murakami, Chase Meidroth
+\end{frame}
+
+\begin{frame}{Replacement Level Per-PA Rates}
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Stat & Per-PA Rate & Full Season (600 PA) \\
+\midrule
+R & 0.1212 & 73 \\
+HR & 0.0330 & 20 \\
+RBI & 0.1208 & 72 \\
+SO & 0.2226 & 134 \\
+TB & 0.3725 & 224 \\
+SB & 0.0152 & 9 \\
+OBP & \textbf{0.320} & (capped at league avg) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\uncertain{OBP was hardcoded to 0.320} because the cohort's actual OBP (0.324) was \textit{above} league average, which would make replacement players OBP-positive. This seemed wrong.
+\end{frame}
+
+\begin{frame}{PA Supplementation}
+\textbf{Problem:} Low-PA players look bad in counting stats.
+
+\vspace{0.3cm}
+\textbf{Solution:} Supplement everyone to 600 PA with replacement-level production.
+
+\vspace{0.3cm}
+For a player with 450 PA:
+\begin{align*}
+\text{Gap PA} &= 600 - 450 = 150 \\
+\text{Runs} &= \text{Projected Runs} + 150 \times 0.1212 \\
+\text{OBP} &= \frac{450 \times \text{proj OBP} + 150 \times 0.320}{600}
+\end{align*}
+
+\vspace{0.3cm}
+\textbf{Interpretation:} ``What would this player produce if they played full-time, with a replacement-level player filling in the rest?''
+\end{frame}
+
+%=============================================================================
+\section{Relief Pitcher Valuation}
+%=============================================================================
+
+\begin{frame}{RP Replacement Level (Per Slot, Weekly)}
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Stat & Replacement RP \\
+\midrule
+IP/week & 2.48 \\
+L/week & 0.118 \\
+SV/week & 0.121 \\
+HLD/week & 0.848 \\
+K/week & 2.69 \\
+ER/week & 0.96 \\
+WH/week & 2.85 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{Key observation:} Replacement RPs get \textbf{holds, not saves}.
+
+Elite closers get saves but sacrifice holds. This creates an explicit tradeoff that the model captures.
+\end{frame}
+
+\begin{frame}{Case Study: Edwin D\'{i}az vs Replacement}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Stat & D\'{i}az & Replacement & Diff \\
+\midrule
+SV/week & 1.472 & 0.121 & \textbf{+1.35} \\
+HLD/week & 0.099 & 0.848 & \textbf{-0.75} \\
+K/week & 3.63 & 2.69 & +0.94 \\
+ER/week & 0.90 & 0.96 & -0.06 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{Win probability impact:}
+\begin{itemize}
+    \item Saves: \textbf{+20.9\%}
+    \item Holds: \textbf{-12.8\%}
+    \item Strikeouts: +1.9\%
+    \item ERA/WHIP: $<$1\% (diluted across 40 IP/week)
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Net marginal value: $\approx$ 0.11} (D\'{i}az adds 0.11 expected category wins/week)
+\end{frame}
+
+\begin{frame}{Why ERA/WHIP Don't Matter Much for RPs}
+\textbf{ERA/WHIP are innings-weighted ratio stats.}
+
+\vspace{0.3cm}
+Typical team: 40 IP/week total
+\begin{itemize}
+    \item 5 SP $\times$ 6.5 IP = 32.5 IP
+    \item 3 RP $\times$ 2.5 IP = 7.5 IP
+\end{itemize}
+
+\vspace{0.3cm}
+D\'{i}az contributes \textbf{2.66 IP / 40 IP = 6.7\%} of team innings.
+
+\vspace{0.3cm}
+Even if D\'{i}az has much better ERA than replacement (3.06 vs 3.50), the team ERA only improves by $\approx$0.02 points.
+
+With ERA SD = 1.31, that's $0.02 / 1.31 = 0.015$ SDs $\rightarrow$ \textbf{+0.4\% win probability}.
+
+\vspace{0.3cm}
+\textbf{Conclusion:} RPs earn value through saves/holds/K, not ERA/WHIP.
+\end{frame}
+
+%=============================================================================
+\section{PA Normalization Between Systems}
+%=============================================================================
+
+\begin{frame}{The Problem: Projection Systems Disagree on PT}
+Different projection systems predict different playing time:
+
+\vspace{0.3cm}
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Player & The Bat PA & Depth Charts PA \\
+\midrule
+Player A & 550 & 620 \\
+Player B & 480 & 510 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{Problem:} We want to compare \textit{skill}, not playing time estimates.
+
+\vspace{0.3cm}
+\textbf{Solution:} Normalize all systems to use Depth Charts PA.
+\end{frame}
+
+\begin{frame}{PA Normalization Process}
+\texttt{normalize\_pa.py}:
+
+\begin{enumerate}
+    \item Read Depth Charts PA for each player
+    \item For each player in The Bat/BatX:
+    \begin{itemize}
+        \item Scale = DC\_PA / TheBat\_PA
+        \item Multiply all counting stats by Scale
+        \item Keep rate stats (OBP, K\%) unchanged
+    \end{itemize}
+    \item Output normalized CSV
+\end{enumerate}
+
+\vspace{0.5cm}
+\uncertain{Keeping rate stats unchanged assumes} that the rate estimates are independent of playing time. This is approximately true but not perfect (e.g., platoon players might have different rates in limited samples).
+\end{frame}
+
+%=============================================================================
+\section{Projection System Toggle}
+%=============================================================================
+
+\begin{frame}{Three Projection Systems Available}
+\begin{enumerate}
+    \item \textbf{Depth Charts} (default) -- Composite of multiple systems
+    \item \textbf{The Bat} -- Tom Tango's projection system
+    \item \textbf{The BatX} -- Extended/experimental version
+\end{enumerate}
+
+\vspace{0.5cm}
+All three use:
+\begin{itemize}
+    \item Same PA (normalized to Depth Charts)
+    \item Same replacement level rates
+    \item Same weekly SDs
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Only difference:} Rate stat projections (HR/PA, SB/PA, K\%, OBP, etc.)
+\end{frame}
+
+%=============================================================================
+\section{Uncertainties and Open Questions}
+%=============================================================================
+
+\begin{frame}{Things I'm Uncertain About}
+\begin{enumerate}
+    \item \uncertain{OBP z-score formula divides by 9} -- Why 9? This seems to arbitrarily scale down OBP's contribution. Should verify this is intentional.
+
+    \vspace{0.3cm}
+    \item \uncertain{Replacement OBP was hardcoded} -- The cohort (ranks 155-175) had OBP = 0.324, but I capped it at 0.320 to be OBP-neutral. Is this right?
+
+    \vspace{0.3cm}
+    \item \uncertain{Choice of ranks 155-175} -- Why not 145-165 or 160-180? The exact cutoff affects replacement level.
+
+    \vspace{0.3cm}
+    \item \uncertain{Rate stats in PA normalization} -- Should K\%, OBP stay fixed when scaling PA? Small sample effects might distort rates.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Things I'm Uncertain About (continued)}
+\begin{enumerate}
+    \setcounter{enumi}{4}
+    \item \uncertain{SP replacement level} -- I didn't examine this closely. Need to verify the methodology matches hitter replacement.
+
+    \vspace{0.3cm}
+    \item \uncertain{Keepers integration} -- Keepers were added but I don't recall the full implementation details.
+
+    \vspace{0.3cm}
+    \item \uncertain{Weekly SD derivation} -- These come from 2024 league data. Are they calculated correctly? Do they need smoothing?
+
+    \vspace{0.3cm}
+    \item \uncertain{The $\sqrt{2}$ factor} -- The formula uses $\sigma \sqrt{2}$ for the difference of two normals, which is correct IF both teams have the same variance. Does this hold?
+\end{enumerate}
+\end{frame}
+
+%=============================================================================
+\section{Features Added (Chronological)}
+%=============================================================================
+
+\begin{frame}{Feature Timeline}
+\begin{enumerate}
+    \item \textbf{Base draft tool} -- UI, player data, basic rankings
+    \item \textbf{Marginal win probability} -- Exact $\Phi()$ calculation
+    \item \textbf{PA supplementation to 600 PA floor} -- Fill with replacement
+    \item \textbf{Projection toggle} -- The Bat vs Depth Charts
+    \item \textbf{PA normalization} -- All systems use DC playing time
+    \item \textbf{300 PA minimum filter} -- Exclude low-PA players
+    \item \textbf{Replacement recalibration} -- Ranks 155-175 cohort
+    \item \textbf{OBP cap at league average} -- Prevent OBP-positive replacement
+    \item \textbf{The BatX projection system} -- Third toggle option
+    \item \textbf{Keepers support} -- Pre-load owned players
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Key Code Files}
+\textbf{Python scripts:}
+\begin{itemize}
+    \item \texttt{create\_league\_stats.py} -- Hitter z-scores, replacement supplementation
+    \item \texttt{create\_pitching\_stats.py} -- Pitcher processing
+    \item \texttt{normalize\_pa.py} -- Align PA across systems
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Main application:}
+\begin{itemize}
+    \item \texttt{draft\_tool.html} -- All-in-one HTML/CSS/JS app
+    \begin{itemize}
+        \item Lines 482-506: SD and replacement constants
+        \item Lines 580-599: \texttt{normalCDF} and \texttt{winProbability}
+        \item Lines 604+: Roster projection calculations
+    \end{itemize}
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Data files:}
+\begin{itemize}
+    \item \texttt{fantasy\_hitters\_dc\_2026.csv}, \texttt{fantasy\_hitters\_thebat\_2026.csv}, \texttt{fantasy\_hitters\_batx\_2026.csv}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Summary}
+\textbf{What the tool does well:}
+\begin{itemize}
+    \item Captures category leverage via weekly SDs
+    \item Models saves vs holds tradeoff for relievers
+    \item Accounts for PA differences via supplementation
+    \item Allows projection system comparison
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{What needs review:}
+\begin{itemize}
+    \item OBP z-score formula (the $\div 9$)
+    \item Replacement level cohort selection
+    \item SP replacement methodology
+    \item Edge cases in keepers
+\end{itemize}
+\end{frame}
+
+\end{document}
