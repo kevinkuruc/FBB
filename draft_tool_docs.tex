@@ -1,0 +1,452 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+\definecolor{good}{RGB}{40,167,69}
+\definecolor{bad}{RGB}{220,53,69}
+
+\title{Fantasy Baseball Draft Tool}
+\subtitle{How Player Values Are Calculated}
+\author{Kevin Kuruc}
+\date{February 2026}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+%=============================================================================
+\section{The Core Idea}
+%=============================================================================
+
+\begin{frame}{What Are We Trying to Do?}
+\textbf{Goal:} Rank players by how much they help you win H2H category matchups.
+
+\vspace{0.5cm}
+\textbf{League format:} 14-category H2H weekly
+\begin{itemize}
+    \item Hitting: R, HR, RBI, SB, SO, TB, OBP
+    \item Pitching: W, SV, K, HLD, ERA, WHIP, QS
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Key insight:} Not all stats are created equal. A steal is worth more than a strikeout because steals are \textit{tighter}---there's less variance week-to-week.
+\end{frame}
+
+\begin{frame}{The Win Probability Formula}
+Each week, your team produces some total in each category. So does your opponent.
+
+\vspace{0.3cm}
+If we assume weekly totals are normally distributed:
+\[
+P(\text{win category}) = \Phi\left(\frac{\mu_{\text{you}} - \mu_{\text{opponent}}}{\sigma \cdot \sqrt{2}}\right)
+\]
+
+\vspace{0.3cm}
+\textbf{Where:}
+\begin{itemize}
+    \item $\Phi$ = the bell curve CDF (converts z-scores to probabilities)
+    \item $\sigma$ = how much that category varies week-to-week
+    \item The $\sqrt{2}$ accounts for both teams having variance
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Why Does Standard Deviation Matter?}
+\textbf{Tight categories} (low SD) are more predictable.
+
+A small edge goes a long way.
+
+\vspace{0.5cm}
+\textbf{Wide categories} (high SD) are noisy.
+
+Even a big edge might not matter---luck dominates.
+
+\vspace{0.5cm}
+\begin{center}
+\begin{tabular}{lrrl}
+\toprule
+Category & SD & 1/SD & Interpretation \\
+\midrule
+SB & 2.57 & 0.39 & \textcolor{good}{High leverage} \\
+SV & 1.54 & 0.65 & \textcolor{good}{High leverage} \\
+K (pitching) & 11.79 & 0.08 & \textcolor{bad}{Low leverage} \\
+TB & 15.94 & 0.06 & \textcolor{bad}{Low leverage} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{frame}
+
+%=============================================================================
+\section{Marginal Value}
+%=============================================================================
+
+\begin{frame}{What Is Marginal Value?}
+\textbf{Marginal value} = how much a player improves your expected wins \textit{compared to a replacement-level player}.
+
+\vspace{0.5cm}
+Think of it this way:
+\begin{enumerate}
+    \item Start with your current roster
+    \item Calculate your win probability in each category
+    \item Add a player to an empty slot
+    \item Recalculate win probabilities
+    \item Marginal value = new total $-$ old total
+\end{enumerate}
+
+\vspace{0.3cm}
+If your roster is empty, you're comparing to a team of 9 replacement-level hitters.
+\end{frame}
+
+\begin{frame}{What Is Replacement Level?}
+\textbf{Replacement level} = the production you could get for free (waiver wire).
+
+\vspace{0.5cm}
+We estimate this by:
+\begin{enumerate}
+    \item Ranking all projected hitters
+    \item Taking players ranked 155--175 (just beyond draft pool)
+    \item Averaging their per-PA production
+\end{enumerate}
+
+\vspace{0.5cm}
+\textbf{Replacement hitter (600 PA):}
+\begin{center}
+\begin{tabular}{lrrrrrrr}
+\toprule
+R & HR & RBI & SO & TB & SB & OBP \\
+\midrule
+73 & 20 & 72 & 134 & 224 & 9 & .320 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{frame}
+
+%=============================================================================
+\section{Worked Example: Jos\'{e} Ram\'{i}rez}
+%=============================================================================
+
+\begin{frame}{Setup: Empty Roster}
+Imagine you have no players drafted yet.
+
+\vspace{0.3cm}
+Your 9 hitter slots are filled with replacement-level production:
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Category & Your Team (weekly) & League Avg \\
+\midrule
+R & 26.3 & 29.0 \\
+HR & 7.2 & 8.0 \\
+RBI & 25.9 & 27.9 \\
+SO & 48.2 & 50.1 \\
+TB & 80.6 & 88.9 \\
+SB & 3.2 & 4.7 \\
+OBP & .320 & .320 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+You're below average in most categories, but slightly better in SO (fewer strikeouts is good).
+\end{frame}
+
+\begin{frame}{Win Probabilities: Replacement Team}
+Using the formula, here's your chance of winning each category:
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Category & Diff vs Avg & P(win) \\
+\midrule
+R & $-2.7$ & 37.7\% \\
+HR & $-0.8$ & 42.2\% \\
+RBI & $-1.9$ & 41.9\% \\
+SO & $+1.9$ & \textcolor{good}{57.0\%} \\
+TB & $-8.2$ & 35.8\% \\
+SB & $-1.5$ & 34.0\% \\
+OBP & $0$ & 50.0\% \\
+\midrule
+\textbf{Total} & & \textbf{2.99 / 7} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A replacement-level team expects to win about 3 of 7 hitting categories.
+\end{frame}
+
+\begin{frame}{Enter Jos\'{e} Ram\'{i}rez}
+\textbf{Ram\'{i}rez's projected line:}\\
+679 PA, 98 R, 30 HR, 94 RBI, 78 SO, 300 TB, 34 SB, .348 OBP
+
+\vspace{0.5cm}
+\textbf{Weekly contribution vs replacement:}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Stat & Ram\'{i}rez & Replacement & Diff \\
+\midrule
+R/wk & 3.92 & 2.92 & \textcolor{good}{+1.00} \\
+HR/wk & 1.20 & 0.80 & \textcolor{good}{+0.40} \\
+RBI/wk & 3.76 & 2.88 & \textcolor{good}{+0.88} \\
+SO/wk & 3.12 & 5.36 & \textcolor{good}{$-2.24$} \\
+TB/wk & 12.00 & 8.96 & \textcolor{good}{+3.04} \\
+SB/wk & 1.36 & 0.36 & \textcolor{good}{+1.00} \\
+OBP & .348 & .320 & \textcolor{good}{+.028} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Ram\'{i}rez is better than replacement in \textit{every} category.
+\end{frame}
+
+\begin{frame}{New Win Probabilities}
+With Ram\'{i}rez replacing one replacement hitter:
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Category & Before & After & Gain \\
+\midrule
+R & 37.7\% & 42.2\% & +4.5\% \\
+HR & 42.2\% & 46.0\% & +3.8\% \\
+RBI & 41.9\% & 45.6\% & +3.6\% \\
+SO & 57.0\% & 65.2\% & \textcolor{good}{+8.1\%} \\
+TB & 35.8\% & 40.9\% & +5.1\% \\
+SB & 34.0\% & 44.5\% & \textcolor{good}{+10.5\%} \\
+OBP & 50.0\% & 52.2\% & +2.2\% \\
+\midrule
+\textbf{Total} & 2.99 & 3.36 & \textbf{+0.378} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Ram\'{i}rez's marginal value: 0.378}
+
+He adds 0.378 expected category wins per week.
+\end{frame}
+
+\begin{frame}{Why Do SB and SO Dominate?}
+Ram\'{i}rez's biggest gains:
+\begin{itemize}
+    \item \textbf{SB: +10.5\%} from just 1 extra steal/week
+    \item \textbf{SO: +8.1\%} from 2.24 fewer strikeouts/week
+\end{itemize}
+
+\vspace{0.3cm}
+Compare to TB: +5.1\% from +3.04 TB/week.
+
+\vspace{0.5cm}
+\textbf{The math:}
+\begin{itemize}
+    \item SB: $1.00 \div 2.57 = 0.39$ standard deviations
+    \item TB: $3.04 \div 15.94 = 0.19$ standard deviations
+\end{itemize}
+
+\vspace{0.3cm}
+One steal moves the needle \textbf{twice as much} as three total bases, because steals have a tighter distribution.
+\end{frame}
+
+%=============================================================================
+\section{Relief Pitcher Valuation}
+%=============================================================================
+
+\begin{frame}{The Saves vs Holds Tradeoff}
+Elite closers get saves but sacrifice holds.
+
+\vspace{0.3cm}
+\textbf{Replacement RP (per week):}
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Stat & Replacement \\
+\midrule
+SV/wk & 0.12 \\
+HLD/wk & 0.85 \\
+K/wk & 2.69 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+Replacement RPs are \textbf{middle relievers}---they get holds, not saves.
+
+An elite closer gives up ~0.75 holds/week to gain ~1.35 saves/week.
+
+Is that trade worth it?
+\end{frame}
+
+\begin{frame}{Saves Have High Leverage}
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Category & SD & 1/SD \\
+\midrule
+SV & 1.54 & \textbf{0.65} \\
+HLD & 1.64 & 0.61 \\
+K & 11.79 & 0.08 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+Saves and holds have similar SDs, but closers gain more saves than they lose in holds.
+
+\vspace{0.3cm}
+\textbf{Net effect:} Elite closers are valuable because the save gain ($+1.35$/wk) exceeds the hold loss ($-0.75$/wk) in absolute terms.
+\end{frame}
+
+\begin{frame}{Why ERA/WHIP Don't Matter Much for RPs}
+ERA and WHIP are \textbf{innings-weighted}.
+
+\vspace{0.3cm}
+A typical team pitches ~40 IP/week:
+\begin{itemize}
+    \item 5 SP $\times$ 6.5 IP = 32.5 IP
+    \item 3 RP $\times$ 2.5 IP = 7.5 IP
+\end{itemize}
+
+\vspace{0.3cm}
+A reliever contributes \textbf{6\%} of team innings.
+
+\vspace{0.3cm}
+Even if an elite RP has much better ERA than replacement (3.06 vs 3.50), the team ERA only improves by $\approx$0.02 points.
+
+\vspace{0.3cm}
+\textbf{Conclusion:} RPs earn their value through saves, holds, and strikeouts---not ERA/WHIP.
+\end{frame}
+
+%=============================================================================
+\section{Comparing Projection Systems}
+%=============================================================================
+
+\begin{frame}{Three Projection Systems}
+The tool supports three projection sources:
+
+\begin{enumerate}
+    \item \textbf{Depth Charts} -- FanGraphs composite (default for playing time)
+    \item \textbf{The Bat} -- Tom Tango's system
+    \item \textbf{The BatX} -- Extended version of The Bat
+\end{enumerate}
+
+\vspace{0.5cm}
+All three use:
+\begin{itemize}
+    \item Same playing time (normalized to Depth Charts)
+    \item Same replacement level
+    \item Same weekly SDs
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Only difference:} Skill estimates (HR rate, SB rate, K\%, OBP, etc.)
+\end{frame}
+
+\begin{frame}{PA Normalization}
+Different systems project different playing time.
+
+\vspace{0.3cm}
+\textbf{Problem:} We want to compare skill, not PT estimates.
+
+\vspace{0.3cm}
+\textbf{Solution:} Scale all systems to use Depth Charts PA.
+
+\vspace{0.5cm}
+Example:
+\begin{itemize}
+    \item The Bat projects Player X at 500 PA, 25 HR
+    \item Depth Charts projects Player X at 600 PA
+    \item Normalized: 600 PA, 30 HR (scaled up by 600/500)
+\end{itemize}
+
+\vspace{0.3cm}
+Rate stats (OBP, K\%) stay unchanged---they reflect skill, not volume.
+\end{frame}
+
+%=============================================================================
+\section{Low-PA Players}
+%=============================================================================
+
+\begin{frame}{The Problem with Part-Time Players}
+A player projected for 400 PA will have lower counting stats than a 600 PA player, even if they're equally skilled per-PA.
+
+\vspace{0.5cm}
+\textbf{Solution:} Supplement everyone to 600 PA with replacement-level production.
+
+\vspace{0.5cm}
+\textbf{Example:} Player with 400 PA, 60 runs, .350 OBP
+\begin{itemize}
+    \item Gap: 200 PA at replacement level
+    \item Replacement runs: $200 \times 0.121 = 24$
+    \item Total runs: $60 + 24 = 84$
+    \item Blended OBP: $(400 \times .350 + 200 \times .320) / 600 = .340$
+\end{itemize}
+
+\vspace{0.3cm}
+This answers: ``What would this player produce over a full roster slot?''
+\end{frame}
+
+%=============================================================================
+\section{Key Takeaways}
+%=============================================================================
+
+\begin{frame}{Summary}
+\textbf{1. Marginal value measures wins added vs replacement.}
+
+Not raw stats---wins.
+
+\vspace{0.3cm}
+\textbf{2. Tight categories (low SD) have high leverage.}
+
+SB, SV, HLD matter more per unit than TB, K.
+
+\vspace{0.3cm}
+\textbf{3. Replacement level is the baseline.}
+
+Players ranked 155-175 define what's ``free.''
+
+\vspace{0.3cm}
+\textbf{4. Rate stats are diluted across rosters.}
+
+OBP is shared by 9 hitters. ERA/WHIP are innings-weighted.
+
+\vspace{0.3cm}
+\textbf{5. Elite closers win the saves/holds tradeoff.}
+
+They give up holds but gain more in saves.
+\end{frame}
+
+\begin{frame}{Category Leverage Reference}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Category & SD & Mean & 1/SD \\
+\midrule
+\multicolumn{4}{l}{\textbf{Hitting}} \\
+SB & 2.57 & 4.74 & \textcolor{good}{0.39} \\
+HR & 2.93 & 8.02 & 0.34 \\
+R & 6.03 & 28.96 & 0.17 \\
+RBI & 6.72 & 27.86 & 0.15 \\
+SO & 7.45 & 50.11 & 0.13 \\
+TB & 15.94 & 88.87 & 0.06 \\
+\midrule
+\multicolumn{4}{l}{\textbf{Pitching}} \\
+SV & 1.54 & 2.27 & \textcolor{good}{0.65} \\
+HLD & 1.64 & 2.30 & 0.61 \\
+L & 1.83 & 3.08 & 0.55 \\
+K & 11.79 & 50.90 & 0.08 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Higher 1/SD = more leverage per unit.
+\end{frame}
+
+\end{document}
