@@ -5,26 +5,13 @@
 \usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{xcolor}
-\usepackage{listings}
 
-\lstset{
-    basicstyle=\ttfamily\small,
-    breaklines=true,
-    frame=single,
-    backgroundcolor=\color{black!5}
-}
-
-\definecolor{warn}{RGB}{220,53,69}
-\definecolor{note}{RGB}{40,167,69}
-\definecolor{codebg}{RGB}{40,40,40}
-
-\newcommand{\warn}[1]{\textcolor{warn}{\textbf{WARNING:} #1}}
-\newcommand{\notebox}[1]{\textcolor{note}{\textbf{NOTE:} #1}}
-\newcommand{\filepath}[1]{\texttt{#1}}
+\definecolor{good}{RGB}{40,167,69}
+\definecolor{bad}{RGB}{220,53,69}
 
 \title{Fantasy Baseball Draft Tool}
-\subtitle{Technical Documentation for AI Handoff}
-\author{Claude + Kevin}
+\subtitle{How Player Values Are Calculated}
+\author{Kevin Kuruc}
 \date{February 2026}
 
 \begin{document}
@@ -38,454 +25,203 @@
 \end{frame}
 
 %=============================================================================
-\section{File Structure}
+\section{The Core Idea}
 %=============================================================================
 
-\begin{frame}[fragile]{Repository Structure}
-\begin{lstlisting}
-/home/user/FBB/
-|-- draft_tool.html      # Main app (HTML + JS, ~1200 lines)
-|-- create_league_stats.py    # Generates hitter CSVs
-|-- create_pitching_stats.py  # Generates pitcher CSVs
-|-- normalize_pa.py           # Aligns PA across systems
-|
-|-- DC_Raw_Jan_25.csv         # Depth Charts raw projections
-|-- The_Bat_Raw_Jan_25.csv    # The Bat raw projections
-|-- The_BatX_Raw_Jan_25.csv   # The BatX raw projections
-|
-|-- The_Bat_Normalized_PA.csv  # The Bat with DC playing time
-|-- The_BatX_Normalized_PA.csv # BatX with DC playing time
-|
-|-- fantasy_hitters_dc_2026.csv    # Processed DC hitters
-|-- fantasy_hitters_thebat_2026.csv
-|-- fantasy_hitters_batx_2026.csv
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}{Data Flow Overview}
-\textbf{Pipeline:}
-\begin{enumerate}
-    \item Raw projections (DC, The Bat, BatX) downloaded from FanGraphs
-    \item \filepath{normalize\_pa.py}: Scale The Bat/BatX to use DC playing time
-    \item \filepath{create\_league\_stats.py}: Add z-scores, supplement to 600 PA
-    \item Output CSVs embedded as JS arrays in \filepath{draft\_tool.html}
-\end{enumerate}
+\begin{frame}{What Are We Trying to Do?}
+\textbf{Goal:} Rank players by how much they help you win H2H category matchups.
 
 \vspace{0.5cm}
-\warn{The player data arrays in draft\_tool.html are generated separately. If you regenerate CSVs, you must manually update the JS arrays.}
-\end{frame}
-
-%=============================================================================
-\section{Key Constants (draft\_tool.html)}
-%=============================================================================
-
-\begin{frame}[fragile]{Location: Lines 482-510}
-\begin{lstlisting}[language={}]
-// Weekly standard deviations from 2024 league data
-const HITTING_SD = {
-  R: 6.03, HR: 2.93, RBI: 6.72, SB: 2.57,
-  SO: 7.45, TB: 15.94, OBP: 0.04, AB: 16.89
-};
-const PITCHING_SD = {
-  L: 1.8346, SV: 1.5362, K: 11.7861, HLD: 1.6383,
-  ERA: 1.3141, WHIP: 0.2057, QS: 1.4012, IP: 10.82
-};
-
-// League averages (used as opponent baseline)
-const HITTING_AVG = {
-  R: 28.96, HR: 8.02, RBI: 27.86, SB: 4.74,
-  SO: 50.11, TB: 88.87, OBP: 0.32, AB: 208.3
-};
-\end{lstlisting}
-
-\notebox{These SDs come from 2024 league weekly results. They determine category leverage.}
-\end{frame}
-
-\begin{frame}[fragile]{Replacement Level Constants}
-\begin{lstlisting}[language={}]
-// Hitter replacement (600 PA season totals)
-const HITTER_REP = {
-  name: 'Replacement', type: 'H', pa: 600,
-  r: 73, hr: 20, rbi: 72, so: 134,
-  tb: 224, sb: 9, obp: 0.32
-};
-
-// RP replacement (per roster slot, weekly)
-const RP_REP_PER_SLOT = {
-  ip_wk: 2.480, l_wk: 0.1180, sv_wk: 0.1208,
-  hld_wk: 0.8484, k_wk: 2.693,
-  er_wk: 0.963, wh_wk: 2.852
-};
-
-// SP replacement (per start)
-const SP_REP_PER_START = {
-  ip: 5.5, l: 0.11, qs: 0.45,
-  k: 5.0, er: 2.5, wh: 7.0
-};
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}{Where Replacement Rates Come From}
-\textbf{Hitter replacement} (defined in \filepath{create\_league\_stats.py}):
+\textbf{League format:} 14-category H2H weekly
 \begin{itemize}
-    \item Rank all hitters by zTotal using Depth Charts
-    \item Take players ranked 155--175 (just beyond 16$\times$9=144 drafted)
-    \item Average their per-PA rates
-    \item Multiply by 600 PA to get season totals
+    \item Hitting: R, HR, RBI, SB, SO, TB, OBP
+    \item Pitching: W, SV, K, HLD, ERA, WHIP, QS
 \end{itemize}
 
-\vspace{0.3cm}
-\warn{OBP is hardcoded to 0.320 (league avg) because the cohort's actual OBP (0.324) exceeded it. Replacement should be neutral, not positive.}
-
-\vspace{0.3cm}
-\textbf{RP replacement}: Middle relievers who get holds, not saves.
-
-\textbf{SP replacement}: Backend starter (~5.5 IP, ~4.1 ERA per start).
-\end{frame}
-
-%=============================================================================
-\section{Core Functions (draft\_tool.html)}
-%=============================================================================
-
-\begin{frame}[fragile]{normalCDF and winProbability (Lines 580-599)}
-\begin{lstlisting}[language={}]
-function normalCDF(x) {
-  // Abramowitz-Stegun approximation
-  const a1=0.254829592, a2=-0.284496736, ...
-  const sign = x < 0 ? -1 : 1;
-  x = Math.abs(x) / Math.sqrt(2);
-  const t = 1.0 / (1.0 + 0.3275911 * x);
-  const y = 1 - (((a5*t+a4)*t+a3)*t+a2)*t+a1)*t
-            * Math.exp(-x*x);
-  return 0.5 * (1.0 + sign * y);
-}
-
-function winProbability(myMean, oppMean, sd,
-                        lowerIsBetter = false) {
-  const z = lowerIsBetter
-    ? (oppMean - myMean) / (sd * Math.sqrt(2))
-    : (myMean - oppMean) / (sd * Math.sqrt(2));
-  return normalCDF(z);
-}
-\end{lstlisting}
+\vspace{0.5cm}
+\textbf{Key insight:} Not all stats are created equal. A steal is worth more than a strikeout because steals are \textit{tighter}---there's less variance week-to-week.
 \end{frame}
 
 \begin{frame}{The Win Probability Formula}
-\[
-P(\text{win}) = \Phi\left(\frac{\mu_{me} - \mu_{opp}}{\sigma \sqrt{2}}\right)
-\]
-
-\textbf{Where:}
-\begin{itemize}
-    \item $\mu_{me}$ = my team's expected weekly total
-    \item $\mu_{opp}$ = opponent's expected (uses \texttt{HITTING\_AVG})
-    \item $\sigma$ = weekly SD for that category
-    \item $\sqrt{2}$ comes from $\text{Var}(X-Y) = 2\sigma^2$
-\end{itemize}
+Each week, your team produces some total in each category. So does your opponent.
 
 \vspace{0.3cm}
-\notebox{The $\sqrt{2}$ assumes both teams have same variance. This is a simplification---opponent quality varies---but reasonable.}
+If we assume weekly totals are normally distributed:
+\[
+P(\text{win category}) = \Phi\left(\frac{\mu_{\text{you}} - \mu_{\text{opponent}}}{\sigma \cdot \sqrt{2}}\right)
+\]
+
+\vspace{0.3cm}
+\textbf{Where:}
+\begin{itemize}
+    \item $\Phi$ = the bell curve CDF (converts z-scores to probabilities)
+    \item $\sigma$ = how much that category varies week-to-week
+    \item The $\sqrt{2}$ accounts for both teams having variance
+\end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{getHittingProjections (Lines 604-615)}
-\begin{lstlisting}[language={}]
-function getHittingProjections(teamName) {
-  const roster = allTeams[teamName].hitters;
-  // Empty slots use HITTER_REP
-  const players = roster.map(slot =>
-    slot.player || HITTER_REP);
+\begin{frame}{Why Does Standard Deviation Matter?}
+\textbf{Tight categories} (low SD) are more predictable.
 
-  const proj = {};
-  ['r','hr','rbi','sb','so','tb'].forEach(cat => {
-    proj[cat.toUpperCase()] = players.reduce(
-      (sum, p) => sum + p[cat] / NUM_WEEKS, 0);
-  });
-  // OBP is average across 9 hitters
-  proj['OBP'] = players.reduce(
-    (sum, p) => sum + p.obp, 0) / players.length;
-  return proj;
-}
-\end{lstlisting}
+A small edge goes a long way.
 
-\warn{Empty slots auto-fill with HITTER\_REP. This is how marginal value ``vs replacement'' works.}
+\vspace{0.5cm}
+\textbf{Wide categories} (high SD) are noisy.
+
+Even a big edge might not matter---luck dominates.
+
+\vspace{0.5cm}
+\begin{center}
+\begin{tabular}{lrrl}
+\toprule
+Category & SD & 1/SD & Interpretation \\
+\midrule
+SB & 2.57 & 0.39 & \textcolor{good}{High leverage} \\
+SV & 1.54 & 0.65 & \textcolor{good}{High leverage} \\
+K (pitching) & 11.79 & 0.08 & \textcolor{bad}{Low leverage} \\
+TB & 15.94 & 0.06 & \textcolor{bad}{Low leverage} \\
+\bottomrule
+\end{tabular}
+\end{center}
 \end{frame}
 
-\begin{frame}[fragile]{calculateMarginalValue (Lines 724-753)}
-\begin{lstlisting}[language={}]
-function calculateMarginalValue(player) {
-  const team = allTeams['My Team'];
-  const currentWins = getExpectedWins('My Team')
-                      .wins.TOTAL;
+%=============================================================================
+\section{Marginal Value}
+%=============================================================================
 
-  // Temporarily add player to first empty slot
-  if (player.type === 'H') {
-    const idx = team.hitters.findIndex(
-      s => s.player === null);
-    if (idx === -1) return -999; // No empty slot
-    team.hitters[idx].player = player;
-    newWins = getExpectedWins('My Team').wins.TOTAL;
-    team.hitters[idx].player = null; // Restore
-  }
-  // Similar for SP, RP...
+\begin{frame}{What Is Marginal Value?}
+\textbf{Marginal value} = how much a player improves your expected wins \textit{compared to a replacement-level player}.
 
-  return newWins - currentWins;
-}
-\end{lstlisting}
-
-This is \textbf{the core ranking function}. It computes: ``How many expected category wins does this player add?''
-\end{frame}
-
-\begin{frame}{Marginal Value Calculation: Step by Step}
-\textbf{When roster is empty:}
+\vspace{0.5cm}
+Think of it this way:
 \begin{enumerate}
-    \item \texttt{currentWins} = wins with 9 replacement hitters
-    \item Add player to slot 0, recalculate \texttt{newWins}
-    \item \texttt{marginalValue = newWins - currentWins}
+    \item Start with your current roster
+    \item Calculate your win probability in each category
+    \item Add a player to an empty slot
+    \item Recalculate win probabilities
+    \item Marginal value = new total $-$ old total
 \end{enumerate}
 
 \vspace{0.3cm}
-\textbf{Example: Jos\'{e} Ram\'{i}rez on empty roster}
-\begin{itemize}
-    \item 9 replacement hitters: expected wins = 2.99/7
-    \item 8 replacement + Ram\'{i}rez: expected wins = 3.36/7
-    \item Marginal value = 0.378
-\end{itemize}
+If your roster is empty, you're comparing to a team of 9 replacement-level hitters.
+\end{frame}
 
-\vspace{0.3cm}
-\notebox{Marginal value depends on current roster. As you draft more players, MV changes based on team composition.}
+\begin{frame}{What Is Replacement Level?}
+\textbf{Replacement level} = the production you could get for free (waiver wire).
+
+\vspace{0.5cm}
+We estimate this by:
+\begin{enumerate}
+    \item Ranking all projected hitters
+    \item Taking players ranked 155--175 (just beyond draft pool)
+    \item Averaging their per-PA production
+\end{enumerate}
+
+\vspace{0.5cm}
+\textbf{Replacement hitter (600 PA):}
+\begin{center}
+\begin{tabular}{lrrrrrrr}
+\toprule
+R & HR & RBI & SO & TB & SB & OBP \\
+\midrule
+73 & 20 & 72 & 134 & 224 & 9 & .320 \\
+\bottomrule
+\end{tabular}
+\end{center}
 \end{frame}
 
 %=============================================================================
-\section{Pitching Projections}
-%=============================================================================
-
-\begin{frame}[fragile]{getPitchingProjections (Lines 617-690)}
-Key logic for SP slots:
-\begin{lstlisting}[language={}]
-const SP_SLOTS = 7;
-const SP_STARTS_PER_WEEK = 1.1; // per slot
-
-// Drafted SPs contribute their projected stats
-sps.forEach(sp => {
-  sp_ip += sp.ip_wk;  // Already per-week
-  sp_k += sp.k_wk;
-  ...
-});
-
-// Empty slots filled with replacement
-const repSpSlots = SP_SLOTS - sps.length;
-sp_ip += repSpSlots * SP_STARTS_PER_WEEK
-         * SP_REP_PER_START.ip;
-\end{lstlisting}
-
-\warn{SP stats in the PITCHERS array are already scaled to 1.1 starts/week. Don't double-scale.}
-\end{frame}
-
-\begin{frame}[fragile]{ERA and WHIP Calculation}
-\begin{lstlisting}[language={}]
-// Total pitching
-const total_ip = sp_ip + rp_ip;
-const total_er = sp_er + rp_er;
-const total_wh = sp_wh + rp_wh;
-
-return {
-  ...
-  ERA: total_ip > 0
-       ? (total_er * 9 / total_ip) : 4.5,
-  WHIP: total_ip > 0
-       ? (total_wh / total_ip) : 1.3,
-  ...
-};
-\end{lstlisting}
-
-\notebox{ERA/WHIP are innings-weighted. A reliever pitching 2.5 IP/week has ~6\% weight on team ERA. This is why RP ERA/WHIP contributions are tiny.}
-\end{frame}
-
-%=============================================================================
-\section{CSV Generation (create\_league\_stats.py)}
-%=============================================================================
-
-\begin{frame}[fragile]{Z-Score Formulas}
-For counting stats (R, HR, RBI, TB, SB):
-\begin{lstlisting}[language={}]
-z_r = (runs / NUM_WEEKS) / SD_R
-\end{lstlisting}
-
-For strikeouts (lower is better):
-\begin{lstlisting}[language={}]
-z_so = -(strikeouts / NUM_WEEKS) / SD_SO
-\end{lstlisting}
-
-For OBP (rate stat, 9 hitters share team OBP):
-\begin{lstlisting}[language={}]
-z_obp = (obp - AVG_OBP) / 9 / SD_OBP
-\end{lstlisting}
-
-\notebox{The /9 on OBP accounts for one player contributing 1/9 of team OBP. Without it, OBP would be overweighted.}
-\end{frame}
-
-\begin{frame}[fragile]{PA Supplementation}
-\begin{lstlisting}[language={}]
-TARGET_PA = 600
-
-if pa < TARGET_PA:
-    gap_pa = TARGET_PA - pa
-    runs = runs + gap_pa * REP_R_PER_PA
-    hr = hr + gap_pa * REP_HR_PER_PA
-    ...
-    # OBP is weighted average
-    obp = (pa * obp + gap_pa * REP_OBP) / TARGET_PA
-    pa = TARGET_PA
-\end{lstlisting}
-
-\textbf{Purpose:} A player with 400 PA shouldn't look worse than 600 PA just due to fewer counting stats. We fill the gap with replacement-level production.
-\end{frame}
-
-\begin{frame}[fragile]{PA Normalization (normalize\_pa.py)}
-\begin{lstlisting}[language={}]
-# Scale The Bat stats to match DC playing time
-scale = dc_pa[name] / thebat_pa
-
-counting_stats = ['AB','H','1B','2B','3B','HR',
-                  'R','RBI','BB','SO','SB','CS',...]
-
-for stat in counting_stats:
-    new_row[stat] = original * scale
-
-# Rate stats (OBP, K%) unchanged
-\end{lstlisting}
-
-\textbf{Purpose:} Compare projection \textit{skill}, not playing time estimates. All systems use DC's PA projections.
-\end{frame}
-
-%=============================================================================
-\section{UI and Player Arrays}
-%=============================================================================
-
-\begin{frame}[fragile]{Player Data Arrays (Lines 438-480)}
-\begin{lstlisting}[language={}]
-const HITTERS_THEBAT = [
-  {"name":"Shohei Ohtani","type":"H","pa":679,
-   "r":126,"hr":48,"rbi":119,"so":160,"tb":347,
-   "sb":24,"obp":0.385},
-  ...
-];
-
-const HITTERS_DC = [...];
-const HITTERS_BATX = [...];
-
-const PITCHERS = [
-  {"name":"Tarik Skubal","type":"SP","gs":29.6,
-   "ip_wk":7.03,"l_wk":0.259,"sv_wk":0.0,
-   "hld_wk":0.0,"k_wk":8.48,"qs_wk":0.673,
-   "er_wk":2.17,"wh_wk":6.854,...},
-  ...
-];
-\end{lstlisting}
-
-\warn{Hitter stats are season totals. Pitcher stats are already weekly.}
-\end{frame}
-
-\begin{frame}[fragile]{Projection System Toggle}
-\begin{lstlisting}[language={}]
-let currentProjection = 'thebat'; // default
-
-function getHitters() {
-  if (currentProjection === 'thebat')
-    return HITTERS_THEBAT;
-  if (currentProjection === 'batx')
-    return HITTERS_BATX;
-  return HITTERS_DC;
-}
-
-function switchProjection(value) {
-  currentProjection = value;
-  renderAll();
-}
-\end{lstlisting}
-
-\notebox{PITCHERS array is shared across all projection systems (not toggled).}
-\end{frame}
-
-%=============================================================================
-\section{Worked Example: Ram\'{i}rez Marginal Value}
+\section{Worked Example: Jos\'{e} Ram\'{i}rez}
 %=============================================================================
 
 \begin{frame}{Setup: Empty Roster}
-\texttt{allTeams['My Team'].hitters} = 9 slots, all null.
+Imagine you have no players drafted yet.
 
 \vspace{0.3cm}
-\texttt{getHittingProjections} fills nulls with \texttt{HITTER\_REP}:
+Your 9 hitter slots are filled with replacement-level production:
+
 \begin{center}
-\begin{tabular}{lr}
+\begin{tabular}{lrr}
 \toprule
-Stat & Team Weekly Total \\
+Category & Your Team (weekly) & League Avg \\
 \midrule
-R & $9 \times 73/25 = 26.28$ \\
-HR & $9 \times 20/25 = 7.20$ \\
-SB & $9 \times 9/25 = 3.24$ \\
-OBP & $0.320$ \\
+R & 26.3 & 29.0 \\
+HR & 7.2 & 8.0 \\
+RBI & 25.9 & 27.9 \\
+SO & 48.2 & 50.1 \\
+TB & 80.6 & 88.9 \\
+SB & 3.2 & 4.7 \\
+OBP & .320 & .320 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-These are compared to \texttt{HITTING\_AVG} to get win probabilities.
+You're below average in most categories, but slightly better in SO (fewer strikeouts is good).
 \end{frame}
 
 \begin{frame}{Win Probabilities: Replacement Team}
+Using the formula, here's your chance of winning each category:
+
 \begin{center}
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrr}
 \toprule
-Cat & My Team & Opp (AVG) & SD & P(win) \\
+Category & Diff vs Avg & P(win) \\
 \midrule
-R & 26.28 & 28.96 & 6.03 & 37.7\% \\
-HR & 7.20 & 8.02 & 2.93 & 42.2\% \\
-RBI & 25.92 & 27.86 & 6.72 & 41.9\% \\
-SO & 48.24 & 50.11 & 7.45 & 57.0\% \\
-TB & 80.64 & 88.87 & 15.94 & 35.8\% \\
-SB & 3.24 & 4.74 & 2.57 & 34.0\% \\
-OBP & 0.320 & 0.320 & 0.04 & 50.0\% \\
+R & $-2.7$ & 37.7\% \\
+HR & $-0.8$ & 42.2\% \\
+RBI & $-1.9$ & 41.9\% \\
+SO & $+1.9$ & \textcolor{good}{57.0\%} \\
+TB & $-8.2$ & 35.8\% \\
+SB & $-1.5$ & 34.0\% \\
+OBP & $0$ & 50.0\% \\
+\midrule
+\textbf{Total} & & \textbf{2.99 / 7} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\texttt{currentWins} = $\sum P = 2.99$
+A replacement-level team expects to win about 3 of 7 hitting categories.
 \end{frame}
 
-\begin{frame}{Add Ram\'{i}rez to Slot 0}
-Ram\'{i}rez's season line: 679 PA, 98 R, 30 HR, 94 RBI, 78 SO, 300 TB, 34 SB, .348 OBP
+\begin{frame}{Enter Jos\'{e} Ram\'{i}rez}
+\textbf{Ram\'{i}rez's projected line:}\\
+679 PA, 98 R, 30 HR, 94 RBI, 78 SO, 300 TB, 34 SB, .348 OBP
 
-\vspace{0.3cm}
-Team becomes 8 replacement + Ram\'{i}rez:
+\vspace{0.5cm}
+\textbf{Weekly contribution vs replacement:}
 \begin{center}
 \begin{tabular}{lrrr}
 \toprule
-Cat & Before & After & $\Delta$ \\
+Stat & Ram\'{i}rez & Replacement & Diff \\
 \midrule
-R & 26.28 & 27.28 & +1.00 \\
-HR & 7.20 & 7.60 & +0.40 \\
-SO & 48.24 & 46.00 & $-2.24$ \\
-SB & 3.24 & 4.24 & +1.00 \\
-OBP & 0.320 & 0.323 & +0.003 \\
+R/wk & 3.92 & 2.92 & \textcolor{good}{+1.00} \\
+HR/wk & 1.20 & 0.80 & \textcolor{good}{+0.40} \\
+RBI/wk & 3.76 & 2.88 & \textcolor{good}{+0.88} \\
+SO/wk & 3.12 & 5.36 & \textcolor{good}{$-2.24$} \\
+TB/wk & 12.00 & 8.96 & \textcolor{good}{+3.04} \\
+SB/wk & 1.36 & 0.36 & \textcolor{good}{+1.00} \\
+OBP & .348 & .320 & \textcolor{good}{+.028} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\notebox{OBP shifts by $(0.348-0.320)/9 = 0.003$ because it's averaged across 9 hitters.}
+Ram\'{i}rez is better than replacement in \textit{every} category.
 \end{frame}
 
 \begin{frame}{New Win Probabilities}
+With Ram\'{i}rez replacing one replacement hitter:
+
 \begin{center}
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrr}
 \toprule
-Cat & Old P & New P & $\Delta P$ \\
+Category & Before & After & Gain \\
 \midrule
 R & 37.7\% & 42.2\% & +4.5\% \\
 HR & 42.2\% & 46.0\% & +3.8\% \\
 RBI & 41.9\% & 45.6\% & +3.6\% \\
-SO & 57.0\% & 65.2\% & +8.1\% \\
+SO & 57.0\% & 65.2\% & \textcolor{good}{+8.1\%} \\
 TB & 35.8\% & 40.9\% & +5.1\% \\
-SB & 34.0\% & 44.5\% & +10.5\% \\
+SB & 34.0\% & 44.5\% & \textcolor{good}{+10.5\%} \\
 OBP & 50.0\% & 52.2\% & +2.2\% \\
 \midrule
 \textbf{Total} & 2.99 & 3.36 & \textbf{+0.378} \\
@@ -493,120 +229,224 @@ OBP & 50.0\% & 52.2\% & +2.2\% \\
 \end{tabular}
 \end{center}
 
-\texttt{marginalValue = 3.36 - 2.99 = 0.378}
+\textbf{Ram\'{i}rez's marginal value: 0.378}
 
-This is what the UI shows as ``+MV'' for Ram\'{i}rez.
+He adds 0.378 expected category wins per week.
 \end{frame}
 
-\begin{frame}{Why SB and SO Dominate}
-\begin{center}
-\begin{tabular}{lrrr}
-\toprule
-Cat & Weekly $\Delta$ & SD & $\Delta P$ \\
-\midrule
-SB & +1.00 & 2.57 & +10.5\% \\
-SO & $-2.24$ & 7.45 & +8.1\% \\
-TB & +3.04 & 15.94 & +5.1\% \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\textbf{Key insight:} Marginal value $\propto \frac{\Delta}{\text{SD}}$
-
+\begin{frame}{Why Do SB and SO Dominate?}
+Ram\'{i}rez's biggest gains:
 \begin{itemize}
-    \item SB: $1.00 / 2.57 = 0.39$ (high leverage)
-    \item TB: $3.04 / 15.94 = 0.19$ (low leverage)
-\end{itemize}
-
-Categories with small SD have outsized impact per unit.
-\end{frame}
-
-%=============================================================================
-\section{Common Gotchas}
-%=============================================================================
-
-\begin{frame}{Things That Will Trip You Up}
-\begin{enumerate}
-    \item \textbf{Hitter stats are season totals}, pitcher stats are weekly
-
-    \item \textbf{Empty slots auto-fill with replacement}---this is how ``vs replacement'' works
-
-    \item \textbf{OBP divides by 9} in z-score calculation (one player = 1/9 of team OBP)
-
-    \item \textbf{Replacement OBP is hardcoded} to 0.320 (not computed from cohort)
-
-    \item \textbf{SP ip\_wk is already scaled} to 1.1 starts/week in PITCHERS array
-
-    \item \textbf{ERA/WHIP are ratio stats}---RPs have tiny impact because they pitch few innings
-
-    \item \textbf{Player arrays are embedded in HTML}---regenerating CSVs requires manual copy
-\end{enumerate}
-\end{frame}
-
-\begin{frame}{SD Interpretation}
-Two related but different metrics:
-
-\vspace{0.3cm}
-\textbf{1/SD = marginal leverage per unit}
-\begin{itemize}
-    \item Used for player valuation
-    \item SB: $1/2.57 = 0.39$ (high leverage)
-    \item K: $1/11.79 = 0.08$ (low leverage)
+    \item \textbf{SB: +10.5\%} from just 1 extra steal/week
+    \item \textbf{SO: +8.1\%} from 2.24 fewer strikeouts/week
 \end{itemize}
 
 \vspace{0.3cm}
-\textbf{CV = SD/Mean = category noise}
+Compare to TB: +5.1\% from +3.04 TB/week.
+
+\vspace{0.5cm}
+\textbf{The math:}
 \begin{itemize}
-    \item SB: $2.57/4.74 = 54\%$ (very noisy)
-    \item SO: $7.45/50.11 = 15\%$ (stable)
+    \item SB: $1.00 \div 2.57 = 0.39$ standard deviations
+    \item TB: $3.04 \div 15.94 = 0.19$ standard deviations
 \end{itemize}
 
-\notebox{For marginal value, only absolute SD matters. CV tells you how luck-dependent a category is, but doesn't change the valuation formula.}
+\vspace{0.3cm}
+One steal moves the needle \textbf{twice as much} as three total bases, because steals have a tighter distribution.
 \end{frame}
 
 %=============================================================================
-\section{Feature History}
+\section{Relief Pitcher Valuation}
 %=============================================================================
 
-\begin{frame}{Changes Made (Chronological)}
-\begin{enumerate}
-    \item Base draft tool with UI and player data
-    \item Marginal win probability calculation
-    \item PA supplementation to 600 PA floor
-    \item Projection toggle (The Bat vs Depth Charts)
-    \item PA normalization across projection systems
-    \item 300 PA minimum filter
-    \item Replacement recalibration (ranks 155-175 cohort)
-    \item OBP cap at league average (0.320)
-    \item The BatX projection system added
-\end{enumerate}
+\begin{frame}{The Saves vs Holds Tradeoff}
+Elite closers get saves but sacrifice holds.
 
 \vspace{0.3cm}
-\notebox{Each feature should be documented here when added. Include: what changed, which files, any gotchas.}
-\end{frame}
-
-\begin{frame}{Quick Reference: Key Lines in draft\_tool.html}
+\textbf{Replacement RP (per week):}
 \begin{center}
 \begin{tabular}{lr}
 \toprule
-What & Lines \\
+Stat & Replacement \\
 \midrule
-HITTERS arrays & 438-480 \\
-PITCHERS array & 480 \\
-SD constants & 482-483 \\
-AVG constants & 486-487 \\
-Replacement constants & 489-510 \\
-normalCDF / winProbability & 580-599 \\
-getHittingProjections & 604-615 \\
-getPitchingProjections & 617-690 \\
-getExpectedWins & 692-720 \\
-calculateMarginalValue & 724-753 \\
-renderAvailablePlayers & 877-980 \\
+SV/wk & 0.12 \\
+HLD/wk & 0.85 \\
+K/wk & 2.69 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\warn{Line numbers may drift as code is edited. Use function names to search.}
+\vspace{0.3cm}
+Replacement RPs are \textbf{middle relievers}---they get holds, not saves.
+
+An elite closer gives up ~0.75 holds/week to gain ~1.35 saves/week.
+
+Is that trade worth it?
+\end{frame}
+
+\begin{frame}{Saves Have High Leverage}
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Category & SD & 1/SD \\
+\midrule
+SV & 1.54 & \textbf{0.65} \\
+HLD & 1.64 & 0.61 \\
+K & 11.79 & 0.08 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+Saves and holds have similar SDs, but closers gain more saves than they lose in holds.
+
+\vspace{0.3cm}
+\textbf{Net effect:} Elite closers are valuable because the save gain ($+1.35$/wk) exceeds the hold loss ($-0.75$/wk) in absolute terms.
+\end{frame}
+
+\begin{frame}{Why ERA/WHIP Don't Matter Much for RPs}
+ERA and WHIP are \textbf{innings-weighted}.
+
+\vspace{0.3cm}
+A typical team pitches ~40 IP/week:
+\begin{itemize}
+    \item 5 SP $\times$ 6.5 IP = 32.5 IP
+    \item 3 RP $\times$ 2.5 IP = 7.5 IP
+\end{itemize}
+
+\vspace{0.3cm}
+A reliever contributes \textbf{6\%} of team innings.
+
+\vspace{0.3cm}
+Even if an elite RP has much better ERA than replacement (3.06 vs 3.50), the team ERA only improves by $\approx$0.02 points.
+
+\vspace{0.3cm}
+\textbf{Conclusion:} RPs earn their value through saves, holds, and strikeouts---not ERA/WHIP.
+\end{frame}
+
+%=============================================================================
+\section{Comparing Projection Systems}
+%=============================================================================
+
+\begin{frame}{Three Projection Systems}
+The tool supports three projection sources:
+
+\begin{enumerate}
+    \item \textbf{Depth Charts} -- FanGraphs composite (default for playing time)
+    \item \textbf{The Bat} -- Tom Tango's system
+    \item \textbf{The BatX} -- Extended version of The Bat
+\end{enumerate}
+
+\vspace{0.5cm}
+All three use:
+\begin{itemize}
+    \item Same playing time (normalized to Depth Charts)
+    \item Same replacement level
+    \item Same weekly SDs
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Only difference:} Skill estimates (HR rate, SB rate, K\%, OBP, etc.)
+\end{frame}
+
+\begin{frame}{PA Normalization}
+Different systems project different playing time.
+
+\vspace{0.3cm}
+\textbf{Problem:} We want to compare skill, not PT estimates.
+
+\vspace{0.3cm}
+\textbf{Solution:} Scale all systems to use Depth Charts PA.
+
+\vspace{0.5cm}
+Example:
+\begin{itemize}
+    \item The Bat projects Player X at 500 PA, 25 HR
+    \item Depth Charts projects Player X at 600 PA
+    \item Normalized: 600 PA, 30 HR (scaled up by 600/500)
+\end{itemize}
+
+\vspace{0.3cm}
+Rate stats (OBP, K\%) stay unchanged---they reflect skill, not volume.
+\end{frame}
+
+%=============================================================================
+\section{Low-PA Players}
+%=============================================================================
+
+\begin{frame}{The Problem with Part-Time Players}
+A player projected for 400 PA will have lower counting stats than a 600 PA player, even if they're equally skilled per-PA.
+
+\vspace{0.5cm}
+\textbf{Solution:} Supplement everyone to 600 PA with replacement-level production.
+
+\vspace{0.5cm}
+\textbf{Example:} Player with 400 PA, 60 runs, .350 OBP
+\begin{itemize}
+    \item Gap: 200 PA at replacement level
+    \item Replacement runs: $200 \times 0.121 = 24$
+    \item Total runs: $60 + 24 = 84$
+    \item Blended OBP: $(400 \times .350 + 200 \times .320) / 600 = .340$
+\end{itemize}
+
+\vspace{0.3cm}
+This answers: ``What would this player produce over a full roster slot?''
+\end{frame}
+
+%=============================================================================
+\section{Key Takeaways}
+%=============================================================================
+
+\begin{frame}{Summary}
+\textbf{1. Marginal value measures wins added vs replacement.}
+
+Not raw stats---wins.
+
+\vspace{0.3cm}
+\textbf{2. Tight categories (low SD) have high leverage.}
+
+SB, SV, HLD matter more per unit than TB, K.
+
+\vspace{0.3cm}
+\textbf{3. Replacement level is the baseline.}
+
+Players ranked 155-175 define what's ``free.''
+
+\vspace{0.3cm}
+\textbf{4. Rate stats are diluted across rosters.}
+
+OBP is shared by 9 hitters. ERA/WHIP are innings-weighted.
+
+\vspace{0.3cm}
+\textbf{5. Elite closers win the saves/holds tradeoff.}
+
+They give up holds but gain more in saves.
+\end{frame}
+
+\begin{frame}{Category Leverage Reference}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Category & SD & Mean & 1/SD \\
+\midrule
+\multicolumn{4}{l}{\textbf{Hitting}} \\
+SB & 2.57 & 4.74 & \textcolor{good}{0.39} \\
+HR & 2.93 & 8.02 & 0.34 \\
+R & 6.03 & 28.96 & 0.17 \\
+RBI & 6.72 & 27.86 & 0.15 \\
+SO & 7.45 & 50.11 & 0.13 \\
+TB & 15.94 & 88.87 & 0.06 \\
+\midrule
+\multicolumn{4}{l}{\textbf{Pitching}} \\
+SV & 1.54 & 2.27 & \textcolor{good}{0.65} \\
+HLD & 1.64 & 2.30 & 0.61 \\
+L & 1.83 & 3.08 & 0.55 \\
+K & 11.79 & 50.90 & 0.08 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Higher 1/SD = more leverage per unit.
 \end{frame}
 
 \end{document}
