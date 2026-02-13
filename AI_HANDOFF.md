@@ -41,33 +41,33 @@ This document is designed for AI handoff. It contains everything needed to under
 
 ### Weekly Standard Deviations (Lines 482-483)
 
-Weighted average: 66% 2025 (filtered, excl. weeks 1 & 15), 33% 2024. These determine category leverage.
+Weighted average: 34% 2024, 66% 2025 (filtered, excl. weeks 1 & 15). These determine category leverage.
 
 ```javascript
 const HITTING_SD = {
-    R: 5.99, HR: 3.02, RBI: 6.86, SB: 2.56,
-    SO: 7.93, TB: 15.90, OBP: 0.035, AB: 20.20
+    R: 6.02, HR: 3.04, RBI: 6.89, SB: 2.57,
+    SO: 7.96, TB: 15.98, OBP: 0.0351, AB: 20.27
 };
 
 const PITCHING_SD = {
-    L: 1.7918, SV: 1.5433, K: 13.4236, HLD: 1.5510,
-    ERA: 1.2996, WHIP: 0.2098, QS: 1.4265, IP: 10.82
+    L: 1.8012, SV: 1.5509, K: 13.4752, HLD: 1.5596,
+    ERA: 1.3062, WHIP: 0.2108, QS: 1.4334, IP: 10.82
 };
 ```
 
 ### League Averages (Lines 486-487)
 
-Weighted average: 66% 2025 (filtered), 33% 2024. Used as opponent baseline.
+Weighted average: 34% 2024, 66% 2025 (filtered). Used as opponent baseline.
 
 ```javascript
 const HITTING_AVG = {
-    R: 29.14, HR: 8.33, RBI: 28.37, SB: 4.73,
-    SO: 49.43, TB: 89.83, OBP: 0.324, AB: 207.7
+    R: 29.43, HR: 8.41, RBI: 28.65, SB: 4.78,
+    SO: 49.93, TB: 90.72, OBP: 0.327, AB: 209.8
 };
 
 const PITCHING_AVG = {
-    L: 3.12, SV: 2.15, K: 50.79, HLD: 2.24,
-    ERA: 3.76, WHIP: 1.21, QS: 3.18, IP: 51.0
+    L: 3.15, SV: 2.17, K: 51.30, HLD: 2.26,
+    ERA: 3.80, WHIP: 1.22, QS: 3.21, IP: 51.0
 };
 ```
 
@@ -470,11 +470,11 @@ With those weeks removed, 2024 and 2025 SDs are very similar:
 
 ### Weighted Average Methodology
 
-The tool uses a **66/33 weighted average** (66% 2025 filtered, 33% 2024) to favor recent data while smoothing noise.
+The tool uses a **34/66 weighted average** (34% 2024, 66% 2025 filtered) to favor recent data while smoothing noise.
 
-For SDs, use variance weighting: `SD_combined = √(0.33×SD₂₀₂₄² + 0.66×SD₂₀₂₅²)`
+For SDs, use variance weighting: `SD_combined = √(0.34×SD₂₀₂₄² + 0.66×SD₂₀₂₅²)`
 
-For means: `Mean_combined = 0.33×Mean₂₀₂₄ + 0.66×Mean₂₀₂₅`
+For means: `Mean_combined = 0.34×Mean₂₀₂₄ + 0.66×Mean₂₀₂₅`
 
 ---
 
