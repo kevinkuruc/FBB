@@ -486,14 +486,47 @@
     const HITTING_AVG = { R: 29.43, HR: 8.41, RBI: 28.65, SB: 4.78, SO: 49.93, TB: 90.72, OBP: 0.327, AB: 209.8 };
     const PITCHING_AVG = { L: 3.15, SV: 2.17, K: 51.30, HLD: 2.26, ERA: 3.80, WHIP: 1.22, QS: 3.21, IP: 51.0 };
 
-    // Hitter replacement level (600 PA)
+    // PA floor - all hitters normalized to this level
+    const PA_FLOOR = 625;
+
+    // Hitter replacement level (625 PA)
     // Based on average of players ranked 155-175 in DC projections (Jan 2026)
+    // Scaled from 600 PA baseline by 625/600 factor
     const HITTER_REP = {
         name: 'Replacement',
         type: 'H',
-        pa: 600,
-        r: 73, hr: 20, rbi: 72, so: 134, tb: 224, sb: 9, obp: 0.324
+        pa: 625,
+        r: 76, hr: 21, rbi: 75, so: 140, tb: 233, sb: 9, obp: 0.324
     };
+
+    // Replacement rates per PA (for normalizing players below PA_FLOOR)
+    const REP_RATES = {
+        r: 76 / 625,
+        hr: 21 / 625,
+        rbi: 75 / 625,
+        so: 140 / 625,
+        tb: 233 / 625,
+        sb: 9 / 625,
+        obp: 0.324
+    };
+
+    // Normalize a hitter to PA_FLOOR by adding replacement-level production
+    function normalizeHitter(player) {
+        if (player.pa >= PA_FLOOR) return player;
+
+        const additionalPA = PA_FLOOR - player.pa;
+        return {
+            ...player,
+            pa: PA_FLOOR,
+            r: player.r + additionalPA * REP_RATES.r,
+            hr: player.hr + additionalPA * REP_RATES.hr,
+            rbi: player.rbi + additionalPA * REP_RATES.rbi,
+            so: player.so + additionalPA * REP_RATES.so,
+            tb: player.tb + additionalPA * REP_RATES.tb,
+            sb: player.sb + additionalPA * REP_RATES.sb,
+            obp: (player.obp * player.pa + REP_RATES.obp * additionalPA) / PA_FLOOR
+        };
+    }
 
     // SP replacement per-start rates
     const SP_REP_PER_START = {
@@ -604,7 +637,8 @@
     // =============================================================================
     function getHittingProjections(teamName) {
         const roster = allTeams[teamName].hitters;
-        const players = roster.map(slot => slot.player || HITTER_REP);
+        // Normalize all players to PA_FLOOR; empty slots use HITTER_REP
+        const players = roster.map(slot => slot.player ? normalizeHitter(slot.player) : HITTER_REP);
         const proj = {};
 
         ['r', 'hr', 'rbi', 'sb', 'so', 'tb'].forEach(cat => {
