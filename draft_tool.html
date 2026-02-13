@@ -959,6 +959,8 @@
             const mvText = p.mv >= 0 ? `+${p.mv.toFixed(3)}` : p.mv.toFixed(3);
             const rowClass = isPitcher ? 'player-row pitcher' : 'player-row';
             const typeBadge = p.type === 'H' ? 'hitter' : p.type.toLowerCase();
+            // Show normalized stats for hitters (consistent with MV calculation)
+            const h = isPitcher ? null : normalizeHitter(p);
 
             if (isPitcher) {
                 return `
@@ -992,14 +994,14 @@
                         <div>${p.name}</div>
                         <div><span class="type-badge ${typeBadge}">H</span></div>
                         <div class="${mvClass}">${mvText}</div>
-                        <div>${p.pa}</div>
-                        <div>${p.r}</div>
-                        <div>${p.hr}</div>
-                        <div>${p.rbi}</div>
-                        <div>${p.sb}</div>
-                        <div>${p.so}</div>
-                        <div>${p.tb}</div>
-                        <div>${p.obp.toFixed(3)}</div>
+                        <div>${h.pa}</div>
+                        <div>${Math.round(h.r)}</div>
+                        <div>${Math.round(h.hr)}</div>
+                        <div>${Math.round(h.rbi)}</div>
+                        <div>${Math.round(h.sb)}</div>
+                        <div>${Math.round(h.so)}</div>
+                        <div>${Math.round(h.tb)}</div>
+                        <div>${h.obp.toFixed(3)}</div>
                         <div>-</div>
                         <div>-</div>
                         <div>-</div>
