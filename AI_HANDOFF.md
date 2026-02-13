@@ -423,6 +423,59 @@ For marginal value calculations, only absolute SD matters. CV tells you how luck
 
 ---
 
+## League Data Files
+
+Historical weekly matchup data used to calculate SDs and league averages.
+
+### Files
+
+| File | Format | Observations |
+|------|--------|--------------|
+| `2024_weeklyresults.xlsx` | Wide (Team, Week, Categories...) | 288 (18 weeks × 16 teams) |
+| `matchup_stats_2025.csv` | Long (Week, Category, Teams...) | 384 rows |
+| `weekly_results_2025.csv` | Wide (converted from above) | 364 (24 weeks × 16 teams) |
+
+### Format Conversion (2025 Long → Wide)
+
+The 2025 data came in "long" format with one row per category per week. To convert:
+
+```python
+import pandas as pd
+
+df_raw = pd.read_csv('matchup_stats_2025.csv')
+df_melted = df_raw.melt(id_vars=['Week', 'Category'], var_name='Team', value_name='Value')
+df_wide = df_melted.pivot_table(index=['Week', 'Team'], columns='Category', values='Value', aggfunc='first').reset_index()
+df_wide = df_wide.rename(columns={'K_B': 'K', 'K_P': 'K.1'})  # Match 2024 column names
+```
+
+### 2024 vs 2025 Standard Deviation Comparison
+
+The current tool uses 2024 SDs. Analysis of 2025 data shows **notably higher variance** for counting categories:
+
+| Category | 2024 SD | 2025 SD | Change |
+|----------|---------|---------|--------|
+| K (batting) | 7.45 | 11.65 | **+56.4%** |
+| K (pitching) | 11.79 | 16.24 | **+37.8%** |
+| TB | 15.94 | 21.78 | **+36.7%** |
+| R | 6.03 | 8.12 | **+34.7%** |
+| RBI | 6.72 | 8.67 | **+29.1%** |
+| HR | 2.93 | 3.61 | **+23.1%** |
+| SB | 2.57 | 2.88 | +12.2% |
+| SV | 1.54 | 1.42 | -7.8% |
+| HLD | 1.64 | 1.61 | -1.7% |
+| ERA | 1.31 | 1.29 | -1.9% |
+| WHIP | 0.21 | 0.23 | +10.6% |
+
+**Interpretation:**
+- Counting categories became more volatile in 2025
+- Pitching ratio stats (ERA, WHIP) and discrete stats (SV, HLD) remained similar
+- If SDs increase, category leverage (1/SD) decreases, meaning individual player contributions matter less
+- The tool currently uses 2024 SDs; consider averaging or using most recent season
+
+**WARNING:** Higher SDs in 2025 may reflect more variable league behavior, different roster construction, or sample noise. Monitor future seasons before adjusting.
+
+---
+
 ## Quick Reference: Key Lines in draft_tool.html
 
 | What | Lines |
