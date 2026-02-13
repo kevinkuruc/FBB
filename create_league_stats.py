@@ -36,8 +36,8 @@ SD_SO = 7.45
 SD_TB = 15.94
 SD_OBP = 0.04
 
-# League average OBP for baseline
-AVG_OBP = 0.32
+# League average OBP for baseline (weighted: 34% 2024, 66% 2025 filtered)
+AVG_OBP = 0.327
 
 # Number of weeks in season
 NUM_WEEKS = 25
@@ -65,7 +65,7 @@ REP_RBI_PER_PA = 0.120773  # 1243 RBI / 10292 PA
 REP_SO_PER_PA = 0.222623   # 2291 SO / 10292 PA
 REP_TB_PER_PA = 0.372522   # 3834 TB / 10292 PA
 REP_SB_PER_PA = 0.015157   # 156 SB / 10292 PA
-REP_OBP = 0.320            # Capped at league average (2024: 0.320) to ensure replacement is OBP-neutral
+REP_OBP = 0.324            # Actual cohort average OBP (ranks 155-175)
 
 with open(input_file, 'r', encoding='utf-8-sig') as infile:
     reader = csv.DictReader(infile)

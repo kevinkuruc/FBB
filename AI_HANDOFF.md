@@ -42,33 +42,33 @@ This document is designed for AI handoff. It contains everything needed to under
 
 ### Weekly Standard Deviations (Lines 482-483)
 
-From 2024 league weekly results. These determine category leverage.
+Weighted average: 34% 2024, 66% 2025 (filtered, excl. weeks 1 & 15). These determine category leverage.
 
 ```javascript
 const HITTING_SD = {
-    R: 6.03, HR: 2.93, RBI: 6.72, SB: 2.57,
-    SO: 7.45, TB: 15.94, OBP: 0.04, AB: 16.89
+    R: 6.02, HR: 3.04, RBI: 6.89, SB: 2.57,
+    SO: 7.96, TB: 15.98, OBP: 0.0351, AB: 20.27
 };
 
 const PITCHING_SD = {
-    L: 1.8346, SV: 1.5362, K: 11.7861, HLD: 1.6383,
-    ERA: 1.3141, WHIP: 0.2057, QS: 1.4012, IP: 10.82
+    L: 1.8012, SV: 1.5509, K: 13.4752, HLD: 1.5596,
+    ERA: 1.3062, WHIP: 0.2108, QS: 1.4334, IP: 10.82
 };
 ```
 
 ### League Averages (Lines 486-487)
 
-Used as opponent baseline in win probability calculations.
+Weighted average: 34% 2024, 66% 2025 (filtered). Used as opponent baseline.
 
 ```javascript
 const HITTING_AVG = {
-    R: 28.96, HR: 8.02, RBI: 27.86, SB: 4.74,
-    SO: 50.11, TB: 88.87, OBP: 0.32, AB: 208.3
+    R: 29.43, HR: 8.41, RBI: 28.65, SB: 4.78,
+    SO: 49.93, TB: 90.72, OBP: 0.327, AB: 209.8
 };
 
 const PITCHING_AVG = {
-    L: 3.08, SV: 2.27, K: 50.90, HLD: 2.30,
-    ERA: 3.79, WHIP: 1.20, QS: 3.25, IP: 51.0
+    L: 3.15, SV: 2.17, K: 51.30, HLD: 2.26,
+    ERA: 3.80, WHIP: 1.22, QS: 3.21, IP: 51.0
 };
 ```
 
@@ -79,7 +79,7 @@ const PITCHING_AVG = {
 const HITTER_REP = {
     name: 'Replacement', type: 'H', pa: 600,
     r: 73, hr: 20, rbi: 72, so: 134,
-    tb: 224, sb: 9, obp: 0.32
+    tb: 224, sb: 9, obp: 0.324
 };
 
 // RP replacement - PER SLOT, WEEKLY
@@ -101,7 +101,7 @@ const SP_REP_PER_START = {
 - Take players ranked 155-175 (just beyond 16 teams × 9 hitters = 144)
 - Average their per-PA rates, multiply by 600 PA
 
-**WARNING:** Replacement OBP is hardcoded to 0.320 (league average) because the cohort's actual OBP (0.324) exceeded it. Replacement should be neutral, not positive.
+**NOTE:** Replacement OBP (0.324) is the actual cohort average. League average OBP (0.327) is slightly higher, so replacement players are slightly below average in OBP.
 
 ---
 
@@ -380,7 +380,7 @@ This is what the UI shows as "+MV" for Ramírez.
 
 3. **OBP divides by 9** in z-score calculation - One player contributes 1/9 of team OBP.
 
-4. **Replacement OBP is hardcoded** to 0.320 - Not computed from the cohort.
+4. **Replacement OBP is 0.324** - Actual cohort average, slightly below league avg (0.327).
 
 5. **SP ip_wk is already scaled** to 1.1 starts/week in PITCHERS array - Don't multiply again.
 
@@ -417,10 +417,66 @@ For marginal value calculations, only absolute SD matters. CV tells you how luck
 5. PA normalization across projection systems
 6. 300 PA minimum filter
 7. Replacement recalibration (ranks 155-175 cohort)
-8. OBP cap at league average (0.320)
-9. The BatX projection system added
+8. The BatX projection system added
+9. Weighted SD/AVG using 34% 2024 + 66% 2025 filtered data
+10. Replacement OBP updated to actual cohort value (0.324)
 
 **Add new features here with: what changed, which files, any gotchas.**
+
+---
+
+## League Data Files
+
+Historical weekly matchup data used to calculate SDs and league averages.
+
+### Files
+
+| File | Format | Observations |
+|------|--------|--------------|
+| `2024_weeklyresults.xlsx` | Wide (Team, Week, Categories...) | 288 (18 weeks × 16 teams) |
+| `matchup_stats_2025.csv` | Long (Week, Category, Teams...) | 384 rows |
+| `weekly_results_2025.csv` | Wide (converted from above) | 364 (24 weeks × 16 teams) |
+
+### Format Conversion (2025 Long → Wide)
+
+The 2025 data came in "long" format with one row per category per week. To convert:
+
+```python
+import pandas as pd
+
+df_raw = pd.read_csv('matchup_stats_2025.csv')
+df_melted = df_raw.melt(id_vars=['Week', 'Category'], var_name='Team', value_name='Value')
+df_wide = df_melted.pivot_table(index=['Week', 'Team'], columns='Category', values='Value', aggfunc='first').reset_index()
+df_wide = df_wide.rename(columns={'K_B': 'K', 'K_P': 'K.1'})  # Match 2024 column names
+```
+
+### 2024 vs 2025 Standard Deviation Comparison
+
+**IMPORTANT:** 2025 data excludes Week 1 (Opening Week) and Week 15 (All-Star Break double week). These were longer weeks with ~340 and ~309 avg AB respectively, vs ~210 for normal weeks. Including them inflated all counting stat variances by 30-130%.
+
+With those weeks removed, 2024 and 2025 SDs are very similar:
+
+| Category | 2024 SD | 2025 SD (filtered) | Change |
+|----------|---------|-------------------|--------|
+| R | 6.03 | 6.02 | -0.2% |
+| SB | 2.57 | 2.57 | -0.3% |
+| TB | 15.94 | 16.00 | +0.3% |
+| RBI | 6.72 | 6.99 | +4.0% |
+| HR | 2.93 | 3.09 | +5.6% |
+| K (batting) | 7.45 | 8.22 | +10.3% |
+| K (pitching) | 11.79 | 14.27 | +21.1% |
+| SV | 1.54 | 1.56 | +1.4% |
+| HLD | 1.64 | 1.52 | -7.4% |
+| ERA | 1.31 | 1.30 | -0.8% |
+| WHIP | 0.21 | 0.21 | +3.4% |
+
+### Weighted Average Methodology
+
+The tool uses a **34/66 weighted average** (34% 2024, 66% 2025 filtered) to favor recent data while smoothing noise.
+
+For SDs, use variance weighting: `SD_combined = √(0.34×SD₂₀₂₄² + 0.66×SD₂₀₂₅²)`
+
+For means: `Mean_combined = 0.34×Mean₂₀₂₄ + 0.66×Mean₂₀₂₅`
 
 ---
 
