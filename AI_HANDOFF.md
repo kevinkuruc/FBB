@@ -41,33 +41,33 @@ This document is designed for AI handoff. It contains everything needed to under
 
 ### Weekly Standard Deviations (Lines 482-483)
 
-From 2024 league weekly results. These determine category leverage.
+Weighted average: 66% 2025 (filtered, excl. weeks 1 & 15), 33% 2024. These determine category leverage.
 
 ```javascript
 const HITTING_SD = {
-    R: 6.03, HR: 2.93, RBI: 6.72, SB: 2.57,
-    SO: 7.45, TB: 15.94, OBP: 0.04, AB: 16.89
+    R: 5.99, HR: 3.02, RBI: 6.86, SB: 2.56,
+    SO: 7.93, TB: 15.90, OBP: 0.035, AB: 20.20
 };
 
 const PITCHING_SD = {
-    L: 1.8346, SV: 1.5362, K: 11.7861, HLD: 1.6383,
-    ERA: 1.3141, WHIP: 0.2057, QS: 1.4012, IP: 10.82
+    L: 1.7918, SV: 1.5433, K: 13.4236, HLD: 1.5510,
+    ERA: 1.2996, WHIP: 0.2098, QS: 1.4265, IP: 10.82
 };
 ```
 
 ### League Averages (Lines 486-487)
 
-Used as opponent baseline in win probability calculations.
+Weighted average: 66% 2025 (filtered), 33% 2024. Used as opponent baseline.
 
 ```javascript
 const HITTING_AVG = {
-    R: 28.96, HR: 8.02, RBI: 27.86, SB: 4.74,
-    SO: 50.11, TB: 88.87, OBP: 0.32, AB: 208.3
+    R: 29.14, HR: 8.33, RBI: 28.37, SB: 4.73,
+    SO: 49.43, TB: 89.83, OBP: 0.324, AB: 207.7
 };
 
 const PITCHING_AVG = {
-    L: 3.08, SV: 2.27, K: 50.90, HLD: 2.30,
-    ERA: 3.79, WHIP: 1.20, QS: 3.25, IP: 51.0
+    L: 3.12, SV: 2.15, K: 50.79, HLD: 2.24,
+    ERA: 3.76, WHIP: 1.21, QS: 3.18, IP: 51.0
 };
 ```
 
@@ -450,29 +450,31 @@ df_wide = df_wide.rename(columns={'K_B': 'K', 'K_P': 'K.1'})  # Match 2024 colum
 
 ### 2024 vs 2025 Standard Deviation Comparison
 
-The current tool uses 2024 SDs. Analysis of 2025 data shows **notably higher variance** for counting categories:
+**IMPORTANT:** 2025 data excludes Week 1 (Opening Week) and Week 15 (All-Star Break double week). These were longer weeks with ~340 and ~309 avg AB respectively, vs ~210 for normal weeks. Including them inflated all counting stat variances by 30-130%.
 
-| Category | 2024 SD | 2025 SD | Change |
-|----------|---------|---------|--------|
-| K (batting) | 7.45 | 11.65 | **+56.4%** |
-| K (pitching) | 11.79 | 16.24 | **+37.8%** |
-| TB | 15.94 | 21.78 | **+36.7%** |
-| R | 6.03 | 8.12 | **+34.7%** |
-| RBI | 6.72 | 8.67 | **+29.1%** |
-| HR | 2.93 | 3.61 | **+23.1%** |
-| SB | 2.57 | 2.88 | +12.2% |
-| SV | 1.54 | 1.42 | -7.8% |
-| HLD | 1.64 | 1.61 | -1.7% |
-| ERA | 1.31 | 1.29 | -1.9% |
-| WHIP | 0.21 | 0.23 | +10.6% |
+With those weeks removed, 2024 and 2025 SDs are very similar:
 
-**Interpretation:**
-- Counting categories became more volatile in 2025
-- Pitching ratio stats (ERA, WHIP) and discrete stats (SV, HLD) remained similar
-- If SDs increase, category leverage (1/SD) decreases, meaning individual player contributions matter less
-- The tool currently uses 2024 SDs; consider averaging or using most recent season
+| Category | 2024 SD | 2025 SD (filtered) | Change |
+|----------|---------|-------------------|--------|
+| R | 6.03 | 6.02 | -0.2% |
+| SB | 2.57 | 2.57 | -0.3% |
+| TB | 15.94 | 16.00 | +0.3% |
+| RBI | 6.72 | 6.99 | +4.0% |
+| HR | 2.93 | 3.09 | +5.6% |
+| K (batting) | 7.45 | 8.22 | +10.3% |
+| K (pitching) | 11.79 | 14.27 | +21.1% |
+| SV | 1.54 | 1.56 | +1.4% |
+| HLD | 1.64 | 1.52 | -7.4% |
+| ERA | 1.31 | 1.30 | -0.8% |
+| WHIP | 0.21 | 0.21 | +3.4% |
 
-**WARNING:** Higher SDs in 2025 may reflect more variable league behavior, different roster construction, or sample noise. Monitor future seasons before adjusting.
+### Weighted Average Methodology
+
+The tool uses a **66/33 weighted average** (66% 2025 filtered, 33% 2024) to favor recent data while smoothing noise.
+
+For SDs, use variance weighting: `SD_combined = √(0.33×SD₂₀₂₄² + 0.66×SD₂₀₂₅²)`
+
+For means: `Mean_combined = 0.33×Mean₂₀₂₄ + 0.66×Mean₂₀₂₅`
 
 ---
 
