@@ -43,13 +43,15 @@ AVG_OBP = 0.327
 NUM_WEEKS = 25
 
 # Target PA - all players supplemented to this level with replacement production
-TARGET_PA = 600
+# NOTE: This is the SINGLE SOURCE OF TRUTH for PA normalization.
+# Do NOT add PA normalization in draft_tool.html - it happens here at data generation time.
+TARGET_PA = 625
 
 # Replacement level per-PA rates
 # Methodology: Using Depth Charts projections, players are ranked by zTotal.
 # Replacement level is defined as the average production of players ranked 155-175.
 # This represents the talent pool just beyond typical draft depth (16 teams x 9 hitters = 144).
-# These rates are used to supplement low-PA players to a 600 PA baseline.
+# These rates are used to supplement low-PA players to the TARGET_PA baseline.
 #
 # Cohort (ranks 155-175, Jan 2026 DC projections):
 # Spencer Steer, Miguel Andujar, Ezequiel Tovar, Jonathan Aranda, Addison Barger,

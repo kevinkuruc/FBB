@@ -74,11 +74,11 @@ const PITCHING_AVG = {
 ### Replacement Level (Lines 489-510)
 
 ```javascript
-// Hitter replacement - 600 PA SEASON TOTALS
+// Hitter replacement - 625 PA SEASON TOTALS (matches TARGET_PA in create_league_stats.py)
 const HITTER_REP = {
-    name: 'Replacement', type: 'H', pa: 600,
-    r: 73, hr: 20, rbi: 72, so: 134,
-    tb: 224, sb: 9, obp: 0.324
+    name: 'Replacement', type: 'H', pa: 625,
+    r: 76, hr: 21, rbi: 75, so: 140,
+    tb: 233, sb: 9, obp: 0.324
 };
 
 // RP replacement - PER SLOT, WEEKLY
@@ -218,51 +218,43 @@ z_obp = (obp - AVG_OBP) / 9 / SD_OBP
 
 **NOTE:** The /9 on OBP accounts for one player contributing 1/9 of team OBP. Without it, OBP would be overweighted.
 
-### PA Supplementation (Two-Layer System)
+### PA Supplementation
 
-PA normalization happens in two places:
+**SINGLE SOURCE OF TRUTH: create_league_stats.py**
 
-**Layer 1: Data Generation (create_league_stats.py)**
+PA normalization happens ONLY in create_league_stats.py at data generation time.
+Do NOT add PA normalization in draft_tool.html - data arrives pre-normalized.
+
 ```python
-TARGET_PA = 600  # Initial floor when generating CSV/JS arrays
+# create_league_stats.py
+TARGET_PA = 625  # All players supplemented to this level
 
 if pa < TARGET_PA:
     gap_pa = TARGET_PA - pa
     runs = runs + gap_pa * REP_R_PER_PA
-    # ... other counting stats ...
+    hr = hr + gap_pa * REP_HR_PER_PA
+    rbi = rbi + gap_pa * REP_RBI_PER_PA
+    so = so + gap_pa * REP_SO_PER_PA
+    tb = tb + gap_pa * REP_TB_PER_PA
+    sb = sb + gap_pa * REP_SB_PER_PA
     obp = (pa * obp + gap_pa * REP_OBP) / TARGET_PA
     pa = TARGET_PA
 ```
 
-**Layer 2: Runtime Normalization (draft_tool.html)**
-```javascript
-const PA_FLOOR = 625;  // Runtime floor (can be higher than TARGET_PA)
-
-function normalizeHitter(player) {
-    if (player.pa >= PA_FLOOR) return player;
-    const additionalPA = PA_FLOOR - player.pa;
-    return {
-        ...player,
-        pa: PA_FLOOR,
-        r: player.r + additionalPA * REP_RATES.r,
-        // ... other counting stats ...
-        obp: (player.obp * player.pa + REP_RATES.obp * additionalPA) / PA_FLOOR
-    };
-}
-```
-
-**How they interact:**
-- Data is generated with TARGET_PA=600 floor baked in
-- At runtime, JS normalizeHitter() tops up to PA_FLOOR=625
-- A player with raw 560 PA → 600 PA in data → 625 PA at runtime
-- Display shows normalized values (consistent with MV calculations)
+**Example:** Corey Seager with raw 560 PA → 625 PA in data (65 replacement PAs added)
 
 **Purpose:** All hitters evaluated on equal playing time basis. Low-PA players get replacement-level production for missing PAs.
 
-### Replacement Level Rates
+**To change the PA floor:**
+1. Update `TARGET_PA` in create_league_stats.py
+2. Regenerate all three CSVs (DC, The Bat, BatX)
+3. Update JS arrays in draft_tool.html (use conversion script)
+4. Update `HITTER_REP` in draft_tool.html to match new PA level
+
+### Replacement Level Rates (create_league_stats.py)
 
 ```python
-# create_league_stats.py (data generation)
+# From players ranked 155-175 in DC projections
 REP_R_PER_PA = 0.121162    # 1247 R / 10292 PA
 REP_HR_PER_PA = 0.033035   # 340 HR / 10292 PA
 REP_RBI_PER_PA = 0.120773  # 1243 RBI / 10292 PA
@@ -270,15 +262,6 @@ REP_SO_PER_PA = 0.222623   # 2291 SO / 10292 PA
 REP_TB_PER_PA = 0.372522   # 3834 TB / 10292 PA
 REP_SB_PER_PA = 0.015157   # 156 SB / 10292 PA
 REP_OBP = 0.324            # Actual cohort average (ranks 155-175)
-```
-
-```javascript
-// draft_tool.html (runtime) - scaled for 625 PA replacement
-const REP_RATES = {
-    r: 76 / 625,   hr: 21 / 625,  rbi: 75 / 625,
-    so: 140 / 625, tb: 233 / 625, sb: 9 / 625,
-    obp: 0.324
-};
 ```
 
 ---
