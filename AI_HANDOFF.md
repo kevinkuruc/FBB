@@ -78,7 +78,7 @@ const PITCHING_AVG = {
 const HITTER_REP = {
     name: 'Replacement', type: 'H', pa: 600,
     r: 73, hr: 20, rbi: 72, so: 134,
-    tb: 224, sb: 9, obp: 0.32
+    tb: 224, sb: 9, obp: 0.324
 };
 
 // RP replacement - PER SLOT, WEEKLY
@@ -100,7 +100,7 @@ const SP_REP_PER_START = {
 - Take players ranked 155-175 (just beyond 16 teams × 9 hitters = 144)
 - Average their per-PA rates, multiply by 600 PA
 
-**WARNING:** Replacement OBP is hardcoded to 0.320 (league average) because the cohort's actual OBP (0.324) exceeded it. Replacement should be neutral, not positive.
+**NOTE:** Replacement OBP (0.324) is the actual cohort average. League average OBP (0.327) is slightly higher, so replacement players are slightly below average in OBP.
 
 ---
 
@@ -379,7 +379,7 @@ This is what the UI shows as "+MV" for Ramírez.
 
 3. **OBP divides by 9** in z-score calculation - One player contributes 1/9 of team OBP.
 
-4. **Replacement OBP is hardcoded** to 0.320 - Not computed from the cohort.
+4. **Replacement OBP is 0.324** - Actual cohort average, slightly below league avg (0.327).
 
 5. **SP ip_wk is already scaled** to 1.1 starts/week in PITCHERS array - Don't multiply again.
 
@@ -416,8 +416,9 @@ For marginal value calculations, only absolute SD matters. CV tells you how luck
 5. PA normalization across projection systems
 6. 300 PA minimum filter
 7. Replacement recalibration (ranks 155-175 cohort)
-8. OBP cap at league average (0.320)
-9. The BatX projection system added
+8. The BatX projection system added
+9. Weighted SD/AVG using 34% 2024 + 66% 2025 filtered data
+10. Replacement OBP updated to actual cohort value (0.324)
 
 **Add new features here with: what changed, which files, any gotchas.**
 
