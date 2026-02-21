@@ -423,6 +423,46 @@
             <div id="other-teams-grid" class="other-teams-grid"></div>
         </div>
 
+        <!-- Team Detail Panel (shown on double-click from All Teams) -->
+        <div id="team-detail-panel" class="panel">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                <button onclick="backToAllTeams()" style="background: #2d5a2d; border: none; color: #5cb85c; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px;">&larr; All Teams</button>
+                <h2 id="team-detail-name" style="margin: 0; color: #5cb85c;"></h2>
+            </div>
+            <div class="roster-section">
+                <h3>Hitters (9 slots)</h3>
+                <div id="detail-hitter-roster" class="roster-grid"></div>
+            </div>
+            <div class="roster-section">
+                <h3>Starting Pitchers (7 slots)</h3>
+                <div id="detail-sp-roster" class="roster-grid pitchers"></div>
+            </div>
+            <div class="roster-section">
+                <h3>Relief Pitchers (4 slots)</h3>
+                <div id="detail-rp-roster" class="roster-grid pitchers"></div>
+            </div>
+            <div class="expected-wins" style="font-size: 28px; margin: 20px 0; padding: 15px; background: #0d1f0d; border-radius: 8px; text-align: center;">
+                Expected Weekly Wins: <span id="detail-expected-wins" style="font-size: 36px;">7.00</span> / 14
+            </div>
+            <h3>Category Win Probabilities</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h4 style="color: #5cb85c; margin-bottom: 10px;">Hitting (7 categories + volume)</h4>
+                    <table class="category-table">
+                        <thead><tr><th>Cat</th><th>Wk Proj</th><th>Lg Avg</th><th>P(Win)</th></tr></thead>
+                        <tbody id="detail-hitting-tbody"></tbody>
+                    </table>
+                </div>
+                <div>
+                    <h4 style="color: #5cb85c; margin-bottom: 10px;">Pitching (7 categories + volume)</h4>
+                    <table class="category-table">
+                        <thead><tr><th>Cat</th><th>Wk Proj</th><th>Lg Avg</th><th>P(Win)</th></tr></thead>
+                        <tbody id="detail-pitching-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Draft Log Panel -->
         <div id="log-panel" class="panel">
             <div id="draft-log" class="draft-log"></div>
@@ -1092,7 +1132,7 @@
             }).join('');
 
             return `
-                <div class="other-team-card ${isMyTeam ? 'my-team-card' : ''}">
+                <div class="other-team-card ${isMyTeam ? 'my-team-card' : ''}" ondblclick="showTeamDetail('${teamName}')" style="cursor: pointer;" title="Double-click for detail view">
                     <h4>${teamName}</h4>
                     <div class="lineup-section-label">Lineup</div>
                     ${hitterHtml}
@@ -1103,6 +1143,99 @@
                 </div>
             `;
         }).join('');
+    }
+
+    function showTeamDetail(teamName) {
+        // Hide all panels, show team-detail-panel
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('team-detail-panel').classList.add('active');
+
+        document.getElementById('team-detail-name').textContent = teamName;
+
+        const team = allTeams[teamName];
+
+        // Hitters
+        document.getElementById('detail-hitter-roster').innerHTML = team.hitters.map(slot => {
+            const player = slot.player;
+            const filled = player !== null;
+            return `
+                <div class="roster-slot ${filled ? 'filled' : ''}">
+                    <div class="position">${slot.position}</div>
+                    <div class="player-name">${filled ? player.name : '—'}</div>
+                    ${filled && player.pos && player.pos.length ? `<div style="margin: 2px 0">${player.pos.map(p => '<span class="pos-badge">' + p + '</span>').join(' ')}</div>` : ''}
+                    ${filled ? `<div class="player-stats">R:${player.r} HR:${player.hr} RBI:${player.rbi} SB:${player.sb} OBP:${player.obp.toFixed(3)}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        // SPs
+        document.getElementById('detail-sp-roster').innerHTML = team.sps.map((player, idx) => {
+            const filled = player !== null;
+            return `
+                <div class="roster-slot ${filled ? 'filled' : ''}">
+                    <div class="position">SP${idx + 1}</div>
+                    <div class="player-name">${filled ? player.name : '—'}</div>
+                    ${filled ? `<div class="player-stats">K:${player.k_wk.toFixed(1)} ERA:${player.era.toFixed(2)}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        // RPs
+        document.getElementById('detail-rp-roster').innerHTML = team.rps.map((player, idx) => {
+            const filled = player !== null;
+            return `
+                <div class="roster-slot ${filled ? 'filled' : ''}">
+                    <div class="position">RP${idx + 1}</div>
+                    <div class="player-name">${filled ? player.name : '—'}</div>
+                    ${filled ? `<div class="player-stats">SV:${player.sv_wk.toFixed(2)} HLD:${player.hld_wk.toFixed(2)}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        // Category tables
+        const { hittingProj, pitchingProj, wins } = getExpectedWins(teamName);
+
+        // Hitting - AB row first
+        const abPWin = winProbability(hittingProj['AB'], HITTING_AVG['AB'], HITTING_SD['AB']);
+        const abRow = `<tr style="background: #0d2d0d;"><td><em>AB</em></td><td>${hittingProj['AB'].toFixed(1)}</td><td>${HITTING_AVG['AB'].toFixed(1)}</td><td class="win-prob ${abPWin >= 0.55 ? 'good' : abPWin >= 0.45 ? 'neutral' : 'bad'}" style="opacity: 0.7;">${(abPWin * 100).toFixed(1)}%</td></tr>`;
+
+        const hittingCats = ['R', 'HR', 'RBI', 'SO', 'TB', 'SB', 'OBP'];
+        const hittingRows = hittingCats.map(cat => {
+            const pWin = wins.hitting[cat];
+            const colorClass = pWin >= 0.55 ? 'good' : pWin >= 0.45 ? 'neutral' : 'bad';
+            const myVal = cat === 'OBP' ? hittingProj[cat].toFixed(3) : hittingProj[cat].toFixed(1);
+            const lgVal = cat === 'OBP' ? HITTING_AVG[cat].toFixed(3) : HITTING_AVG[cat].toFixed(1);
+            return `<tr><td>${cat}</td><td>${myVal}</td><td>${lgVal}</td><td class="win-prob ${colorClass}">${(pWin * 100).toFixed(1)}%</td></tr>`;
+        }).join('');
+        document.getElementById('detail-hitting-tbody').innerHTML = abRow + hittingRows;
+
+        // Pitching - IP row first
+        const ipPWin = winProbability(pitchingProj['IP'], PITCHING_AVG['IP'], PITCHING_SD['IP']);
+        const ipRow = `<tr style="background: #0d2d0d;"><td><em>IP</em></td><td>${pitchingProj['IP'].toFixed(1)}</td><td>${PITCHING_AVG['IP'].toFixed(1)}</td><td class="win-prob ${ipPWin >= 0.55 ? 'good' : ipPWin >= 0.45 ? 'neutral' : 'bad'}" style="opacity: 0.7;">${(ipPWin * 100).toFixed(1)}%</td></tr>`;
+
+        const pitchingCats = ['L', 'SV', 'K', 'HLD', 'ERA', 'WHIP', 'QS'];
+        const pitchingRows = pitchingCats.map(cat => {
+            const pWin = wins.pitching[cat];
+            const colorClass = pWin >= 0.55 ? 'good' : pWin >= 0.45 ? 'neutral' : 'bad';
+            const myVal = ['ERA', 'WHIP'].includes(cat) ? pitchingProj[cat].toFixed(3) : pitchingProj[cat].toFixed(2);
+            const lgVal = ['ERA', 'WHIP'].includes(cat) ? PITCHING_AVG[cat].toFixed(3) : PITCHING_AVG[cat].toFixed(2);
+            return `<tr><td>${cat}</td><td>${myVal}</td><td>${lgVal}</td><td class="win-prob ${colorClass}">${(pWin * 100).toFixed(1)}%</td></tr>`;
+        }).join('');
+        document.getElementById('detail-pitching-tbody').innerHTML = ipRow + pitchingRows;
+
+        document.getElementById('detail-expected-wins').textContent = wins.TOTAL.toFixed(2);
+    }
+
+    function backToAllTeams() {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('teams-panel').classList.add('active');
+        // Re-activate the All Teams tab button
+        document.querySelectorAll('.tab').forEach(t => {
+            if (t.textContent === 'All Teams') t.classList.add('active');
+        });
+        renderOtherTeams();
     }
 
     function renderDraftLog() {
