@@ -75,26 +75,13 @@ The gap has actually widened since the HTML tool was updated. **Use the HTML too
 
 The merge conflict markers have been resolved. The file is clean.
 
-### ISSUE 3 (Low, STILL OPEN): `AI_HANDOFF.md` has stale SP replacement and RP_SLOTS values
+### ISSUE 3 (Low, FIXED): `AI_HANDOFF.md` had stale SP replacement and RP_SLOTS values
 
-The handoff doc still lists old SP_REP_PER_START values that differ from the actual code:
+Fixed: SP_REP_PER_START values, RP_SLOTS (3 -> 4), and "multiply by 600 PA" -> 625 now all match the code.
 
-| Stat | Doc says | Code has |
-|------|----------|----------|
-| ip   | 5.5      | 5.756    |
-| l    | 0.11     | 0.3379   |
-| qs   | 0.45     | 0.3797   |
-| k    | 5.0      | 5.187    |
-| er   | 2.5      | 2.688    |
-| wh   | 7.0      | 7.448    |
+### ISSUE 4 (Low, FIXED): Beamer slides said "W" instead of "L"
 
-The doc also still says RP_SLOTS = 3, but the code correctly uses RP_SLOTS = 4.
-
-Additionally, the doc says "multiply by 600 PA" in the replacement level explanation, but TARGET_PA is now 625. This was partially updated in some places but not all.
-
-### ISSUE 4 (Low, STILL OPEN): Beamer slides say "W" instead of "L"
-
-`draft_tool_docs.tex` line 38 still says "Pitching: W, SV, K, HLD, ERA, WHIP, QS" but the actual league category is L (losses, lower is better).
+Fixed: `draft_tool_docs.tex` now correctly says "L, SV, K, HLD, ERA, WHIP, QS".
 
 ### ISSUE 5 (Low, STILL OPEN): `fantasy_hitters_2026.csv` uses non-normalized PA
 

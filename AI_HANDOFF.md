@@ -90,15 +90,15 @@ const RP_REP_PER_SLOT = {
 
 // SP replacement - PER START
 const SP_REP_PER_START = {
-    ip: 5.5, l: 0.11, qs: 0.45,
-    k: 5.0, er: 2.5, wh: 7.0
+    ip: 5.756, l: 0.3379, qs: 0.3797,
+    k: 5.187, er: 2.688, wh: 7.448
 };
 ```
 
 **Where hitter replacement comes from** (defined in create_league_stats.py):
 - Rank all hitters by zTotal using Depth Charts projections
 - Take players ranked 155-175 (just beyond 16 teams × 9 hitters = 144)
-- Average their per-PA rates, multiply by 600 PA
+- Average their per-PA rates, multiply by 625 PA
 
 **NOTE:** Replacement OBP (0.324) is the actual cohort average. League average OBP (0.327) is slightly higher, so replacement players are slightly below average in OBP.
 
@@ -165,7 +165,7 @@ function getHittingProjections(teamName) {
 
 Key points:
 - SP_SLOTS = 7, each gets 1.1 starts/week
-- RP_SLOTS = 3
+- RP_SLOTS = 4
 - Empty slots filled with replacement production
 - ERA = (total_er × 9) / total_ip
 - WHIP = total_wh / total_ip
