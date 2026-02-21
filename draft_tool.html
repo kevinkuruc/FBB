@@ -206,48 +206,55 @@
             background: #0d1f0d;
             border: 2px solid #2d5a2d;
             border-radius: 8px;
-            padding: 10px;
+            padding: 12px;
         }
         .other-team-card.my-team-card {
             border-color: #5cb85c;
         }
         .other-team-card h4 {
-            margin: 0 0 10px 0;
+            margin: 0 0 8px 0;
             color: #5cb85c;
             font-size: 14px;
+            border-bottom: 1px solid #2d5a2d;
+            padding-bottom: 6px;
         }
-        .team-roster-mini {
-            font-size: 10px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2px;
-            margin-bottom: 10px;
+        .lineup-slot {
+            display: flex;
+            align-items: center;
+            padding: 3px 0;
+            font-size: 12px;
+            border-bottom: 1px solid #1a2e1a;
         }
-        .mini-slot {
+        .lineup-slot:last-child {
+            border-bottom: none;
+        }
+        .lineup-pos {
+            width: 32px;
+            color: #888;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .lineup-name {
+            color: #5cb85c;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .mini-slot .pos {
-            color: #888;
+        .lineup-name.empty {
+            color: #444;
+            font-style: italic;
         }
-        .mini-slot .name {
-            color: #5cb85c;
-        }
-        .mini-slot .name.empty {
-            color: #555;
-        }
-        .team-projections {
+        .lineup-section-label {
             font-size: 10px;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 2px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 8px 0 4px 0;
+            border-bottom: 1px solid #2d5a2d;
+            padding-bottom: 2px;
         }
-        .proj-row .cat {
-            color: #888;
-        }
-        .proj-row .val {
-            color: #5cb85c;
+        .lineup-section-label:first-child {
+            margin-top: 0;
         }
         /* Draft Log Tab */
         .draft-log {
@@ -536,6 +543,62 @@
     let selectedSlotType = null;
 
     // =============================================================================
+    // POSITION OPTIMIZER - assigns hitters to optimal position slots
+    // =============================================================================
+    // Uses Hungarian-style most-constrained-first matching:
+    // 1. Collect all hitters on the team and their eligible positions
+    // 2. Sort by number of eligible slots (most constrained first)
+    // 3. Assign each player to their best available slot
+    // 4. UTIL is a wildcard that any hitter can fill
+    function optimizeTeamPositions(teamName) {
+        const team = allTeams[teamName];
+        // Collect all rostered hitters
+        const players = [];
+        team.hitters.forEach(slot => {
+            if (slot.player) players.push(slot.player);
+        });
+        if (players.length === 0) return;
+
+        // Clear all hitter slots
+        team.hitters.forEach(slot => { slot.player = null; });
+
+        // Build eligibility map: each player -> which slot positions they can fill
+        const playerEligibility = players.map(player => {
+            const pos = player.pos || [];
+            // A player can fill a slot if the slot position is in their pos array,
+            // OR if the slot is UTIL (any hitter can fill UTIL)
+            const eligible = HITTER_POSITIONS.filter(slotPos =>
+                slotPos === 'UTIL' || pos.includes(slotPos)
+            );
+            return { player, eligible };
+        });
+
+        // Sort: most constrained first (fewest eligible slots)
+        playerEligibility.sort((a, b) => a.eligible.length - b.eligible.length);
+
+        // Greedy assignment: assign each player to their first available matching slot
+        // Try non-UTIL slots first, then UTIL as fallback
+        playerEligibility.forEach(({ player, eligible }) => {
+            const nonUtil = eligible.filter(p => p !== 'UTIL');
+            const tryOrder = [...nonUtil, 'UTIL'];
+            let assigned = false;
+            for (const pos of tryOrder) {
+                const slotIdx = team.hitters.findIndex(s => s.position === pos && s.player === null);
+                if (slotIdx !== -1) {
+                    team.hitters[slotIdx].player = player;
+                    assigned = true;
+                    break;
+                }
+            }
+            // Last resort: any empty slot (shouldn't happen with valid data)
+            if (!assigned) {
+                const slotIdx = team.hitters.findIndex(s => s.player === null);
+                if (slotIdx !== -1) team.hitters[slotIdx].player = player;
+            }
+        });
+    }
+
+    // =============================================================================
     // KEEPER INITIALIZATION
     // =============================================================================
     (function initKeepers() {
@@ -549,21 +612,8 @@
                 if (keeper.type === 'H') {
                     const player = getHitters().find(h => h.name === keeper.name);
                     if (player) {
-                        // Try to place in a matching position slot
-                        const eligiblePositions = keeper.position ? keeper.position.split(',') : [];
-                        let slotIdx = -1;
-                        for (const pos of eligiblePositions) {
-                            slotIdx = team.hitters.findIndex(s => s.position === pos && s.player === null);
-                            if (slotIdx !== -1) break;
-                        }
-                        // Fall back to UTIL
-                        if (slotIdx === -1) {
-                            slotIdx = team.hitters.findIndex(s => s.position === 'UTIL' && s.player === null);
-                        }
-                        // Last resort: any empty slot
-                        if (slotIdx === -1) {
-                            slotIdx = team.hitters.findIndex(s => s.player === null);
-                        }
+                        // Just put in any empty slot; optimizeTeamPositions will sort it out
+                        const slotIdx = team.hitters.findIndex(s => s.player === null);
                         if (slotIdx !== -1) {
                             team.hitters[slotIdx].player = { ...player, type: 'H' };
                             draftedPlayers.add(player.name);
@@ -592,6 +642,9 @@
                     }
                 }
             });
+
+            // Optimize position assignments after loading all keepers for this team
+            optimizeTeamPositions(teamName);
         });
     })();
 
@@ -1009,33 +1062,44 @@
         const grid = document.getElementById('other-teams-grid');
         grid.innerHTML = TEAM_NAMES.map(teamName => {
             const team = allTeams[teamName];
-            const { hittingProj, pitchingProj } = getExpectedWins(teamName);
             const isMyTeam = teamName === 'Skrey';
 
-            const hitterHtml = team.hitters.slice(0, 6).map(slot => {
+            // Hitter lineup: C, 1B, 2B, SS, 3B, LF, CF, RF, UTIL
+            const hitterHtml = team.hitters.map(slot => {
                 const hasPlayer = slot.player !== null;
-                return `<div class="mini-slot"><span class="pos">${slot.position}:</span><span class="name ${hasPlayer ? '' : 'empty'}">${hasPlayer ? slot.player.name.split(' ').pop() : '-'}</span></div>`;
+                return `<div class="lineup-slot">
+                    <span class="lineup-pos">${slot.position}</span>
+                    <span class="lineup-name ${hasPlayer ? '' : 'empty'}">${hasPlayer ? slot.player.name : '—'}</span>
+                </div>`;
             }).join('');
 
-            const spCount = team.sps.filter(p => p !== null).length;
-            const rpCount = team.rps.filter(p => p !== null).length;
-            const pitcherHtml = `<div class="mini-slot"><span class="pos">SP:</span><span class="name">${spCount}/6</span></div><div class="mini-slot"><span class="pos">RP:</span><span class="name">${rpCount}/4</span></div>`;
-
-            const hittingProjHtml = ['R', 'HR', 'RBI', 'SB'].map(cat => {
-                const val = hittingProj[cat].toFixed(1);
-                return `<div class="proj-row"><span class="cat">${cat}:</span><span class="val">${val}</span></div>`;
+            // SP lineup
+            const spHtml = team.sps.map((player, idx) => {
+                const filled = player !== null;
+                return `<div class="lineup-slot">
+                    <span class="lineup-pos">SP${idx + 1}</span>
+                    <span class="lineup-name ${filled ? '' : 'empty'}">${filled ? player.name : '—'}</span>
+                </div>`;
             }).join('');
 
-            const pitchingProjHtml = ['K', 'SV', 'ERA', 'QS'].map(cat => {
-                const val = ['ERA'].includes(cat) ? pitchingProj[cat].toFixed(2) : pitchingProj[cat].toFixed(1);
-                return `<div class="proj-row"><span class="cat">${cat}:</span><span class="val">${val}</span></div>`;
+            // RP lineup
+            const rpHtml = team.rps.map((player, idx) => {
+                const filled = player !== null;
+                return `<div class="lineup-slot">
+                    <span class="lineup-pos">RP${idx + 1}</span>
+                    <span class="lineup-name ${filled ? '' : 'empty'}">${filled ? player.name : '—'}</span>
+                </div>`;
             }).join('');
 
             return `
                 <div class="other-team-card ${isMyTeam ? 'my-team-card' : ''}">
                     <h4>${teamName}</h4>
-                    <div class="team-roster-mini">${hitterHtml}${pitcherHtml}</div>
-                    <div class="team-projections">${hittingProjHtml}${pitchingProjHtml}</div>
+                    <div class="lineup-section-label">Lineup</div>
+                    ${hitterHtml}
+                    <div class="lineup-section-label">Starting Pitchers</div>
+                    ${spHtml}
+                    <div class="lineup-section-label">Relief Pitchers</div>
+                    ${rpHtml}
                 </div>
             `;
         }).join('');
@@ -1152,6 +1216,11 @@
 
         draftedPlayers.add(selectedPlayer.name);
         draftLog.push({ team: selectedTeam, player: selectedPlayer.name, position });
+
+        // Re-optimize position assignments after adding a hitter
+        if (selectedSlotType === 'H') {
+            optimizeTeamPositions(selectedTeam);
+        }
 
         closeModal();
         renderAll();
