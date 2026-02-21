@@ -1103,6 +1103,8 @@
         grid.innerHTML = TEAM_NAMES.map(teamName => {
             const team = allTeams[teamName];
             const isMyTeam = teamName === 'Skrey';
+            const { wins } = getExpectedWins(teamName);
+            const ewins = wins.TOTAL.toFixed(1);
 
             // Hitter lineup: C, 1B, 2B, SS, 3B, LF, CF, RF, UTIL
             const hitterHtml = team.hitters.map(slot => {
@@ -1133,7 +1135,7 @@
 
             return `
                 <div class="other-team-card ${isMyTeam ? 'my-team-card' : ''}" ondblclick="showTeamDetail('${teamName}')" style="cursor: pointer;" title="Double-click for detail view">
-                    <h4>${teamName}</h4>
+                    <h4>${teamName} <span style="float: right; color: #aaa; font-weight: normal; font-size: 12px;">${ewins} W</span></h4>
                     <div class="lineup-section-label">Lineup</div>
                     ${hitterHtml}
                     <div class="lineup-section-label">Starting Pitchers</div>
