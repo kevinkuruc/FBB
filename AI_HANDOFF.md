@@ -6,11 +6,13 @@ This document is designed for AI handoff. It contains everything needed to under
 
 ```
 /home/user/FBB/
-├── draft_tool.html           # Main app (HTML + JS, ~1200 lines)
+├── draft_tool.html           # Main app (HTML + JS, ~1300 lines)
+├── add_fantrax_data.py       # Patches HTML with Fantrax data (keepers, positions)
 ├── create_league_stats.py    # Generates hitter CSVs with z-scores
 ├── create_pitching_stats.py  # Generates pitcher CSVs
 ├── normalize_pa.py           # Aligns PA across projection systems
 │
+├── Fantrax-Players-Kevin's League.csv  # Fantrax roster export (positions, team ownership)
 ├── DC_Raw_Jan_25.csv         # Depth Charts raw projections (source of truth for PA)
 ├── The_Bat_Raw_Jan_25.csv    # The Bat raw projections
 ├── The_BatX_Raw_Jan_25.csv   # The BatX raw projections
@@ -30,10 +32,11 @@ This document is designed for AI handoff. It contains everything needed to under
 
 1. Raw projections downloaded from FanGraphs (DC, The Bat, BatX)
 2. `normalize_pa.py`: Scale The Bat/BatX counting stats to use DC playing time
-3. `create_league_stats.py`: Calculate z-scores, supplement low-PA players to 600 PA
+3. `create_league_stats.py`: Calculate z-scores, supplement low-PA players to 625 PA
 4. Output CSVs are manually embedded as JS arrays in `draft_tool.html`
+5. `add_fantrax_data.py`: Patches the HTML with Fantrax data (positional eligibility, keepers, team names)
 
-**WARNING:** Player arrays in draft_tool.html are generated separately. If you regenerate CSVs, you must manually copy the data into the JS arrays.
+**WARNING:** Player arrays in draft_tool.html are generated separately. If you regenerate CSVs, you must manually copy the data into the JS arrays, then re-run `add_fantrax_data.py` to re-apply Fantrax data.
 
 ---
 
@@ -172,19 +175,19 @@ Key points:
 
 **WARNING:** SP stats in PITCHERS array are already scaled to 1.1 starts/week. Don't double-scale.
 
-### calculateMarginalValue (Lines 724-753)
+### calculateMarginalValue
 
 ```javascript
 function calculateMarginalValue(player) {
-    const team = allTeams['My Team'];
-    const currentWins = getExpectedWins('My Team').wins.TOTAL;
+    const team = allTeams['Skrey'];
+    const currentWins = getExpectedWins('Skrey').wins.TOTAL;
 
     // Temporarily add player to first empty slot
     if (player.type === 'H') {
         const idx = team.hitters.findIndex(s => s.player === null);
         if (idx === -1) return -999;  // No empty slot
         team.hitters[idx].player = player;
-        newWins = getExpectedWins('My Team').wins.TOTAL;
+        newWins = getExpectedWins('Skrey').wins.TOTAL;
         team.hitters[idx].player = null;  // Restore
     }
     // Similar for SP, RP...
@@ -288,18 +291,23 @@ for stat in counting_stats:
 
 ```javascript
 const HITTERS_THEBAT = [
-    {"name":"Shohei Ohtani","type":"H","pa":679,"r":126,"hr":48,"rbi":119,"so":160,"tb":347,"sb":24,"obp":0.385},
+    {"name":"Shohei Ohtani","type":"H","pa":679,"r":126,"hr":48,"rbi":119,"so":160,"tb":347,"sb":24,"obp":0.385,"pos":["UT"]},
     // ...
 ];
 
-const HITTERS_DC = [...];
+const HITTERS_DC = [...];  // Same shape, different projections
 const HITTERS_BATX = [...];
 
 const PITCHERS = [
     {"name":"Tarik Skubal","type":"SP","gs":29.6,"ip_wk":7.03,"l_wk":0.259,"sv_wk":0.0,"hld_wk":0.0,"k_wk":8.48,"qs_wk":0.673,"er_wk":2.17,"wh_wk":6.854,...},
+    {"name":"Some Reliever","type":"RP",...,"dualEligible":true},  // SP/RP eligible
     // ...
 ];
 ```
+
+**Fields added by add_fantrax_data.py:**
+- Hitters: `pos` (array of eligible positions, e.g. `["LF","CF","RF","UT"]`) — used by position optimizer and UI badges
+- Pitchers: `dualEligible` (boolean, true if eligible at both SP and RP) — displayed as badge in UI
 
 **WARNING:** Hitter stats are SEASON TOTALS. Pitcher stats are ALREADY WEEKLY.
 
@@ -323,7 +331,7 @@ function getHitters() {
 
 ### Setup: Empty Roster
 
-`allTeams['My Team'].hitters` = 9 slots, all null.
+`allTeams['Skrey'].hitters` = 9 slots, all null (after keepers are loaded, some slots are filled).
 
 `getHittingProjections` fills nulls with `HITTER_REP`:
 
@@ -388,6 +396,109 @@ This is what the UI shows as "+MV" for Ramírez.
 
 ---
 
+## Fantrax Integration (add_fantrax_data.py)
+
+### Overview
+
+`add_fantrax_data.py` reads the Fantrax CSV export and patches `draft_tool.html` with:
+1. **Positional eligibility** (`pos` field) on all hitter arrays — e.g. `"pos":["LF","CF","RF","UT"]`
+2. **Dual SP/RP eligibility** (`dualEligible` field) on pitchers who qualify for both
+3. **Keepers** — a `KEEPERS` JSON object embedded in `initKeepers()`, keyed by Fantrax team name
+4. **Team names** — `TEAM_NAMES` array updated to use Fantrax team names instead of placeholders
+
+### Name Matching
+
+Projection names (with accents like "José Ramírez") must match Fantrax names (often without accents, "Jose Ramirez"). The script uses aggressive normalization:
+
+```python
+def normalize(name):
+    # Strip accents (NFKD decomposition), lowercase, remove apostrophes/hyphens/periods
+    # "José Ramírez" -> "jose ramirez"
+    # "Tyler O'Neill" -> "tyler oneill"
+    # "C.J. Kayfus" -> "cj kayfus"
+```
+
+**Duplicate name handling:** Fantrax has ~10,000 players including minors, so names like "Jose Ramirez" appear multiple times (3B star, minor league RP, minor league RF). The script keeps the highest-ranked entry (lowest `RkOv` value) for each normalized name.
+
+**Special case:** Shohei Ohtani appears as "Shohei Ohtani-H" (hitter) and "Shohei Ohtani-P" (pitcher) in Fantrax but just "Shohei Ohtani" in hitter projections. The script maps "Shohei Ohtani" → the "-H" entry.
+
+### Re-running After Data Changes
+
+If you update projection CSVs or the Fantrax CSV:
+1. Update the JS player arrays in `draft_tool.html` (from new CSVs)
+2. Run `python3 add_fantrax_data.py` — this patches the HTML in-place
+3. The script is idempotent but expects the HTML to have the original (un-patched) player arrays, so reset the HTML with `git checkout -- draft_tool.html` before re-running if it was already patched
+
+### Team Name Mapping
+
+The 16-team league uses Fantrax display names. The user's team is "Skrey". All references to team names in the JS code use these Fantrax names.
+
+```
+Skrey, JDM, BigJoe, Ferrante, Rut, Gwon, Beefs, Unks,
+Swagga, Triz, Boofers, BShit, DertyDer, wes11, DGreasy, Diarrhea
+```
+
+---
+
+## Keepers and Position Optimizer (draft_tool.html)
+
+### Keeper Initialization
+
+At startup, `initKeepers()` loads all keepers onto their teams from the embedded `KEEPERS` object. Hitters are placed into any empty slot, then `optimizeTeamPositions()` is called to sort them into optimal positions.
+
+Keepers that don't match any player in the projection arrays (e.g. prospects like Konnor Griffin) are silently skipped.
+
+### Position Optimizer
+
+`optimizeTeamPositions(teamName)` re-assigns all hitters on a team to optimal position slots using most-constrained-first greedy matching:
+
+1. Collects all rostered hitters and clears all slots
+2. For each player, determines eligible slots from their `pos` array (plus UTIL for everyone)
+3. Sorts players by number of eligible slots (fewest first)
+4. Assigns each player to their first available non-UTIL slot, falling back to UTIL
+
+**When it runs:**
+- After loading keepers for each team in `initKeepers()`
+- After every hitter draft pick in `confirmDraft()`
+
+**Example:** Boofers has Yordan Alvarez (LF) and James Wood (LF). The optimizer assigns Yordan to LF (processed first, fewer options) and Wood to UTIL. If a CF is later drafted, the optimizer re-runs and might move Wood to a different slot if it frees up better assignments.
+
+**Not used for "My Roster" (Skrey)** — the user explicitly picks their own slots when drafting.
+
+---
+
+## UI: All Teams Tab and Team Detail View
+
+### All Teams Tab
+
+Displays a 4-column grid of lineup cards. Each card shows:
+- Team name + expected weekly wins (e.g. "BigJoe  7.2 W")
+- Full hitter lineup: C, 1B, 2B, SS, 3B, LF, CF, RF, UTIL
+- All 7 SP slots and 4 RP slots
+- Empty slots shown as "—"
+
+### Team Detail View
+
+**Double-clicking** any team card opens a full detail view (same layout as "My Roster") showing:
+- All roster slots with per-player stats (R, HR, RBI, SB, OBP for hitters; K, ERA for SP; SV, HLD for RP)
+- Position eligibility badges on hitters
+- Category win probability tables (hitting + pitching) with color coding
+- Expected weekly wins total out of 14
+- "Back to All Teams" button returns to grid view
+
+The detail view is rendered by `showTeamDetail(teamName)` into `#team-detail-panel`. It's a separate hidden panel (not a tab) that takes over the display when activated.
+
+### Player Position Badges
+
+Hitters display their Fantrax positional eligibility as small green badges (e.g. `C` `1B` `LF`) next to their name in:
+- Best Available list (available-panel)
+- My Roster view (roster-panel)
+- Team Detail view (team-detail-panel)
+
+Pitchers with dual SP/RP eligibility show an `SP/RP` badge.
+
+---
+
 ## Common Gotchas
 
 1. **Hitter stats are season totals; pitcher stats are weekly** - Don't mix them up when doing calculations.
@@ -405,6 +516,16 @@ This is what the UI shows as "+MV" for Ramírez.
 7. **Player arrays are embedded in HTML** - Regenerating CSVs requires manual copy of data into JS arrays.
 
 8. **Marginal value depends on current roster** - As you draft players, MV changes for remaining players.
+
+9. **add_fantrax_data.py expects un-patched HTML** - It replaces player arrays and the `initKeepers()` block. If the HTML was already patched, `git checkout -- draft_tool.html` first, then re-run.
+
+10. **Fantrax name collisions** - ~157 duplicate normalized names in the 10k-player Fantrax CSV. The script keeps the highest-ranked (lowest RkOv) entry. If a new projection player shares a name with a minor leaguer, verify the match is correct.
+
+11. **Keepers missing from projections are silently skipped** - If a keeper (e.g. a prospect) doesn't appear in any projection array, `initKeepers()` just skips them. No error, no slot filled.
+
+12. **Team name is 'Skrey', not 'My Team'** - All JS references use the Fantrax team name. `calculateMarginalValue` is hardcoded to evaluate against Skrey's roster.
+
+13. **Position optimizer doesn't run for Skrey's own roster** - The user explicitly picks slots via the My Roster tab. Only other teams get auto-optimized.
 
 ---
 
@@ -436,6 +557,10 @@ For marginal value calculations, only absolute SD matters. CV tells you how luck
 8. The BatX projection system added
 9. Weighted SD/AVG using 34% 2024 + 66% 2025 filtered data
 10. Replacement OBP updated to actual cohort value (0.324)
+11. Fantrax integration: positional eligibility, keepers, team names (`add_fantrax_data.py` + `draft_tool.html`)
+12. Position optimizer: auto-assigns hitters to optimal slots using most-constrained-first matching
+13. All Teams tab: full lineup cards with expected weekly wins, replacing compact mini-roster
+14. Team Detail view: double-click any team for full roster/projections/win probabilities
 
 **Add new features here with: what changed, which files, any gotchas.**
 
@@ -496,21 +621,29 @@ For means: `Mean_combined = 0.34×Mean₂₀₂₄ + 0.66×Mean₂₀₂₅`
 
 ---
 
-## Quick Reference: Key Lines in draft_tool.html
+## Quick Reference: Key Functions in draft_tool.html
 
-| What | Lines |
-|------|-------|
-| HITTERS arrays | 438-480 |
-| PITCHERS array | 480 |
-| HITTING_SD, PITCHING_SD | 482-483 |
-| HITTING_AVG, PITCHING_AVG | 486-487 |
-| HITTER_REP, RP_REP, SP_REP | 489-510 |
-| normalCDF | 580-592 |
-| winProbability | 594-599 |
-| getHittingProjections | 604-615 |
-| getPitchingProjections | 617-690 |
-| getExpectedWins | 692-720 |
-| calculateMarginalValue | 724-753 |
-| renderAvailablePlayers | 877-980 |
+Use function names to search — line numbers drift as code is edited.
 
-**WARNING:** Line numbers drift as code is edited. Use function names to search.
+| Function / Block | Purpose |
+|------------------|---------|
+| `HITTERS_THEBAT`, `HITTERS_BATX`, `HITTERS_DC` | Hitter data arrays (season totals, with `pos` field from Fantrax) |
+| `PITCHERS` | Pitcher data array (weekly stats, with `dualEligible` flag) |
+| `HITTING_SD`, `PITCHING_SD` | Weekly standard deviations per category |
+| `HITTING_AVG`, `PITCHING_AVG` | League average weekly production per category |
+| `HITTER_REP`, `RP_REP_PER_SLOT`, `SP_REP_PER_START` | Replacement-level baselines |
+| `optimizeTeamPositions(teamName)` | Re-assigns hitters to optimal position slots |
+| `initKeepers()` | IIFE that loads keepers from embedded KEEPERS object |
+| `normalCDF(x)` | Abramowitz-Stegun normal CDF approximation |
+| `winProbability(myMean, oppMean, sd, lowerIsBetter)` | P(win) for a category matchup |
+| `getHittingProjections(teamName)` | Weekly hitting projections (empty slots → replacement) |
+| `getPitchingProjections(teamName)` | Weekly pitching projections (empty slots → replacement) |
+| `getExpectedWins(teamName)` | Total expected wins across all 14 categories |
+| `calculateMarginalValue(player)` | Marginal wins added to Skrey's roster |
+| `renderRoster()` | Renders My Roster tab (Skrey only) |
+| `renderAvailablePlayers(filter, typeFilter)` | Best Available list with +MV ranking |
+| `renderOtherTeams()` | All Teams grid with lineup cards |
+| `showTeamDetail(teamName)` | Full detail view for any team (double-click) |
+| `backToAllTeams()` | Returns from detail view to All Teams grid |
+| `confirmDraft()` | Drafts player to selected team + slot, runs optimizer |
+| `draftToSlot(player)` | Quick-draft to Skrey's pending slot (click-to-draft flow) |
