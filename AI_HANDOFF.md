@@ -497,6 +497,18 @@ Hitters display their Fantrax positional eligibility as small green badges (e.g.
 
 Pitchers with dual SP/RP eligibility show an `SP/RP` badge.
 
+### Position Filter Dropdown
+
+The Best Available tab has a `<select>` dropdown (`#pos-filter`) next to the search box that filters the player list by positional eligibility. Options: All Positions, C, 1B, 2B, SS, 3B, LF, CF, RF, SP, RP.
+
+**Filter logic** (in `renderAvailablePlayers`, third parameter `posFilter`):
+- **Hitter positions** (C, 1B, 2B, SS, 3B, LF, CF, RF): Shows only hitters whose `pos` array includes that position.
+- **SP**: Shows all SP-typed pitchers plus RP-typed pitchers with `dualEligible: true`.
+- **RP**: Shows all RP-typed pitchers plus SP-typed pitchers with `dualEligible: true`.
+- **All Positions** (empty string): No position filtering applied.
+
+The search box and position filter work together — both are passed to `renderAvailablePlayers` on every change event. The position filter is reset to "All Positions" when `selectSlotForDraft()` switches to the Best Available tab.
+
 ---
 
 ## Common Gotchas
@@ -561,6 +573,7 @@ For marginal value calculations, only absolute SD matters. CV tells you how luck
 12. Position optimizer: auto-assigns hitters to optimal slots using most-constrained-first matching
 13. All Teams tab: full lineup cards with expected weekly wins, replacing compact mini-roster
 14. Team Detail view: double-click any team for full roster/projections/win probabilities
+15. Position filter dropdown on Best Available tab: filters players by positional eligibility (C, 1B, 2B, SS, 3B, LF, CF, RF, SP, RP). Hitters are filtered by their `pos` array; SP/RP filters include dual-eligible pitchers. (`draft_tool.html`)
 
 **Add new features here with: what changed, which files, any gotchas.**
 
@@ -641,7 +654,7 @@ Use function names to search — line numbers drift as code is edited.
 | `getExpectedWins(teamName)` | Total expected wins across all 14 categories |
 | `calculateMarginalValue(player)` | Marginal wins added to Skrey's roster |
 | `renderRoster()` | Renders My Roster tab (Skrey only) |
-| `renderAvailablePlayers(filter, typeFilter)` | Best Available list with +MV ranking |
+| `renderAvailablePlayers(filter, typeFilter, posFilter)` | Best Available list with +MV ranking (posFilter filters by position eligibility) |
 | `renderOtherTeams()` | All Teams grid with lineup cards |
 | `showTeamDetail(teamName)` | Full detail view for any team (double-click) |
 | `backToAllTeams()` | Returns from detail view to All Teams grid |

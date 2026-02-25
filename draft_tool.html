@@ -130,15 +130,28 @@
             margin-top: 10px;
         }
         /* Best Available Tab */
+        .available-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
         .search-box {
-            width: 100%;
+            flex: 1;
             padding: 10px;
             border: 1px solid #2d5a2d;
             border-radius: 5px;
             background: #0d1f0d;
             color: #eee;
-            margin-bottom: 15px;
             font-size: 14px;
+        }
+        .pos-filter {
+            padding: 10px;
+            border: 1px solid #2d5a2d;
+            border-radius: 5px;
+            background: #0d1f0d;
+            color: #eee;
+            font-size: 14px;
+            cursor: pointer;
         }
         .player-list {
             max-height: 800px;
@@ -414,7 +427,22 @@
 
         <!-- Best Available Panel -->
         <div id="available-panel" class="panel">
-            <input type="text" class="search-box" placeholder="Search players..." oninput="renderAvailablePlayers(this.value)">
+            <div class="available-filters">
+                <input type="text" class="search-box" placeholder="Search players..." oninput="renderAvailablePlayers(this.value, null, document.getElementById('pos-filter').value)">
+                <select id="pos-filter" class="pos-filter" onchange="renderAvailablePlayers(document.querySelector('.search-box').value, null, this.value)">
+                    <option value="">All Positions</option>
+                    <option value="C">C</option>
+                    <option value="1B">1B</option>
+                    <option value="2B">2B</option>
+                    <option value="SS">SS</option>
+                    <option value="3B">3B</option>
+                    <option value="LF">LF</option>
+                    <option value="CF">CF</option>
+                    <option value="RF">RF</option>
+                    <option value="SP">SP</option>
+                    <option value="RP">RP</option>
+                </select>
+            </div>
             <div id="player-list" class="player-list"></div>
         </div>
 
@@ -881,9 +909,10 @@
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         document.querySelector('.tab:nth-child(2)').classList.add('active');
         document.getElementById('available-panel').classList.add('active');
-        // Filter by type
+        // Filter by type and reset position filter
         const filterMap = { hitter: 'H', sp: 'SP', rp: 'RP' };
         document.querySelector('.search-box').value = '';
+        document.getElementById('pos-filter').value = '';
         renderAvailablePlayers('', filterMap[slotType]);
     }
 
@@ -990,7 +1019,7 @@
         document.getElementById('expected-wins').textContent = wins.TOTAL.toFixed(2);
     }
 
-    function renderAvailablePlayers(filter = '', typeFilter = null) {
+    function renderAvailablePlayers(filter = '', typeFilter = null, posFilter = '') {
         const list = document.getElementById('player-list');
         const filterLower = filter.toLowerCase();
 
@@ -1005,6 +1034,14 @@
             .filter(p => !draftedPlayers.has(p.name))
             .filter(p => p.name.toLowerCase().includes(filterLower))
             .filter(p => !typeFilter || p.type === typeFilter)
+            .filter(p => {
+                if (!posFilter) return true;
+                // SP/RP filter: match pitcher type or dualEligible
+                if (posFilter === 'SP') return p.type === 'SP' || (p.type === 'RP' && p.dualEligible);
+                if (posFilter === 'RP') return p.type === 'RP' || (p.type === 'SP' && p.dualEligible);
+                // Hitter position filter: check pos array
+                return p.pos && p.pos.includes(posFilter);
+            })
             .map(p => ({ ...p, mv: calculateMarginalValue(p) }))
             .filter(p => p.mv > -900)  // Filter out full roster positions
             .sort((a, b) => b.mv - a.mv);
@@ -1378,14 +1415,14 @@
         event.target.classList.add('active');
         document.getElementById(tabName + '-panel').classList.add('active');
 
-        if (tabName === 'available') renderAvailablePlayers();
+        if (tabName === 'available') renderAvailablePlayers('', null, document.getElementById('pos-filter')?.value || '');
         if (tabName === 'teams') renderOtherTeams();
         if (tabName === 'log') renderDraftLog();
     }
 
     function renderAll() {
         renderRoster();
-        renderAvailablePlayers(document.querySelector('.search-box')?.value || '');
+        renderAvailablePlayers(document.querySelector('.search-box')?.value || '', null, document.getElementById('pos-filter')?.value || '');
         renderOtherTeams();
         renderDraftLog();
     }
