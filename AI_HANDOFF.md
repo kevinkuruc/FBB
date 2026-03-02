@@ -30,11 +30,12 @@ This document is designed for AI handoff. It contains everything needed to under
 
 ## Data Flow
 
-1. Raw projections downloaded from FanGraphs (DC, The Bat, BatX)
+1. Raw projections downloaded from FanGraphs (DC, The Bat, BatX, ATC pitching)
 2. `normalize_pa.py`: Scale The Bat/BatX counting stats to use DC playing time
-3. `create_league_stats.py`: Calculate z-scores, supplement low-PA players to 625 PA
-4. Output CSVs are manually embedded as JS arrays in `draft_tool.html`
-5. `add_fantrax_data.py`: Patches the HTML with Fantrax data (positional eligibility, keepers, team names)
+3. `create_league_stats.py`: Calculate z-scores, supplement low-PA hitters to 625 PA
+4. `create_pitching_stats.py`: Supplement low-IP SPs to 190 IP with replacement innings, compute weekly rates
+5. Output CSVs are manually embedded as JS arrays in `draft_tool.html`
+6. `add_fantrax_data.py`: Patches the HTML with Fantrax data (positional eligibility, keepers, team names)
 
 **WARNING:** Player arrays in draft_tool.html are generated separately. If you regenerate CSVs, you must manually copy the data into the JS arrays, then re-run `add_fantrax_data.py` to re-apply Fantrax data.
 
@@ -104,6 +105,28 @@ const SP_REP_PER_START = {
 - Average their per-PA rates, multiply by 625 PA
 
 **NOTE:** Replacement OBP (0.324) is the actual cohort average. League average OBP (0.327) is slightly higher, so replacement players are slightly below average in OBP.
+
+### SP IP Supplement (create_pitching_stats.py)
+
+Analogous to the hitter PA supplement. SPs projected below `TARGET_SP_IP` (190) are supplemented with replacement-level innings:
+
+```python
+TARGET_SP_IP = 190
+
+if ip < TARGET_SP_IP:
+    gap_ip = TARGET_SP_IP - ip
+    gap_gs = gap_ip / REP_SP_IP_PER_GS  # replacement starts to fill gap
+    ip = TARGET_SP_IP
+    k = k + gap_gs * REP_SP_K_PER_GS
+    er = er + gap_gs * REP_SP_ER_PER_GS
+    # ... same for L, QS, WH
+    gs = gs + gap_gs
+# Then compute per-start rates from blended totals, × 1.1 starts/week
+```
+
+**Purpose:** Accounts for SP injury risk. The ATC projections already discount IP for expected missed time (median SP is ~129 IP). Without this supplement, the code computed per-start rates and applied a flat 1.1 starts/week to everyone, discarding the durability information. Now a durable ace (190+ IP) keeps his true rates while a fragile arm (e.g., 39 IP projection) is heavily blended toward replacement.
+
+**To change the IP floor:** Update `TARGET_SP_IP` in create_pitching_stats.py, regenerate the CSV, re-inject into `draft_tool.html`, and re-run `add_fantrax_data.py`.
 
 ---
 
@@ -310,6 +333,8 @@ const PITCHERS = [
 - Pitchers: `dualEligible` (boolean, true if eligible at both SP and RP) — displayed as badge in UI
 
 **WARNING:** Hitter stats are SEASON TOTALS. Pitcher stats are ALREADY WEEKLY.
+
+**NOTE:** For SPs, the `ip` field is the **original projected IP** (before supplement), not 190. The weekly rate fields (`ip_wk`, `k_wk`, `er_wk`, etc.) reflect the blended rates after supplementing to 190 IP. The `gs` field is also the original projected GS. The `era` and `whip` fields reflect the blended rates.
 
 ### Projection Toggle
 
@@ -521,7 +546,7 @@ The search box and position filter work together — both are passed to `renderA
 
 4. **Replacement OBP is 0.324** - Actual cohort average, slightly below league avg (0.327).
 
-5. **SP ip_wk is already scaled** to 1.1 starts/week in PITCHERS array - Don't multiply again.
+5. **SP ip_wk is already scaled** to 1.1 starts/week in PITCHERS array - Don't multiply again. SP stats are also already blended with replacement innings (supplement to 190 IP) — don't supplement again.
 
 6. **ERA/WHIP are ratio stats** - RPs contribute ~6% of team innings, so their ERA/WHIP impact is tiny.
 
@@ -574,6 +599,7 @@ For marginal value calculations, only absolute SD matters. CV tells you how luck
 13. All Teams tab: full lineup cards with expected weekly wins, replacing compact mini-roster
 14. Team Detail view: double-click any team for full roster/projections/win probabilities
 15. Position filter dropdown on Best Available tab: filters players by positional eligibility (C, 1B, 2B, SS, 3B, LF, CF, RF, SP, RP). Hitters are filtered by their `pos` array; SP/RP filters include dual-eligible pitchers. (`draft_tool.html`)
+16. SP IP supplement to 190 IP: SPs projected below 190 IP are supplemented with replacement-level innings, mirroring the hitter 625 PA supplement. Accounts for injury risk — when a SP is on the IL, the slot is filled by streaming replacement arms. Blended per-start rates feed into the existing 1.1 starts/week model. (`create_pitching_stats.py`, `draft_tool.html` PITCHERS array regenerated)
 
 **Add new features here with: what changed, which files, any gotchas.**
 
