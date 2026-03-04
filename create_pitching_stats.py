@@ -26,6 +26,12 @@ RP_SLOTS = 4
 # Minimum WAR to include
 MIN_WAR = 0.2
 
+# SP IP supplement target - analogous to hitter TARGET_PA (625)
+# SPs projected below this are supplemented with replacement-level innings.
+# This accounts for injury risk: when a SP is on the IL, the slot is filled
+# by streaming replacement-quality arms.
+TARGET_SP_IP = 190
+
 # SP Replacement per-start rates (from Brayan Bello, Cade Povich, Parker Messick, Shane Smith)
 REP_SP_IP_PER_GS = 5.756
 REP_SP_L_PER_GS = 0.3379
@@ -83,14 +89,32 @@ with open(input_file, 'r', encoding='utf-8-sig') as infile:
             is_sp = gs > 5
 
             if is_sp:
-                # SP: compute per-start stats
-                # Weekly contribution = 1.1 starts/week * per-start stats
+                # SP: supplement to TARGET_SP_IP with replacement innings,
+                # then compute per-start stats from blended totals.
+                # This mirrors the hitter PA supplement: when a SP is on the IL,
+                # the roster slot is filled by streaming replacement-quality arms.
+                wh = bb + h  # walks + hits for WHIP calc
+                orig_ip = ip
+                orig_gs = gs
+
+                if ip < TARGET_SP_IP:
+                    gap_ip = TARGET_SP_IP - ip
+                    gap_gs = gap_ip / REP_SP_IP_PER_GS
+                    ip = TARGET_SP_IP
+                    l = l + gap_gs * REP_SP_L_PER_GS
+                    qs = qs + gap_gs * REP_SP_QS_PER_GS
+                    k = k + gap_gs * REP_SP_K_PER_GS
+                    er = er + gap_gs * REP_SP_ER_PER_GS
+                    wh = wh + gap_gs * (REP_SP_H_PER_GS + REP_SP_BB_PER_GS)
+                    gs = gs + gap_gs
+
+                # Per-start rates from (possibly supplemented) totals
                 ip_per_gs = ip / gs
                 l_per_gs = l / gs
                 qs_per_gs = qs / gs
                 k_per_gs = k / gs
                 er_per_gs = er / gs
-                wh_per_gs = (bb + h) / gs  # walks + hits for WHIP calc
+                wh_per_gs = wh / gs
 
                 # Weekly stats (1.1 starts)
                 ip_wk = ip_per_gs * SP_CONTRIBUTION
@@ -100,16 +124,15 @@ with open(input_file, 'r', encoding='utf-8-sig') as infile:
                 er_wk = er_per_gs * SP_CONTRIBUTION
                 wh_wk = wh_per_gs * SP_CONTRIBUTION
 
-                # ERA and WHIP for the player's contribution
-                # These are rate stats, so we use their projected rates
-                player_era = era
-                player_whip = whip
+                # ERA and WHIP from blended totals
+                player_era = er * 9 / ip
+                player_whip = wh / ip
 
                 sp_rows.append({
                     'Name': name,
                     'Type': 'SP',
-                    'GS': round(gs, 1),
-                    'IP': round(ip, 1),
+                    'GS': round(orig_gs, 1),
+                    'IP': round(orig_ip, 1),
                     'IP_wk': round(ip_wk, 2),
                     'L_wk': round(l_wk, 3),
                     'SV_wk': 0,  # SPs don't get saves
@@ -175,11 +198,11 @@ print(f"  SPs: {len(sp_rows)} (WAR >= {MIN_WAR})")
 print(f"  RPs: {len(rp_rows)} (WAR >= {MIN_WAR})")
 print(f"  Total: {len(all_pitchers)}")
 
-print("\nTop 15 SPs by WAR:")
-print(f"{'Name':<25} {'GS':>5} {'IP_wk':>6} {'L_wk':>5} {'K_wk':>5} {'QS_wk':>5} {'ERA':>5} {'WHIP':>5}")
+print(f"\nTop 15 SPs by WAR (supplemented to {TARGET_SP_IP} IP):")
+print(f"{'Name':<25} {'IP':>5} {'IP_wk':>6} {'L_wk':>5} {'K_wk':>5} {'QS_wk':>5} {'ERA':>5} {'WHIP':>5}")
 print("-" * 70)
 for row in sorted(sp_rows, key=lambda x: x['WAR'], reverse=True)[:15]:
-    print(f"{row['Name']:<25} {row['GS']:>5} {row['IP_wk']:>6} {row['L_wk']:>5} {row['K_wk']:>5} {row['QS_wk']:>5} {row['ERA']:>5} {row['WHIP']:>5}")
+    print(f"{row['Name']:<25} {row['IP']:>5} {row['IP_wk']:>6} {row['L_wk']:>5} {row['K_wk']:>5} {row['QS_wk']:>5} {row['ERA']:>5} {row['WHIP']:>5}")
 
 print("\nTop 15 RPs by WAR:")
 print(f"{'Name':<25} {'G':>5} {'IP_wk':>6} {'SV_wk':>5} {'HLD_wk':>5} {'K_wk':>5} {'ERA':>5} {'WHIP':>5}")
