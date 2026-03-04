@@ -201,6 +201,10 @@
         font-size: 0.8em;
         margin-bottom: 12px;
     }
+    /* Sportsbook odds coloring */
+    .odds-fav { color: #e74c3c; }  /* negative = favorite */
+    .odds-dog { color: #2ecc71; }  /* positive = underdog */
+    .odds-longshot { color: #5dade2; } /* very long odds */
 </style>
 </head>
 <body>
@@ -209,8 +213,8 @@
 <div class="subtitle">Bradley-Terry model &middot; 14 categories &middot; 20-week season &middot; Monte Carlo</div>
 
 <div class="helper-text">
-    Strength 1.0 = average. Higher = better. A team at 1.22 vs 1.0 wins ~55% of categories.
-    <br>Conversion: strength = win% / (1 - win%), e.g. .550 → 1.22, .600 → 1.50, .450 → 0.82
+    Enter each team's true talent win probability (e.g. .525 means they'd win 52.5% of categories against a .500 team).
+    <br>.500 = average &middot; .550 = strong &middot; .600 = dominant &middot; .450 = weak
 </div>
 
 <div class="divisions-container" id="divisionsContainer"></div>
@@ -219,7 +223,8 @@
     <label>Simulations: <input type="number" id="numSims" value="10000" min="100" max="100000" step="1000"></label>
     <label>Tie prob: <input type="number" id="tieProb" value="0.03" min="0" max="0.2" step="0.01"></label>
     <button id="simulateBtn" onclick="runSimulation()">Simulate Season</button>
-    <button id="resetBtn" onclick="resetStrengths()">Reset to 1.0</button>
+    <label>Overround: <input type="number" id="vigPct" value="10" min="0" max="50" step="1">%</label>
+    <button id="resetBtn" onclick="resetStrengths()">Reset to .500</button>
 </div>
 
 <div class="progress-container" id="progressContainer">
@@ -227,6 +232,11 @@
         <div class="progress-bar-fill" id="progressBar"></div>
     </div>
     <div class="progress-text" id="progressText">Running...</div>
+</div>
+
+<div class="standings-container" id="sportsbookContainer">
+    <h2>Sportsbook Lines <span style="font-size:0.65em;color:#888;font-weight:normal">(American odds with overround)</span></h2>
+    <div class="standings-table" id="sportsbookTable"></div>
 </div>
 
 <div class="standings-container" id="standingsContainer">
@@ -321,7 +331,7 @@ function buildUI() {
             <thead>
                 <tr>
                     <th>Team</th>
-                    <th class="center">Strength</th>
+                    <th class="center">Win%</th>
                     <th class="right">Div%</th>
                     <th class="right">Playoff%</th>
                     <th class="right">Champ%</th>
@@ -344,10 +354,10 @@ function buildUI() {
             const input = document.createElement('input');
             input.type = 'number';
             input.className = 'strength-input';
-            input.value = '1.00';
-            input.min = '0.1';
-            input.max = '5.0';
-            input.step = '0.01';
+            input.value = '.500';
+            input.min = '0.2';
+            input.max = '0.8';
+            input.step = '0.005';
             strengthInputs[team] = input;
             tdStr.appendChild(input);
             tr.appendChild(tdStr);
@@ -373,7 +383,7 @@ function buildUI() {
 
 function resetStrengths() {
     for (const input of Object.values(strengthInputs)) {
-        input.value = '1.00';
+        input.value = '.500';
     }
     for (const cells of Object.values(resultCells)) {
         for (const td of Object.values(cells)) {
@@ -382,13 +392,16 @@ function resetStrengths() {
         }
     }
     document.getElementById('standingsContainer').style.display = 'none';
+    document.getElementById('sportsbookContainer').style.display = 'none';
 }
 
 function getStrengths() {
+    // Convert win probability inputs to Bradley-Terry strength: s = p / (1 - p)
     const strengths = {};
     for (const team of ALL_TEAMS) {
-        const val = parseFloat(strengthInputs[team].value);
-        strengths[team] = (isNaN(val) || val <= 0) ? 1.0 : val;
+        let p = parseFloat(strengthInputs[team].value);
+        if (isNaN(p) || p <= 0 || p >= 1) p = 0.5;
+        strengths[team] = p / (1.0 - p);
     }
     return strengths;
 }
@@ -617,8 +630,79 @@ function displayResults(stats, numSims) {
         cells.champ.className = 'right result ' + pctClass(champPct, [10, 5]);
     }
 
-    // Build overall standings table
+    // Build sportsbook + overall standings tables
+    buildSportsbookTable(stats, numSims);
     buildStandingsTable(stats, numSims);
+}
+
+// ============================================================
+// SPORTSBOOK TABLE
+// ============================================================
+
+function probToAmericanOdds(trueProb, overround) {
+    // Apply overround to inflate implied probability
+    let implied = trueProb * (1 + overround);
+    if (implied >= 0.99) implied = 0.99;
+    if (implied <= 0.005) implied = 0.005;
+
+    if (implied >= 0.5) {
+        return Math.round(-(implied / (1 - implied)) * 100);
+    } else {
+        return Math.round(((1 - implied) / implied) * 100);
+    }
+}
+
+function formatOdds(odds) {
+    if (odds > 0) return '+' + odds;
+    return '' + odds;
+}
+
+function oddsClass(odds) {
+    if (odds < 0) return 'odds-fav';
+    if (odds >= 1000) return 'odds-longshot';
+    return 'odds-dog';
+}
+
+function buildSportsbookTable(stats, numSims) {
+    const overround = (parseFloat(document.getElementById('vigPct').value) || 10) / 100;
+
+    // Build data sorted by championship probability (descending)
+    const data = ALL_TEAMS.map(team => {
+        const s = stats[team];
+        const divProb = s.divTitles / numSims;
+        const playoffProb = s.playoffApps / numSims;
+        const champProb = s.championships / numSims;
+        return {
+            team,
+            division: TEAM_TO_DIVISION[team],
+            divOdds: probToAmericanOdds(divProb, overround),
+            playoffOdds: probToAmericanOdds(playoffProb, overround),
+            champOdds: probToAmericanOdds(champProb, overround),
+            champProb,
+        };
+    });
+    data.sort((a, b) => b.champProb - a.champProb);
+
+    let html = '<table><thead><tr>';
+    html += '<th>Team</th><th>Div</th>';
+    html += '<th class="right">Div Winner</th>';
+    html += '<th class="right">Playoffs</th>';
+    html += '<th class="right">Championship</th>';
+    html += '</tr></thead><tbody>';
+
+    for (const row of data) {
+        html += '<tr>';
+        html += `<td class="team-name">${row.team}</td>`;
+        html += `<td>${row.division}</td>`;
+        html += `<td class="right result ${oddsClass(row.divOdds)}">${formatOdds(row.divOdds)}</td>`;
+        html += `<td class="right result ${oddsClass(row.playoffOdds)}">${formatOdds(row.playoffOdds)}</td>`;
+        html += `<td class="right result ${oddsClass(row.champOdds)}">${formatOdds(row.champOdds)}</td>`;
+        html += '</tr>';
+    }
+
+    html += '</tbody></table>';
+    document.getElementById('sportsbookTable').innerHTML = html;
+    document.getElementById('sportsbookContainer').style.display = 'block';
 }
 
 // ============================================================
@@ -634,7 +718,7 @@ function buildStandingsTable(stats, numSims) {
         return {
             team,
             division: TEAM_TO_DIVISION[team],
-            strength: parseFloat(strengthInputs[team].value) || 1.0,
+            strength: parseFloat(strengthInputs[team].value) || 0.5,
             avgWins: s.totalWins / numSims,
             avgLosses: s.totalLosses / numSims,
             avgTies: s.totalTies / numSims,
@@ -664,7 +748,7 @@ function renderStandings() {
     const cols = [
         { key: 'team', label: 'Team', align: 'left' },
         { key: 'division', label: 'Div', align: 'left' },
-        { key: 'strength', label: 'Str', align: 'right' },
+        { key: 'strength', label: 'Win%', align: 'right' },
         { key: 'avgRecord', label: 'Avg Record', align: 'right' },
         { key: 'winPct', label: 'Win%', align: 'right' },
         { key: 'divPct', label: 'Div%', align: 'right' },
@@ -693,7 +777,7 @@ function renderStandings() {
         html += '<tr>';
         html += `<td class="team-name">${row.team}</td>`;
         html += `<td>${row.division}</td>`;
-        html += `<td class="right">${row.strength.toFixed(2)}</td>`;
+        html += `<td class="right">${row.strength.toFixed(3)}</td>`;
         html += `<td class="right">${record}</td>`;
         html += `<td class="right">${row.winPct.toFixed(3)}</td>`;
         html += `<td class="right result ${pctClass(row.divPct, [35, 20])}">${row.divPct.toFixed(1)}%</td>`;
