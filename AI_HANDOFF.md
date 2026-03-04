@@ -24,7 +24,8 @@ This document is designed for AI handoff. It contains everything needed to under
 ├── fantasy_hitters_thebat_2026.csv # Processed hitters (The Bat)
 ├── fantasy_hitters_batx_2026.csv   # Processed hitters (BatX)
 │
-├── simulate_season.py        # Season simulator (Monte Carlo + Bradley-Terry)
+├── simulate_season.py        # Season simulator CLI (Monte Carlo + Bradley-Terry)
+├── playoff_simulator.html    # Season simulator browser app (same engine, interactive UI)
 ├── Schedule/                 # Schedule screenshots (source for SCHEDULE data)
 │   ├── First_4_weeks.png
 │   ├── Second_4_weeks.png
@@ -610,6 +611,7 @@ For marginal value calculations, only absolute SD matters. CV tells you how luck
 16. SP IP supplement to 190 IP: SPs projected below 190 IP are supplemented with replacement-level innings, mirroring the hitter 625 PA supplement. Accounts for injury risk — when a SP is on the IL, the slot is filled by streaming replacement arms. Blended per-start rates feed into the existing 1.1 starts/week model. (`create_pitching_stats.py`, `draft_tool.html` PITCHERS array regenerated)
 
 17. Season simulator: Monte Carlo simulation of the full 20-week regular season + 3-round playoffs using Bradley-Terry model for category-by-category matchup outcomes. (`simulate_season.py`)
+18. Season simulator browser app: Interactive HTML/JS version with editable team strength inputs, live progress bar, color-coded results, and sortable standings table. (`playoff_simulator.html`)
 
 **Add new features here with: what changed, which files, any gotchas.**
 
@@ -704,6 +706,26 @@ With all teams at strength 1.0 and 10,000 simulations:
 - Division win rate: ~25% per team (1 in 4)
 - Playoff rate: ~37.5% (6 of 16 teams)
 - Championship rate: ~6.25% (1 in 16)
+
+### Browser App (`playoff_simulator.html`)
+
+Interactive HTML/JS version of the same simulation engine. Open directly in a browser (no server needed).
+
+**UI layout:**
+- 4 division cards in a 2x2 grid, each showing its 4 teams
+- Each team row: name, strength input field (editable), Div%, Playoff%, Champ% columns
+- Controls: simulation count, tie probability, Simulate button, Reset button
+- Progress bar during simulation (chunked into 200-sim batches for UI responsiveness)
+- Sortable overall standings table below (click column headers to sort)
+
+**Color coding:** Green (high probability), yellow (medium), red (low).
+
+**Strength input:** Same Bradley-Terry scale as the Python version. 1.0 = average. The helper text at the top shows the conversion formula: `strength = win% / (1 - win%)`.
+
+**Implementation notes:**
+- Simulation runs in the main thread but is chunked via `setTimeout` to keep the UI responsive
+- Schedule data is identical to `simulate_season.py` (same 20 weeks, same matchups)
+- Playoff logic is identical: reseeding bracket, higher seed wins ties
 
 ---
 
