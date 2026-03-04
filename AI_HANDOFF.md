@@ -24,6 +24,14 @@ This document is designed for AI handoff. It contains everything needed to under
 ├── fantasy_hitters_thebat_2026.csv # Processed hitters (The Bat)
 ├── fantasy_hitters_batx_2026.csv   # Processed hitters (BatX)
 │
+├── simulate_season.py        # Season simulator (Monte Carlo + Bradley-Terry)
+├── Schedule/                 # Schedule screenshots (source for SCHEDULE data)
+│   ├── First_4_weeks.png
+│   ├── Second_4_weeks.png
+│   ├── third_4_weeks.png
+│   ├── fourth_4_weeks.png
+│   └── last_4_weeks.png
+│
 ├── AI_HANDOFF.md             # This file (technical docs for AI)
 └── draft_tool_docs.pdf       # Beamer slides (methodology for humans)
 ```
@@ -601,7 +609,101 @@ For marginal value calculations, only absolute SD matters. CV tells you how luck
 15. Position filter dropdown on Best Available tab: filters players by positional eligibility (C, 1B, 2B, SS, 3B, LF, CF, RF, SP, RP). Hitters are filtered by their `pos` array; SP/RP filters include dual-eligible pitchers. (`draft_tool.html`)
 16. SP IP supplement to 190 IP: SPs projected below 190 IP are supplemented with replacement-level innings, mirroring the hitter 625 PA supplement. Accounts for injury risk — when a SP is on the IL, the slot is filled by streaming replacement arms. Blended per-start rates feed into the existing 1.1 starts/week model. (`create_pitching_stats.py`, `draft_tool.html` PITCHERS array regenerated)
 
+17. Season simulator: Monte Carlo simulation of the full 20-week regular season + 3-round playoffs using Bradley-Terry model for category-by-category matchup outcomes. (`simulate_season.py`)
+
 **Add new features here with: what changed, which files, any gotchas.**
+
+---
+
+## Season Simulator (`simulate_season.py`)
+
+### Overview
+
+Monte Carlo season simulator for a 16-team, 4-division fantasy baseball league. Simulates the 20-week regular season and 3-round playoffs thousands of times to estimate playoff odds, division title probabilities, and championship probabilities for each team.
+
+### How It Works
+
+#### The Bradley-Terry Model
+
+Each team has a **strength parameter** (default: 1.0 for all teams). When two teams face off in a given week, each of the 14 stat categories (7 hitting + 7 pitching) is resolved independently:
+
+```
+P(Team A wins category) = (1 - TIE_PROB) × strength_A / (strength_A + strength_B)
+P(Team B wins category) = (1 - TIE_PROB) × strength_B / (strength_A + strength_B)
+P(tie in category)      = TIE_PROB  (default 3%)
+```
+
+The weekly record is the sum of category wins, losses, and ties (e.g., 8-5-1). This is a **Binomial(14, p)** process, so variance emerges naturally:
+- Equal teams (p=0.5): SD ≈ 1.87 categories → typical records 5-9 to 9-5
+- Dominant matchup (p=0.7): typical records 8-6 to 12-2
+- Key property: **closer teams → more variance** (binomial variance peaks at p=0.5)
+
+#### Standings
+
+Teams accumulate category wins/losses/ties across all 20 weeks (280 total category matchups per team). Standings are sorted by:
+1. Total category wins (descending)
+2. Total category losses (ascending)
+3. Random tiebreaker
+
+#### Playoff Structure
+
+- **6 teams qualify**: 4 division winners (seeds 1-4, ranked by record) + 2 wild cards (seeds 5-6)
+- **Round 1 (Wild Card)**: Seed 3 vs 6, Seed 4 vs 5. Seeds 1-2 have a bye.
+- **Round 2 (Semifinal)**: Reseed remaining 4 teams — best vs worst, 2nd vs 3rd.
+- **Round 3 (Championship)**: Semifinal winners play for the title.
+- **Playoff tiebreaker**: If category wins are equal in a playoff week, higher seed advances (configurable via `PLAYOFF_HIGHER_SEED_WINS_TIE`).
+
+#### Divisions
+
+| Division | Teams |
+|----------|-------|
+| YGG | Skrey's Squad, Beasts of the East, Acuna Matata, Put Up or Shut Up |
+| Summer Krew | wes11, Polar Bears, Derty's Rolling Crew, Cleveland Steamers |
+| Benders | Tardy Plumbers, North Shore Beefs, vves11, Unkle Jerik |
+| Breeders | $wagga, Shmoulie, The Bronx Boofers, The Murk Master |
+
+### Configuring Team Strengths
+
+Edit the `TEAM_STRENGTHS` dictionary at the top of the file. Only **ratios** matter:
+- All 1.0 = equal teams (baseline)
+- Team at 1.5 vs team at 1.0 → wins each category ~60% of the time
+- Team at 2.0 vs team at 1.0 → wins each category ~67% of the time
+
+**Future extension**: Split into hitting and pitching strengths by changing `simulate_matchup()` to draw from two different probability distributions for the two groups of 7 categories.
+
+### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `validate_schedule()` | Verifies every week has 8 matchups covering all 16 teams |
+| `simulate_matchup(a, b, strengths)` | One week: 14 independent Bradley-Terry category draws → (wins_a, wins_b, ties) |
+| `simulate_regular_season(schedule, strengths)` | Full 20-week season → cumulative records |
+| `determine_playoff_seeds(records)` | Division winners + wild cards → seeded list |
+| `simulate_playoffs(seeds, strengths)` | 3-round bracket → champion |
+| `run_simulations(n, schedule, strengths, seed)` | Monte Carlo loop accumulating all stats |
+| `print_results(stats, n)` | Formatted output tables |
+
+### Usage
+
+```bash
+python simulate_season.py                    # 10,000 sims, random seed
+python simulate_season.py --sims 50000       # More simulations for precision
+python simulate_season.py --seed 42          # Reproducible results
+```
+
+### Schedule Data
+
+The full 20-week schedule (Scoring Periods 1-20, Mar 25 – Aug 23, 2026) is embedded in the `SCHEDULE` list. Each week is a list of 8 `(away, home)` tuples. The schedule was transcribed from screenshots in the `Schedule/` folder.
+
+**Note**: Home/away designation has no effect on simulation (no home-field advantage). It's preserved for reference fidelity to the source screenshots.
+
+### Sanity Checks (Equal Strength Baseline)
+
+With all teams at strength 1.0 and 10,000 simulations:
+- Each team averages ~135.9-135.7-8.4 (≈ 0.485 win%)
+- Division win rate: ~25% per team (1 in 4)
+- Playoff rate: ~37.5% (6 of 16 teams)
+- Championship rate: ~6.25% (1 in 16)
 
 ---
 
