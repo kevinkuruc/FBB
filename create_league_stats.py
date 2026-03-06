@@ -7,13 +7,13 @@ if len(sys.argv) >= 3:
     input_file = sys.argv[1]
     output_file = sys.argv[2]
 else:
-    input_file = '/home/user/FBB/The_Bat_Raw_Jan_25.csv'
+    input_file = '/home/user/FBB/The_Bat_March_26.csv'
     output_file = '/home/user/FBB/fantasy_hitters_2026.csv'
 
 # Minimum PA filter - use Depth Charts PA projections as the source of truth
 # Players with < MIN_PA in Depth Charts are excluded from the pool
-MIN_PA = 300
-DC_FILE = '/home/user/FBB/DC_Raw_Jan_25.csv'
+MIN_PA = 200
+DC_FILE = '/home/user/FBB/Depth_Charts_March_26.csv'
 
 # Build set of eligible players (those with >= MIN_PA in Depth Charts)
 eligible_players = set()
