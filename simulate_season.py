@@ -640,7 +640,9 @@ def print_results(stats, n_sims, all_season_wpcts):
     # ---- Density plot ----
     plot_path = "season_winpct_density.png"
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.hist(all_season_wpcts, bins=80, density=True, alpha=0.7,
+    # 280 category decisions per season (20 wks × 14 cats) → win% in steps of 1/280.
+    # 70 bins → width 1/140 = 2/280 → each bin catches exactly 2 discrete values.
+    ax.hist(all_season_wpcts, bins=70, density=True, alpha=0.7,
             color="steelblue", edgecolor="white", linewidth=0.3)
     ax.axvline(0.600, color="green", linestyle="--", linewidth=1.5, label=".600")
     ax.axvline(0.400, color="red", linestyle="--", linewidth=1.5, label=".400")

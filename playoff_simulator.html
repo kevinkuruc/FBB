@@ -787,7 +787,9 @@ function drawHistogram(wpcts, numSims, noiseMult) {
 
     // Histogram parameters
     const binMin = 0.25, binMax = 0.75;
-    const numBins = 80;
+    // 280 category decisions per season (20 wks × 14 cats) → win% in steps of 1/280.
+    // 70 bins → width 1/140 = 2/280 → each bin catches exactly 2 discrete values.
+    const numBins = 70;
     const binWidth = (binMax - binMin) / numBins;
     const bins = new Array(numBins).fill(0);
 
