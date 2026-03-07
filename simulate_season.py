@@ -2,15 +2,17 @@
 """
 Fantasy Baseball Season Simulator
 
-Simulates a 16-team fantasy baseball season using the Bradley-Terry model
-for category-by-category matchup outcomes. Supports division-based playoffs
-with configurable team strengths.
+Simulates a 16-team fantasy baseball season. Each weekly matchup draws a
+"percentage of categories won" from a distribution centered on the talent
+difference between the two teams, plus weekly noise. This produces high
+week-to-week variance (noise-dominated) but talent-dominated season standings.
 
 Usage:
     python simulate_season.py [--sims N] [--seed S]
 """
 
 import argparse
+import math
 import random
 from collections import defaultdict
 
@@ -53,14 +55,24 @@ for _div, _teams in DIVISIONS.items():
     for _team in _teams:
         TEAM_TO_DIVISION[_team] = _div
 
-# Bradley-Terry strength parameters.
-# The RATIO between two teams' strengths determines win probability.
-# Default 1.0 = all teams equal.
-# Example: 1.3 vs 1.0 means the stronger team wins each category ~56.5% of the time.
-TEAM_STRENGTHS = {team: 1.0 for team in ALL_TEAMS}
+# True-talent win probabilities.
+# Each value is the fraction of categories a team would win against an
+# average (0.50) opponent over a large sample.  E.g. 0.55 means "wins
+# 55 % of categories vs. a perfectly average team."
+TEAM_STRENGTHS = {team: 0.50 for team in ALL_TEAMS}
 
 NUM_CATEGORIES = 14  # 7 hitting + 7 pitching
 TIE_PROB = 0.03      # probability any single category ends in a tie
+
+# Weekly noise.  NOISE_MULTIPLIER controls how much larger the per-week
+# noise variance is relative to the cross-team talent variance.
+# A value of 5 means any single week is dominated by noise, but over a
+# 20-week season the talent signal dominates the standings.
+NOISE_MULTIPLIER = 5.0
+
+# Floor for weekly noise SD so that equal-strength teams still produce
+# varied weekly outcomes.
+MIN_NOISE_SD = 0.05
 
 # If True, higher seed wins a tied playoff matchup (equal category wins).
 # If False, coin flip.
@@ -324,38 +336,57 @@ def validate_schedule(schedule, all_teams):
 # SIMULATION FUNCTIONS
 # ============================================================
 
-def simulate_matchup(team_a, team_b, strengths):
+def compute_noise_sd(strengths):
+    """
+    Compute weekly noise SD from the cross-team talent spread.
+
+    noise_variance = NOISE_MULTIPLIER * talent_variance
+    Returns max(sqrt(noise_variance), MIN_NOISE_SD).
+    """
+    vals = list(strengths.values())
+    mean = sum(vals) / len(vals)
+    talent_var = sum((v - mean) ** 2 for v in vals) / len(vals)
+    noise_sd = math.sqrt(NOISE_MULTIPLIER * talent_var)
+    return max(noise_sd, MIN_NOISE_SD)
+
+
+def simulate_matchup(team_a, team_b, strengths, noise_sd):
     """
     Simulate one week's matchup between two teams.
 
-    Uses Bradley-Terry model: for each of the 14 categories, team_a wins
-    with probability (1 - TIE_PROB) * s_a / (s_a + s_b).
+    1. Expected win% for team_a = 0.5 + (talent_a - talent_b)
+    2. Actual win% = expected + Normal(0, noise_sd), clipped to [0, 1]
+    3. Ties are drawn per-category at TIE_PROB; remaining categories
+       are split according to the drawn win%.
 
     Returns (wins_a, wins_b, ties).
     """
-    s_a = strengths[team_a]
-    s_b = strengths[team_b]
-    p_a = (1.0 - TIE_PROB) * s_a / (s_a + s_b)
-    p_b = (1.0 - TIE_PROB) * s_b / (s_a + s_b)
-    # p_tie = TIE_PROB (implicit: 1 - p_a - p_b)
+    talent_a = strengths[team_a]
+    talent_b = strengths[team_b]
 
-    wins_a = 0
-    wins_b = 0
-    ties = 0
+    # Expected category win fraction for team_a
+    expected_pct = 0.5 + (talent_a - talent_b)
+    expected_pct = max(0.0, min(1.0, expected_pct))
 
-    for _ in range(NUM_CATEGORIES):
-        r = random.random()
-        if r < p_a:
-            wins_a += 1
-        elif r < p_a + p_b:
-            wins_b += 1
-        else:
-            ties += 1
+    # Draw weekly performance with noise, clip to [0, 1]
+    actual_pct = expected_pct + random.gauss(0, noise_sd)
+    actual_pct = max(0.0, min(1.0, actual_pct))
+
+    # Determine ties (still per-category coin flip)
+    ties = sum(1 for _ in range(NUM_CATEGORIES) if random.random() < TIE_PROB)
+    non_tie = NUM_CATEGORIES - ties
+
+    # Allocate non-tied categories using probabilistic rounding
+    exact_wins_a = actual_pct * non_tie
+    floor_wins = int(exact_wins_a)
+    frac = exact_wins_a - floor_wins
+    wins_a = floor_wins + (1 if random.random() < frac else 0)
+    wins_b = non_tie - wins_a
 
     return wins_a, wins_b, ties
 
 
-def simulate_regular_season(schedule, strengths):
+def simulate_regular_season(schedule, strengths, noise_sd):
     """
     Simulate the full 20-week regular season.
 
@@ -367,7 +398,7 @@ def simulate_regular_season(schedule, strengths):
 
     for week in schedule:
         for away, home in week:
-            w_away, w_home, t = simulate_matchup(away, home, strengths)
+            w_away, w_home, t = simulate_matchup(away, home, strengths, noise_sd)
             records[away]["wins"] += w_away
             records[away]["losses"] += w_home
             records[away]["ties"] += t
@@ -413,12 +444,12 @@ def determine_playoff_seeds(records):
     return seeds, div_winners
 
 
-def simulate_playoff_matchup(higher_seed, lower_seed, strengths):
+def simulate_playoff_matchup(higher_seed, lower_seed, strengths, noise_sd):
     """
     Simulate a single playoff week between two teams.
     If category wins are equal, higher seed advances (configurable).
     """
-    w_h, w_l, t = simulate_matchup(higher_seed, lower_seed, strengths)
+    w_h, w_l, t = simulate_matchup(higher_seed, lower_seed, strengths, noise_sd)
     if w_h > w_l:
         return higher_seed
     elif w_l > w_h:
@@ -430,7 +461,7 @@ def simulate_playoff_matchup(higher_seed, lower_seed, strengths):
             return random.choice([higher_seed, lower_seed])
 
 
-def simulate_playoffs(seeds, strengths):
+def simulate_playoffs(seeds, strengths, noise_sd):
     """
     Simulate 3-round playoffs with reseeding.
 
@@ -441,8 +472,8 @@ def simulate_playoffs(seeds, strengths):
     Returns the champion team name.
     """
     # Round 1: seeds 1-2 have bye
-    r1_winner_a = simulate_playoff_matchup(seeds[2], seeds[5], strengths)
-    r1_winner_b = simulate_playoff_matchup(seeds[3], seeds[4], strengths)
+    r1_winner_a = simulate_playoff_matchup(seeds[2], seeds[5], strengths, noise_sd)
+    r1_winner_b = simulate_playoff_matchup(seeds[3], seeds[4], strengths, noise_sd)
 
     # Round 2: Reseed — rank remaining 4 by original seed number
     remaining = [
@@ -454,17 +485,17 @@ def simulate_playoffs(seeds, strengths):
     remaining.sort(key=lambda x: x[0])
 
     # Best remaining vs worst remaining, 2nd vs 3rd
-    r2_winner_a = simulate_playoff_matchup(remaining[0][1], remaining[3][1], strengths)
-    r2_winner_b = simulate_playoff_matchup(remaining[1][1], remaining[2][1], strengths)
+    r2_winner_a = simulate_playoff_matchup(remaining[0][1], remaining[3][1], strengths, noise_sd)
+    r2_winner_b = simulate_playoff_matchup(remaining[1][1], remaining[2][1], strengths, noise_sd)
 
     # Round 3: Championship
     # Determine higher seed for tiebreaker purposes
     idx_a = seeds.index(r2_winner_a)
     idx_b = seeds.index(r2_winner_b)
     if idx_a < idx_b:
-        champion = simulate_playoff_matchup(r2_winner_a, r2_winner_b, strengths)
+        champion = simulate_playoff_matchup(r2_winner_a, r2_winner_b, strengths, noise_sd)
     else:
-        champion = simulate_playoff_matchup(r2_winner_b, r2_winner_a, strengths)
+        champion = simulate_playoff_matchup(r2_winner_b, r2_winner_a, strengths, noise_sd)
 
     return champion
 
@@ -480,6 +511,15 @@ def run_simulations(n_sims, schedule, strengths, seed=None):
 
     validate_schedule(schedule, ALL_TEAMS)
 
+    noise_sd = compute_noise_sd(strengths)
+    talent_vals = list(strengths.values())
+    talent_mean = sum(talent_vals) / len(talent_vals)
+    talent_sd = math.sqrt(sum((v - talent_mean) ** 2 for v in talent_vals) / len(talent_vals))
+    print(f"  Talent SD: {talent_sd:.4f}  |  Weekly noise SD: {noise_sd:.4f}"
+          f"  |  Noise/talent variance ratio: "
+          f"{(noise_sd**2 / talent_sd**2):.1f}x" if talent_sd > 0 else
+          f"  Talent SD: 0 (equal teams)  |  Weekly noise SD: {noise_sd:.4f}")
+
     stats = {team: {
         "total_wins": 0,
         "total_losses": 0,
@@ -491,9 +531,9 @@ def run_simulations(n_sims, schedule, strengths, seed=None):
     } for team in ALL_TEAMS}
 
     for _ in range(n_sims):
-        records = simulate_regular_season(schedule, strengths)
+        records = simulate_regular_season(schedule, strengths, noise_sd)
         seeds, div_winners = determine_playoff_seeds(records)
-        champion = simulate_playoffs(seeds, strengths)
+        champion = simulate_playoffs(seeds, strengths, noise_sd)
 
         # Accumulate regular season records
         for team in ALL_TEAMS:
