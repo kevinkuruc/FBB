@@ -14,12 +14,12 @@ removing playing time disagreements between systems.
 """
 
 # Input files
-thebat_file = '/home/user/FBB/The_Bat_Raw_Jan_25.csv'
-dc_file = '/home/user/FBB/DC_Raw_Jan_25.csv'
+thebat_file = '/home/user/FBB/The_Bat_March_26.csv'
+dc_file = '/home/user/FBB/Depth_Charts_March_26.csv'
 output_file = '/home/user/FBB/The_Bat_Normalized_PA.csv'
 
 # Minimum PA filter - only include players with >= MIN_PA in Depth Charts
-MIN_PA = 300
+MIN_PA = 200
 
 # Read Depth Charts to get PA by player name (only those meeting MIN_PA threshold)
 dc_pa = {}
