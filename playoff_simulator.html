@@ -31,6 +31,7 @@
         align-items: center;
         gap: 16px;
         margin-bottom: 20px;
+        flex-wrap: wrap;
     }
     .controls label {
         font-size: 0.85em;
@@ -158,40 +159,38 @@
         color: #888;
         margin-top: 4px;
     }
-    /* Color coding for probabilities */
     .pct-high { color: #2ecc71; }
     .pct-mid { color: #f1c40f; }
     .pct-low { color: #e74c3c; }
     .pct-neutral { color: #e0e0e0; }
 
-    /* Overall standings table */
-    .standings-container {
+    .section-container {
         max-width: 1100px;
-        margin: 0 auto;
+        margin: 0 auto 24px auto;
         display: none;
     }
-    .standings-container h2 {
+    .section-container h2 {
         font-size: 1.1em;
         margin-bottom: 10px;
         color: #fff;
     }
-    .standings-table {
+    .section-box {
         background: #16213e;
         border-radius: 8px;
         padding: 14px;
         border: 1px solid #333;
     }
-    .standings-table table {
+    .section-box table {
         font-size: 0.85em;
     }
-    .standings-table th {
+    .section-box th {
         cursor: pointer;
         user-select: none;
     }
-    .standings-table th:hover {
+    .section-box th:hover {
         color: #5dade2;
     }
-    .standings-table th .sort-arrow {
+    .section-box th .sort-arrow {
         font-size: 0.7em;
         margin-left: 2px;
     }
@@ -201,19 +200,65 @@
         font-size: 0.8em;
         margin-bottom: 12px;
     }
-    /* Sportsbook odds coloring */
-    .odds-fav { color: #e74c3c; }  /* negative = favorite */
-    .odds-dog { color: #2ecc71; }  /* positive = underdog */
-    .odds-longshot { color: #5dade2; } /* very long odds */
+    .odds-fav { color: #e74c3c; }
+    .odds-dog { color: #2ecc71; }
+    .odds-longshot { color: #5dade2; }
+
+    /* Calibration panel */
+    .calibration-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    .cal-stats {
+        font-size: 0.85em;
+    }
+    .cal-stats .cal-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        border-bottom: 1px solid #1a1a2e;
+    }
+    .cal-stats .cal-row:last-child { border-bottom: none; }
+    .cal-label { color: #aaa; }
+    .cal-value { color: #e0e0e0; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .cal-highlight { color: #5dade2; }
+    .cal-section-title {
+        color: #5dade2;
+        font-size: 0.8em;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid #2a2a4a;
+    }
+    .cal-left, .cal-right {
+        padding: 4px;
+    }
+
+    /* Histogram canvas */
+    #histogramCanvas {
+        width: 100%;
+        height: 260px;
+        display: block;
+        margin-top: 12px;
+    }
+    .noise-info {
+        text-align: center;
+        font-size: 0.8em;
+        color: #5dade2;
+        margin-bottom: 12px;
+        display: none;
+    }
 </style>
 </head>
 <body>
 
 <h1>Fantasy Baseball Season Simulator</h1>
-<div class="subtitle">Bradley-Terry model &middot; 14 categories &middot; 20-week season &middot; Monte Carlo</div>
+<div class="subtitle">Win-percentage model &middot; 14 categories &middot; 20-week season &middot; Monte Carlo</div>
 
 <div class="helper-text">
-    Enter each team's true talent win probability (e.g. .525 means they'd win 52.5% of categories against a .500 team).
+    Enter each team's true talent win probability (fraction of categories won vs. average).
     <br>.500 = average &middot; .550 = strong &middot; .600 = dominant &middot; .450 = weak
 </div>
 
@@ -221,11 +266,14 @@
 
 <div class="controls">
     <label>Simulations: <input type="number" id="numSims" value="10000" min="100" max="100000" step="1000"></label>
+    <label>Noise mult: <input type="number" id="noiseMult" value="5" min="1" max="50" step="0.5"></label>
     <label>Tie prob: <input type="number" id="tieProb" value="0.03" min="0" max="0.2" step="0.01"></label>
-    <button id="simulateBtn" onclick="runSimulation()">Simulate Season</button>
     <label>Overround: <input type="number" id="vigPct" value="10" min="0" max="50" step="1">%</label>
+    <button id="simulateBtn" onclick="runSimulation()">Simulate Season</button>
     <button id="resetBtn" onclick="resetStrengths()">Reset to .500</button>
 </div>
+
+<div class="noise-info" id="noiseInfo"></div>
 
 <div class="progress-container" id="progressContainer">
     <div class="progress-bar-bg">
@@ -234,14 +282,34 @@
     <div class="progress-text" id="progressText">Running...</div>
 </div>
 
-<div class="standings-container" id="sportsbookContainer">
-    <h2>Sportsbook Lines <span style="font-size:0.65em;color:#888;font-weight:normal">(American odds with overround)</span></h2>
-    <div class="standings-table" id="sportsbookTable"></div>
+<!-- Calibration panel -->
+<div class="section-container" id="calibrationContainer">
+    <h2>Calibration</h2>
+    <div class="section-box">
+        <div class="calibration-grid">
+            <div class="cal-left">
+                <div class="cal-section-title">Teams per season at threshold</div>
+                <div class="cal-stats" id="calThresholds"></div>
+            </div>
+            <div class="cal-right">
+                <div class="cal-section-title">Distribution stats</div>
+                <div class="cal-stats" id="calDistribution"></div>
+            </div>
+        </div>
+        <canvas id="histogramCanvas"></canvas>
+    </div>
 </div>
 
-<div class="standings-container" id="standingsContainer">
+<!-- Sportsbook -->
+<div class="section-container" id="sportsbookContainer">
+    <h2>Sportsbook Lines <span style="font-size:0.65em;color:#888;font-weight:normal">(American odds with overround)</span></h2>
+    <div class="section-box" id="sportsbookTable"></div>
+</div>
+
+<!-- Overall standings -->
+<div class="section-container" id="standingsContainer">
     <h2>Overall Standings</h2>
-    <div class="standings-table" id="standingsTable"></div>
+    <div class="section-box" id="standingsTable"></div>
 </div>
 
 <script>
@@ -264,51 +332,32 @@ for (const [div, teams] of Object.entries(DIVISIONS)) {
 }
 
 const NUM_CATEGORIES = 14;
+const MIN_NOISE_SD = 0.05;
 
 // ============================================================
 // SCHEDULE — 20 scoring periods
 // ============================================================
 
 const SCHEDULE = [
-    // Period 1
     [["$wagga","The Bronx Boofers"],["Acuna Matata","Beasts of the East"],["Cleveland Steamers","Derty's Rolling Crew"],["Polar Bears","wes11"],["Unkle Jerik","Tardy Plumbers"],["vves11","North Shore Beefs"],["Skrey's Squad","Put Up or Shut Up"],["Shmoulie","The Murk Master"]],
-    // Period 2
     [["Acuna Matata","Put Up or Shut Up"],["Cleveland Steamers","Polar Bears"],["The Murk Master","$wagga"],["wes11","Derty's Rolling Crew"],["Tardy Plumbers","North Shore Beefs"],["Beasts of the East","Skrey's Squad"],["Unkle Jerik","vves11"],["Shmoulie","The Bronx Boofers"]],
-    // Period 3
     [["$wagga","Shmoulie"],["Cleveland Steamers","wes11"],["The Murk Master","The Bronx Boofers"],["Polar Bears","Derty's Rolling Crew"],["Tardy Plumbers","vves11"],["Beasts of the East","Put Up or Shut Up"],["Skrey's Squad","Acuna Matata"],["North Shore Beefs","Unkle Jerik"]],
-    // Period 4
     [["Cleveland Steamers","$wagga"],["The Murk Master","Derty's Rolling Crew"],["Polar Bears","The Bronx Boofers"],["Put Up or Shut Up","North Shore Beefs"],["Tardy Plumbers","Beasts of the East"],["vves11","Acuna Matata"],["Skrey's Squad","Unkle Jerik"],["Shmoulie","wes11"]],
-    // Period 5
     [["$wagga","Polar Bears"],["Acuna Matata","Unkle Jerik"],["The Murk Master","wes11"],["The Bronx Boofers","Derty's Rolling Crew"],["Put Up or Shut Up","Tardy Plumbers"],["Beasts of the East","vves11"],["Skrey's Squad","North Shore Beefs"],["Shmoulie","Cleveland Steamers"]],
-    // Period 6
     [["$wagga","Derty's Rolling Crew"],["Acuna Matata","North Shore Beefs"],["The Murk Master","Cleveland Steamers"],["The Bronx Boofers","wes11"],["Put Up or Shut Up","vves11"],["Beasts of the East","Unkle Jerik"],["Skrey's Squad","Tardy Plumbers"],["Shmoulie","Polar Bears"]],
-    // Period 7
     [["$wagga","wes11"],["Acuna Matata","Tardy Plumbers"],["The Murk Master","Polar Bears"],["The Bronx Boofers","Cleveland Steamers"],["Put Up or Shut Up","Unkle Jerik"],["Beasts of the East","North Shore Beefs"],["Skrey's Squad","vves11"],["Shmoulie","Derty's Rolling Crew"]],
-    // Period 8
     [["$wagga","North Shore Beefs"],["Acuna Matata","Derty's Rolling Crew"],["The Murk Master","vves11"],["The Bronx Boofers","Tardy Plumbers"],["Put Up or Shut Up","Cleveland Steamers"],["Beasts of the East","Polar Bears"],["Skrey's Squad","wes11"],["Shmoulie","Unkle Jerik"]],
-    // Period 9
     [["$wagga","Tardy Plumbers"],["Acuna Matata","wes11"],["The Murk Master","Unkle Jerik"],["The Bronx Boofers","vves11"],["Put Up or Shut Up","Polar Bears"],["Beasts of the East","Derty's Rolling Crew"],["Skrey's Squad","Cleveland Steamers"],["Shmoulie","North Shore Beefs"]],
-    // Period 10
     [["$wagga","vves11"],["Acuna Matata","Cleveland Steamers"],["The Murk Master","North Shore Beefs"],["The Bronx Boofers","Unkle Jerik"],["Put Up or Shut Up","Derty's Rolling Crew"],["Beasts of the East","wes11"],["Skrey's Squad","Polar Bears"],["Shmoulie","Tardy Plumbers"]],
-    // Period 11
     [["$wagga","Unkle Jerik"],["Acuna Matata","Polar Bears"],["The Murk Master","Tardy Plumbers"],["The Bronx Boofers","North Shore Beefs"],["Put Up or Shut Up","wes11"],["Beasts of the East","Cleveland Steamers"],["Skrey's Squad","Derty's Rolling Crew"],["Shmoulie","vves11"]],
-    // Period 12
     [["Acuna Matata","The Murk Master"],["Cleveland Steamers","Unkle Jerik"],["Derty's Rolling Crew","Tardy Plumbers"],["wes11","vves11"],["Polar Bears","North Shore Beefs"],["Put Up or Shut Up","$wagga"],["Beasts of the East","The Bronx Boofers"],["Skrey's Squad","Shmoulie"]],
-    // Period 13
     [["Acuna Matata","Shmoulie"],["Cleveland Steamers","North Shore Beefs"],["Derty's Rolling Crew","vves11"],["wes11","Unkle Jerik"],["Polar Bears","Tardy Plumbers"],["Put Up or Shut Up","The Bronx Boofers"],["Beasts of the East","The Murk Master"],["Skrey's Squad","$wagga"]],
-    // Period 14
     [["Acuna Matata","$wagga"],["Cleveland Steamers","Tardy Plumbers"],["Derty's Rolling Crew","Unkle Jerik"],["wes11","North Shore Beefs"],["Polar Bears","vves11"],["Put Up or Shut Up","The Murk Master"],["Beasts of the East","Shmoulie"],["Skrey's Squad","The Bronx Boofers"]],
-    // Period 15
     [["Acuna Matata","The Bronx Boofers"],["Cleveland Steamers","vves11"],["Derty's Rolling Crew","North Shore Beefs"],["wes11","Tardy Plumbers"],["Polar Bears","Unkle Jerik"],["Put Up or Shut Up","Shmoulie"],["Beasts of the East","$wagga"],["Skrey's Squad","The Murk Master"]],
-    // Period 16
     [["$wagga","Cleveland Steamers"],["Acuna Matata","vves11"],["The Murk Master","Derty's Rolling Crew"],["The Bronx Boofers","Polar Bears"],["Put Up or Shut Up","North Shore Beefs"],["Beasts of the East","Tardy Plumbers"],["Skrey's Squad","Unkle Jerik"],["Shmoulie","wes11"]],
-    // Period 17
     [["$wagga","North Shore Beefs"],["Acuna Matata","Derty's Rolling Crew"],["The Murk Master","vves11"],["The Bronx Boofers","Tardy Plumbers"],["Put Up or Shut Up","Cleveland Steamers"],["Beasts of the East","Polar Bears"],["Skrey's Squad","wes11"],["Shmoulie","Unkle Jerik"]],
-    // Period 18
     [["$wagga","The Murk Master"],["wes11","Derty's Rolling Crew"],["Polar Bears","Cleveland Steamers"],["Put Up or Shut Up","Beasts of the East"],["Unkle Jerik","Tardy Plumbers"],["vves11","North Shore Beefs"],["Skrey's Squad","Acuna Matata"],["Shmoulie","The Bronx Boofers"]],
-    // Period 19
     [["$wagga","Shmoulie"],["Cleveland Steamers","wes11"],["The Murk Master","The Bronx Boofers"],["Polar Bears","Derty's Rolling Crew"],["Tardy Plumbers","North Shore Beefs"],["Beasts of the East","Acuna Matata"],["vves11","Unkle Jerik"],["Skrey's Squad","Put Up or Shut Up"]],
-    // Period 20
     [["$wagga","The Bronx Boofers"],["Acuna Matata","Put Up or Shut Up"],["Cleveland Steamers","Derty's Rolling Crew"],["The Murk Master","Shmoulie"],["wes11","Polar Bears"],["Tardy Plumbers","vves11"],["Beasts of the East","Skrey's Squad"],["Unkle Jerik","North Shore Beefs"]],
 ];
 
@@ -331,7 +380,7 @@ function buildUI() {
             <thead>
                 <tr>
                     <th>Team</th>
-                    <th class="center">Win%</th>
+                    <th class="center">Talent</th>
                     <th class="right">Div%</th>
                     <th class="right">Playoff%</th>
                     <th class="right">Champ%</th>
@@ -342,13 +391,11 @@ function buildUI() {
         for (const team of teams) {
             const tr = document.createElement('tr');
 
-            // Team name
             const tdName = document.createElement('td');
             tdName.className = 'team-name';
             tdName.textContent = team;
             tr.appendChild(tdName);
 
-            // Strength input
             const tdStr = document.createElement('td');
             tdStr.className = 'center';
             const input = document.createElement('input');
@@ -362,17 +409,15 @@ function buildUI() {
             tdStr.appendChild(input);
             tr.appendChild(tdStr);
 
-            // Result columns
             const cells = {};
             for (const key of ['div', 'playoff', 'champ']) {
                 const td = document.createElement('td');
                 td.className = 'right result';
-                td.textContent = '—';
+                td.textContent = '\u2014';
                 cells[key] = td;
                 tr.appendChild(td);
             }
             resultCells[team] = cells;
-
             tbody.appendChild(tr);
         }
         table.appendChild(tbody);
@@ -387,54 +432,91 @@ function resetStrengths() {
     }
     for (const cells of Object.values(resultCells)) {
         for (const td of Object.values(cells)) {
-            td.textContent = '—';
+            td.textContent = '\u2014';
             td.className = 'right result';
         }
     }
     document.getElementById('standingsContainer').style.display = 'none';
     document.getElementById('sportsbookContainer').style.display = 'none';
+    document.getElementById('calibrationContainer').style.display = 'none';
+    document.getElementById('noiseInfo').style.display = 'none';
 }
 
 function getStrengths() {
-    // Convert win probability inputs to Bradley-Terry strength: s = p / (1 - p)
     const strengths = {};
     for (const team of ALL_TEAMS) {
         let p = parseFloat(strengthInputs[team].value);
         if (isNaN(p) || p <= 0 || p >= 1) p = 0.5;
-        strengths[team] = p / (1.0 - p);
+        strengths[team] = p;
     }
     return strengths;
 }
 
 // ============================================================
-// SIMULATION ENGINE (mirrors simulate_season.py exactly)
+// SIMULATION ENGINE (percentage-of-categories-won model)
 // ============================================================
 
-function simulateMatchup(teamA, teamB, strengths, tieProb) {
-    const sA = strengths[teamA];
-    const sB = strengths[teamB];
-    const pA = (1.0 - tieProb) * sA / (sA + sB);
-    const pB = (1.0 - tieProb) * sB / (sA + sB);
-
-    let winsA = 0, winsB = 0, ties = 0;
-    for (let i = 0; i < NUM_CATEGORIES; i++) {
-        const r = Math.random();
-        if (r < pA) winsA++;
-        else if (r < pA + pB) winsB++;
-        else ties++;
+// Box-Muller transform for normal random variates
+let _spareGauss = null;
+function gaussRandom() {
+    if (_spareGauss !== null) {
+        const val = _spareGauss;
+        _spareGauss = null;
+        return val;
     }
+    let u, v, s;
+    do {
+        u = Math.random() * 2 - 1;
+        v = Math.random() * 2 - 1;
+        s = u * u + v * v;
+    } while (s >= 1 || s === 0);
+    const mul = Math.sqrt(-2 * Math.log(s) / s);
+    _spareGauss = v * mul;
+    return u * mul;
+}
+
+function computeNoiseSD(strengths, noiseMult) {
+    const vals = Object.values(strengths);
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const talentVar = vals.reduce((a, v) => a + (v - mean) ** 2, 0) / vals.length;
+    const noiseSD = Math.sqrt(noiseMult * talentVar);
+    return Math.max(noiseSD, MIN_NOISE_SD);
+}
+
+function simulateMatchup(teamA, teamB, strengths, noiseSD, tieProb) {
+    // Expected win% for teamA
+    let expectedPct = 0.5 + (strengths[teamA] - strengths[teamB]);
+    expectedPct = Math.max(0, Math.min(1, expectedPct));
+
+    // Draw with noise, clip [0, 1]
+    let actualPct = expectedPct + gaussRandom() * noiseSD;
+    actualPct = Math.max(0, Math.min(1, actualPct));
+
+    // Ties per-category, then split remainder
+    let ties = 0;
+    for (let i = 0; i < NUM_CATEGORIES; i++) {
+        if (Math.random() < tieProb) ties++;
+    }
+    const nonTie = NUM_CATEGORIES - ties;
+
+    // Probabilistic rounding
+    const exactWinsA = actualPct * nonTie;
+    const floorWins = Math.floor(exactWinsA);
+    const frac = exactWinsA - floorWins;
+    const winsA = floorWins + (Math.random() < frac ? 1 : 0);
+    const winsB = nonTie - winsA;
+
     return [winsA, winsB, ties];
 }
 
-function simulateRegularSeason(schedule, strengths, tieProb) {
+function simulateRegularSeason(schedule, strengths, noiseSD, tieProb) {
     const records = {};
     for (const team of ALL_TEAMS) {
         records[team] = { wins: 0, losses: 0, ties: 0 };
     }
-
     for (const week of schedule) {
         for (const [away, home] of week) {
-            const [wA, wH, t] = simulateMatchup(away, home, strengths, tieProb);
+            const [wA, wH, t] = simulateMatchup(away, home, strengths, noiseSD, tieProb);
             records[away].wins += wA;
             records[away].losses += wH;
             records[away].ties += t;
@@ -459,12 +541,11 @@ function determinePlayoffSeeds(records) {
     const cmpTeams = (a, b) => {
         const ka = sortKey(a), kb = sortKey(b);
         for (let i = 0; i < ka.length; i++) {
-            if (kb[i] !== ka[i]) return kb[i] - ka[i]; // descending
+            if (kb[i] !== ka[i]) return kb[i] - ka[i];
         }
         return 0;
     };
 
-    // Division winners
     const divWinners = {};
     const divWinnerList = [];
     for (const [divName, teams] of Object.entries(DIVISIONS)) {
@@ -472,51 +553,39 @@ function determinePlayoffSeeds(records) {
         divWinners[divName] = sorted[0];
         divWinnerList.push(sorted[0]);
     }
-
-    // Rank division winners by record
     divWinnerList.sort(cmpTeams);
 
-    // Wild cards
     const dwSet = new Set(divWinnerList);
     const nonWinners = ALL_TEAMS.filter(t => !dwSet.has(t));
     nonWinners.sort(cmpTeams);
-    const wildCards = nonWinners.slice(0, 2);
 
-    return { seeds: [...divWinnerList, ...wildCards], divWinners };
+    return { seeds: [...divWinnerList, ...nonWinners.slice(0, 2)], divWinners };
 }
 
-function simulatePlayoffMatchup(higherSeed, lowerSeed, strengths, tieProb) {
-    const [wH, wL, t] = simulateMatchup(higherSeed, lowerSeed, strengths, tieProb);
-    if (wH > wL) return higherSeed;
-    if (wL > wH) return lowerSeed;
-    return higherSeed; // higher seed wins tie
+function simulatePlayoffMatchup(higher, lower, strengths, noiseSD, tieProb) {
+    const [wH, wL] = simulateMatchup(higher, lower, strengths, noiseSD, tieProb);
+    if (wH > wL) return higher;
+    if (wL > wH) return lower;
+    return higher; // higher seed wins tie
 }
 
-function simulatePlayoffs(seeds, strengths, tieProb) {
-    // Round 1: 3v6, 4v5 (seeds 1-2 bye)
-    const r1a = simulatePlayoffMatchup(seeds[2], seeds[5], strengths, tieProb);
-    const r1b = simulatePlayoffMatchup(seeds[3], seeds[4], strengths, tieProb);
+function simulatePlayoffs(seeds, strengths, noiseSD, tieProb) {
+    const r1a = simulatePlayoffMatchup(seeds[2], seeds[5], strengths, noiseSD, tieProb);
+    const r1b = simulatePlayoffMatchup(seeds[3], seeds[4], strengths, noiseSD, tieProb);
 
-    // Round 2: Reseed
     const remaining = [
-        { seed: 0, team: seeds[0] },
-        { seed: 1, team: seeds[1] },
+        { seed: 0, team: seeds[0] }, { seed: 1, team: seeds[1] },
         { seed: seeds.indexOf(r1a), team: r1a },
         { seed: seeds.indexOf(r1b), team: r1b },
-    ];
-    remaining.sort((a, b) => a.seed - b.seed);
+    ].sort((a, b) => a.seed - b.seed);
 
-    const r2a = simulatePlayoffMatchup(remaining[0].team, remaining[3].team, strengths, tieProb);
-    const r2b = simulatePlayoffMatchup(remaining[1].team, remaining[2].team, strengths, tieProb);
+    const r2a = simulatePlayoffMatchup(remaining[0].team, remaining[3].team, strengths, noiseSD, tieProb);
+    const r2b = simulatePlayoffMatchup(remaining[1].team, remaining[2].team, strengths, noiseSD, tieProb);
 
-    // Round 3: Championship
-    const idxA = seeds.indexOf(r2a);
-    const idxB = seeds.indexOf(r2b);
-    if (idxA < idxB) {
-        return simulatePlayoffMatchup(r2a, r2b, strengths, tieProb);
-    } else {
-        return simulatePlayoffMatchup(r2b, r2a, strengths, tieProb);
-    }
+    const idxA = seeds.indexOf(r2a), idxB = seeds.indexOf(r2b);
+    return idxA < idxB
+        ? simulatePlayoffMatchup(r2a, r2b, strengths, noiseSD, tieProb)
+        : simulatePlayoffMatchup(r2b, r2a, strengths, noiseSD, tieProb);
 }
 
 // ============================================================
@@ -539,21 +608,33 @@ async function runSimulation() {
     progressContainer.style.display = 'block';
 
     const numSims = parseInt(document.getElementById('numSims').value) || 10000;
+    const noiseMult = parseFloat(document.getElementById('noiseMult').value) || 5;
     const tieProb = parseFloat(document.getElementById('tieProb').value) || 0.03;
     const strengths = getStrengths();
+    const noiseSD = computeNoiseSD(strengths, noiseMult);
+
+    // Show noise info
+    const vals = Object.values(strengths);
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const talentSD = Math.sqrt(vals.reduce((a, v) => a + (v - mean) ** 2, 0) / vals.length);
+    const noiseInfoEl = document.getElementById('noiseInfo');
+    if (talentSD > 0) {
+        const ratio = (noiseSD ** 2) / (talentSD ** 2);
+        noiseInfoEl.textContent = `Talent SD: ${talentSD.toFixed(4)}  |  Weekly noise SD: ${noiseSD.toFixed(4)}  |  Noise/talent variance ratio: ${ratio.toFixed(1)}x`;
+    } else {
+        noiseInfoEl.textContent = `Talent SD: 0 (equal teams)  |  Weekly noise SD: ${noiseSD.toFixed(4)}`;
+    }
+    noiseInfoEl.style.display = 'block';
 
     // Initialize accumulators
     const stats = {};
     for (const team of ALL_TEAMS) {
         stats[team] = {
-            totalWins: 0,
-            totalLosses: 0,
-            totalTies: 0,
-            playoffApps: 0,
-            divTitles: 0,
-            championships: 0,
+            totalWins: 0, totalLosses: 0, totalTies: 0,
+            playoffApps: 0, divTitles: 0, championships: 0,
         };
     }
+    const allSeasonWpcts = [];
 
     const CHUNK_SIZE = 200;
     let completed = 0;
@@ -563,24 +644,22 @@ async function runSimulation() {
             setTimeout(() => {
                 const end = Math.min(completed + CHUNK_SIZE, numSims);
                 for (let sim = completed; sim < end; sim++) {
-                    const records = simulateRegularSeason(SCHEDULE, strengths, tieProb);
+                    const records = simulateRegularSeason(SCHEDULE, strengths, noiseSD, tieProb);
                     const { seeds, divWinners } = determinePlayoffSeeds(records);
-                    const champion = simulatePlayoffs(seeds, strengths, tieProb);
+                    const champion = simulatePlayoffs(seeds, strengths, noiseSD, tieProb);
 
                     for (const team of ALL_TEAMS) {
-                        stats[team].totalWins += records[team].wins;
-                        stats[team].totalLosses += records[team].losses;
-                        stats[team].totalTies += records[team].ties;
+                        const r = records[team];
+                        stats[team].totalWins += r.wins;
+                        stats[team].totalLosses += r.losses;
+                        stats[team].totalTies += r.ties;
+
+                        const total = r.wins + r.losses + r.ties;
+                        allSeasonWpcts.push(total > 0 ? r.wins / total : 0.5);
                     }
 
-                    for (const team of seeds) {
-                        stats[team].playoffApps++;
-                    }
-
-                    for (const winner of Object.values(divWinners)) {
-                        stats[winner].divTitles++;
-                    }
-
+                    for (const team of seeds) stats[team].playoffApps++;
+                    for (const w of Object.values(divWinners)) stats[w].divTitles++;
                     stats[champion].championships++;
                 }
                 completed = end;
@@ -596,8 +675,7 @@ async function runSimulation() {
         progressText.textContent = `${completed.toLocaleString()} / ${numSims.toLocaleString()} simulations`;
     }
 
-    // Display results
-    displayResults(stats, numSims);
+    displayResults(stats, numSims, allSeasonWpcts, noiseMult);
 
     progressContainer.style.display = 'none';
     btn.disabled = false;
@@ -605,16 +683,19 @@ async function runSimulation() {
     simulationRunning = false;
 }
 
+// ============================================================
+// DISPLAY RESULTS
+// ============================================================
+
 function pctClass(pct, thresholds) {
-    // thresholds: [high, mid] — above high = green, above mid = yellow, else red
     if (pct >= thresholds[0]) return 'pct-high';
     if (pct >= thresholds[1]) return 'pct-mid';
     if (pct > 0) return 'pct-low';
     return 'pct-neutral';
 }
 
-function displayResults(stats, numSims) {
-    // Update division tables
+function displayResults(stats, numSims, allWpcts, noiseMult) {
+    // Division tables
     for (const team of ALL_TEAMS) {
         const s = stats[team];
         const divPct = (100 * s.divTitles / numSims);
@@ -630,9 +711,165 @@ function displayResults(stats, numSims) {
         cells.champ.className = 'right result ' + pctClass(champPct, [10, 5]);
     }
 
-    // Build sportsbook + overall standings tables
+    buildCalibrationPanel(allWpcts, numSims, noiseMult);
     buildSportsbookTable(stats, numSims);
     buildStandingsTable(stats, numSims);
+}
+
+// ============================================================
+// CALIBRATION PANEL + HISTOGRAM
+// ============================================================
+
+function buildCalibrationPanel(allWpcts, numSims, noiseMult) {
+    const n = allWpcts.length;
+    const sorted = [...allWpcts].sort((a, b) => a - b);
+
+    const above650 = allWpcts.filter(w => w > 0.650).length;
+    const above600 = allWpcts.filter(w => w > 0.600).length;
+    const above550 = allWpcts.filter(w => w > 0.550).length;
+    const below450 = allWpcts.filter(w => w < 0.450).length;
+    const below400 = allWpcts.filter(w => w < 0.400).length;
+    const below350 = allWpcts.filter(w => w < 0.350).length;
+
+    const mean = allWpcts.reduce((a, b) => a + b, 0) / n;
+    const sd = Math.sqrt(allWpcts.reduce((a, w) => a + (w - mean) ** 2, 0) / n);
+    const median = sorted[Math.floor(n / 2)];
+    const best = sorted[n - 1];
+    const worst = sorted[0];
+    const p10 = sorted[Math.floor(n * 0.10)];
+    const p90 = sorted[Math.floor(n * 0.90)];
+
+    // Threshold stats (per season)
+    document.getElementById('calThresholds').innerHTML = [
+        ['Teams above .650', (above650 / numSims).toFixed(2)],
+        ['Teams above .600', (above600 / numSims).toFixed(2)],
+        ['Teams above .550', (above550 / numSims).toFixed(2)],
+        ['Teams below .450', (below450 / numSims).toFixed(2)],
+        ['Teams below .400', (below400 / numSims).toFixed(2)],
+        ['Teams below .350', (below350 / numSims).toFixed(2)],
+    ].map(([label, val]) =>
+        `<div class="cal-row"><span class="cal-label">${label}</span><span class="cal-value">${val}</span></div>`
+    ).join('');
+
+    // Distribution stats
+    document.getElementById('calDistribution').innerHTML = [
+        ['SD of season win%', sd.toFixed(4)],
+        ['Mean season win%', mean.toFixed(4)],
+        ['Median season win%', median.toFixed(4)],
+        ['10th percentile', p10.toFixed(4)],
+        ['90th percentile', p90.toFixed(4)],
+        ['Best season seen', `<span class="cal-highlight">${best.toFixed(4)}</span>`],
+        ['Worst season seen', `<span class="cal-highlight">${worst.toFixed(4)}</span>`],
+    ].map(([label, val]) =>
+        `<div class="cal-row"><span class="cal-label">${label}</span><span class="cal-value">${val}</span></div>`
+    ).join('');
+
+    // Draw histogram
+    drawHistogram(allWpcts, numSims, noiseMult);
+
+    document.getElementById('calibrationContainer').style.display = 'block';
+}
+
+function drawHistogram(wpcts, numSims, noiseMult) {
+    const canvas = document.getElementById('histogramCanvas');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = rect.height;
+
+    // Clear
+    ctx.fillStyle = '#0d1b2a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Histogram parameters
+    const binMin = 0.25, binMax = 0.75;
+    const numBins = 80;
+    const binWidth = (binMax - binMin) / numBins;
+    const bins = new Array(numBins).fill(0);
+
+    for (const w of wpcts) {
+        if (w < binMin || w >= binMax) continue;
+        const idx = Math.floor((w - binMin) / binWidth);
+        if (idx >= 0 && idx < numBins) bins[idx]++;
+    }
+
+    // Convert to density
+    const totalCount = wpcts.length;
+    const densities = bins.map(c => c / (totalCount * binWidth));
+    const maxDensity = Math.max(...densities);
+
+    // Chart area
+    const padL = 50, padR = 20, padT = 30, padB = 40;
+    const chartW = W - padL - padR;
+    const chartH = H - padT - padB;
+
+    // Draw bars
+    const barW = chartW / numBins;
+    ctx.fillStyle = 'rgba(93, 173, 226, 0.7)';
+    for (let i = 0; i < numBins; i++) {
+        const barH = (densities[i] / maxDensity) * chartH;
+        const x = padL + i * barW;
+        const y = padT + chartH - barH;
+        ctx.fillRect(x, y, barW - 0.5, barH);
+    }
+
+    // Reference lines
+    const drawVLine = (pct, color, label) => {
+        const x = padL + ((pct - binMin) / (binMax - binMin)) * chartW;
+        if (x < padL || x > padL + chartW) return;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(x, padT);
+        ctx.lineTo(x, padT + chartH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = color;
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x, padT - 5);
+    };
+
+    drawVLine(0.400, '#e74c3c', '.400');
+    drawVLine(0.500, '#666', '.500');
+    drawVLine(0.600, '#2ecc71', '.600');
+
+    // X axis labels
+    ctx.fillStyle = '#888';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    for (let v = 0.30; v <= 0.70; v += 0.05) {
+        const x = padL + ((v - binMin) / (binMax - binMin)) * chartW;
+        ctx.fillText(v.toFixed(2), x, padT + chartH + 18);
+    }
+
+    // Y axis label
+    ctx.save();
+    ctx.translate(14, padT + chartH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = '#888';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Density', 0, 0);
+    ctx.restore();
+
+    // Title
+    ctx.fillStyle = '#ccc';
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+        `Season Win% Distribution (${numSims.toLocaleString()} sims \u00d7 ${ALL_TEAMS.length} teams, noise mult = ${noiseMult})`,
+        W / 2, 16
+    );
+
+    // X axis title
+    ctx.fillStyle = '#888';
+    ctx.fillText('Season Win %', padL + chartW / 2, H - 4);
 }
 
 // ============================================================
@@ -640,11 +877,9 @@ function displayResults(stats, numSims) {
 // ============================================================
 
 function probToAmericanOdds(trueProb, overround) {
-    // Apply overround to inflate implied probability
     let implied = trueProb * (1 + overround);
     if (implied >= 0.99) implied = 0.99;
     if (implied <= 0.005) implied = 0.005;
-
     if (implied >= 0.5) {
         return Math.round(-(implied / (1 - implied)) * 100);
     } else {
@@ -652,10 +887,7 @@ function probToAmericanOdds(trueProb, overround) {
     }
 }
 
-function formatOdds(odds) {
-    if (odds > 0) return '+' + odds;
-    return '' + odds;
-}
+function formatOdds(odds) { return odds > 0 ? '+' + odds : '' + odds; }
 
 function oddsClass(odds) {
     if (odds < 0) return 'odds-fav';
@@ -666,19 +898,14 @@ function oddsClass(odds) {
 function buildSportsbookTable(stats, numSims) {
     const overround = (parseFloat(document.getElementById('vigPct').value) || 10) / 100;
 
-    // Build data sorted by championship probability (descending)
     const data = ALL_TEAMS.map(team => {
         const s = stats[team];
-        const divProb = s.divTitles / numSims;
-        const playoffProb = s.playoffApps / numSims;
-        const champProb = s.championships / numSims;
         return {
-            team,
-            division: TEAM_TO_DIVISION[team],
-            divOdds: probToAmericanOdds(divProb, overround),
-            playoffOdds: probToAmericanOdds(playoffProb, overround),
-            champOdds: probToAmericanOdds(champProb, overround),
-            champProb,
+            team, division: TEAM_TO_DIVISION[team],
+            divOdds: probToAmericanOdds(s.divTitles / numSims, overround),
+            playoffOdds: probToAmericanOdds(s.playoffApps / numSims, overround),
+            champOdds: probToAmericanOdds(s.championships / numSims, overround),
+            champProb: s.championships / numSims,
         };
     });
     data.sort((a, b) => b.champProb - a.champProb);
@@ -699,7 +926,6 @@ function buildSportsbookTable(stats, numSims) {
         html += `<td class="right result ${oddsClass(row.champOdds)}">${formatOdds(row.champOdds)}</td>`;
         html += '</tr>';
     }
-
     html += '</tbody></table>';
     document.getElementById('sportsbookTable').innerHTML = html;
     document.getElementById('sportsbookContainer').style.display = 'block';
@@ -728,13 +954,11 @@ function buildStandingsTable(stats, numSims) {
             champPct: 100 * s.championships / numSims,
         };
     });
-
     renderStandings();
     document.getElementById('standingsContainer').style.display = 'block';
 }
 
 function renderStandings() {
-    // Sort
     const data = [...standingsData];
     data.sort((a, b) => {
         let va = a[currentSort.col], vb = b[currentSort.col];
@@ -748,7 +972,7 @@ function renderStandings() {
     const cols = [
         { key: 'team', label: 'Team', align: 'left' },
         { key: 'division', label: 'Div', align: 'left' },
-        { key: 'strength', label: 'Win%', align: 'right' },
+        { key: 'strength', label: 'Talent', align: 'right' },
         { key: 'avgRecord', label: 'Avg Record', align: 'right' },
         { key: 'winPct', label: 'Win%', align: 'right' },
         { key: 'divPct', label: 'Div%', align: 'right' },
@@ -759,13 +983,12 @@ function renderStandings() {
     let html = '<table><thead><tr>';
     for (const col of cols) {
         const sortable = col.key !== 'avgRecord';
-        const sortKey = col.key;
-        const arrow = (currentSort.col === sortKey)
+        const arrow = (currentSort.col === col.key)
             ? (currentSort.asc ? ' \u25B2' : ' \u25BC')
             : '';
         const cls = col.align === 'right' ? 'right' : '';
         if (sortable) {
-            html += `<th class="${cls}" onclick="sortStandings('${sortKey}')">${col.label}<span class="sort-arrow">${arrow}</span></th>`;
+            html += `<th class="${cls}" onclick="sortStandings('${col.key}')">${col.label}<span class="sort-arrow">${arrow}</span></th>`;
         } else {
             html += `<th class="${cls}">${col.label}</th>`;
         }
@@ -785,7 +1008,6 @@ function renderStandings() {
         html += `<td class="right result ${pctClass(row.champPct, [10, 5])}">${row.champPct.toFixed(1)}%</td>`;
         html += '</tr>';
     }
-
     html += '</tbody></table>';
     document.getElementById('standingsTable').innerHTML = html;
 }
