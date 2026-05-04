@@ -467,9 +467,11 @@ function determinePlayoffSeeds(records) {
     const tiebreakers = {};
     for (const team of ALL_TEAMS) tiebreakers[team] = Math.random();
 
+    // League win% counts ties as half-wins: (W + 0.5*T) / total.
+    // Every team plays the same total decisions, so ranking by 2W+T
+    // is equivalent and avoids floats. Random tiebreaker for actual ties.
     const sortKey = (team) => [
-        records[team].wins,
-        -records[team].losses,
+        2 * records[team].wins + records[team].ties,
         tiebreakers[team],
     ];
 

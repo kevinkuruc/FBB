@@ -365,8 +365,11 @@ def determine_playoff_seeds(records):
     tiebreakers = {team: random.random() for team in ALL_TEAMS}
 
     def sort_key(team):
+        # League win% counts ties as half-wins: (W + 0.5*T) / total.
+        # Since every team plays the same total decisions, ranking by 2W+T
+        # is equivalent and avoids floats. Random tiebreaker for actual ties.
         r = records[team]
-        return (r["wins"], -r["losses"], tiebreakers[team])
+        return (2 * r["wins"] + r["ties"], tiebreakers[team])
 
     # Division winners
     div_winners = {}
