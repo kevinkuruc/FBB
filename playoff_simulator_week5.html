@@ -741,7 +741,7 @@ function buildStandingsTable(stats, numSims) {
             avgWins: s.totalWins / numSims,
             avgLosses: s.totalLosses / numSims,
             avgTies: s.totalTies / numSims,
-            winPct: s.totalWins / (s.totalWins + s.totalLosses + s.totalTies),
+            winPct: (s.totalWins + 0.5 * s.totalTies) / (s.totalWins + s.totalLosses + s.totalTies),
             divPct: 100 * s.divTitles / numSims,
             playoffPct: 100 * s.playoffApps / numSims,
             champPct: 100 * s.championships / numSims,

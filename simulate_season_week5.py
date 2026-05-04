@@ -525,7 +525,7 @@ def print_results(stats, n_sims):
         avg_l = s["total_losses"] / n_sims
         avg_t = s["total_ties"] / n_sims
         total_decisions = avg_w + avg_l + avg_t
-        win_pct = avg_w / total_decisions if total_decisions > 0 else 0
+        win_pct = (avg_w + 0.5 * avg_t) / total_decisions if total_decisions > 0 else 0
         div_pct = 100 * s["div_titles"] / n_sims
         playoff_pct = 100 * s["playoff_apps"] / n_sims
         champ_pct = 100 * s["championships"] / n_sims
