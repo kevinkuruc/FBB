@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Fantasy Baseball Season Simulator — Mid-Season (Post Week 5)
+Fantasy Baseball Season Simulator — Mid-Season (Post Week 6)
 
-Variant of simulate_season.py that picks up after the first 5 scoring periods
+Variant of simulate_season.py that picks up after the first 6 scoring periods
 have already been played. Each team starts the simulation with their actual
-W-L-T record through week 5, and only the remaining 15 weeks of the schedule
+W-L-T record through week 6, and only the remaining 14 weeks of the schedule
 are simulated.
 
 Usage:
-    python simulate_season_week5.py [--sims N] [--seed S]
+    python simulate_season_week6.py [--sims N] [--seed S]
 """
 
 import argparse
@@ -69,50 +69,39 @@ PLAYOFF_HIGHER_SEED_WINS_TIE = True
 
 
 # ============================================================
-# STARTING RECORDS — actual cumulative W-L-T through Scoring Period 5.
-# Source: Schedule/Results_thruweek5.csv (Standings block).
-# Sum of W+L+T = 70 for every team (5 weeks * 14 categories).
+# STARTING RECORDS — actual cumulative W-L-T through Scoring Period 6.
+# Source: Schedule/Week_6_Results.csv (Standings block).
+# Sum of W+L+T = 84 for every team (6 weeks * 14 categories).
 # ============================================================
 
 STARTING_RECORDS = {
-    "Skrey's Squad":         {"wins": 42, "losses": 25, "ties": 3},   # Kevin's Magoos
-    "Beasts of the East":    {"wins": 32, "losses": 33, "ties": 5},
-    "Acuna Matata":          {"wins": 34, "losses": 33, "ties": 3},
-    "Put Up or Shut Up":     {"wins": 37, "losses": 31, "ties": 2},
-    "wes11":                 {"wins": 34, "losses": 32, "ties": 4},
-    "Polar Bears":           {"wins": 28, "losses": 38, "ties": 4},
-    "Derty's Rolling Crew":  {"wins": 40, "losses": 23, "ties": 7},
-    "Cleveland Steamers":    {"wins": 23, "losses": 37, "ties": 10},
-    "Tardy Plumbers":        {"wins": 35, "losses": 32, "ties": 3},
-    "North Shore Beefs":     {"wins": 25, "losses": 35, "ties": 10},
-    "vves11":                {"wins": 24, "losses": 39, "ties": 7},
-    "Unkle Jerik":           {"wins": 32, "losses": 33, "ties": 5},   # UNKle Jerik
-    "$wagga":                {"wins": 31, "losses": 36, "ties": 3},
-    "Shmoulie":              {"wins": 32, "losses": 31, "ties": 7},
-    "The Bronx Boofers":     {"wins": 38, "losses": 29, "ties": 3},
-    "The Murk Master":       {"wins": 33, "losses": 33, "ties": 4},   # Murk Masters
+    "Skrey's Squad":         {"wins": 54, "losses": 26, "ties": 4},   # Kevin's Magoos
+    "Beasts of the East":    {"wins": 38, "losses": 41, "ties": 5},
+    "Acuna Matata":          {"wins": 44, "losses": 36, "ties": 4},
+    "Put Up or Shut Up":     {"wins": 44, "losses": 37, "ties": 3},
+    "wes11":                 {"wins": 46, "losses": 33, "ties": 5},
+    "Polar Bears":           {"wins": 36, "losses": 44, "ties": 4},
+    "Derty's Rolling Crew":  {"wins": 46, "losses": 31, "ties": 7},
+    "Cleveland Steamers":    {"wins": 26, "losses": 45, "ties": 13},
+    "Tardy Plumbers":        {"wins": 37, "losses": 44, "ties": 3},
+    "North Shore Beefs":     {"wins": 27, "losses": 45, "ties": 12},
+    "vves11":                {"wins": 30, "losses": 46, "ties": 8},
+    "Unkle Jerik":           {"wins": 40, "losses": 39, "ties": 5},   # UNKle Jerik
+    "$wagga":                {"wins": 39, "losses": 42, "ties": 3},
+    "Shmoulie":              {"wins": 38, "losses": 39, "ties": 7},
+    "The Bronx Boofers":     {"wins": 39, "losses": 41, "ties": 4},
+    "The Murk Master":       {"wins": 41, "losses": 36, "ties": 7},   # Murk Masters
 }
 
 
 # ============================================================
-# SCHEDULE — remaining 15 scoring periods (weeks 6–20).
-# Weeks 1–5 are already in the books; their results live in STARTING_RECORDS.
+# SCHEDULE — remaining 14 scoring periods (weeks 7–20).
+# Weeks 1–6 are already in the books; their results live in STARTING_RECORDS.
 # Each entry: list of (away, home) tuples
 # Home/away doesn't affect simulation (no home-field advantage).
 # ============================================================
 
 SCHEDULE = [
-    # --- Scoring Period 6 (May 4 – May 10) ---
-    [
-        ("$wagga", "Derty's Rolling Crew"),
-        ("Acuna Matata", "North Shore Beefs"),
-        ("The Murk Master", "Cleveland Steamers"),
-        ("The Bronx Boofers", "wes11"),
-        ("Put Up or Shut Up", "vves11"),
-        ("Beasts of the East", "Unkle Jerik"),
-        ("Skrey's Squad", "Tardy Plumbers"),
-        ("Shmoulie", "Polar Bears"),
-    ],
     # --- Scoring Period 7 (May 11 – May 17) ---
     [
         ("$wagga", "wes11"),

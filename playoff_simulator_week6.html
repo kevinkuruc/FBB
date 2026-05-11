@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fantasy Baseball Season Simulator (Post Week 5)</title>
+<title>Fantasy Baseball Season Simulator (Post Week 6)</title>
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -209,11 +209,11 @@
 </head>
 <body>
 
-<h1>Fantasy Baseball Season Simulator (Post Week 5)</h1>
-<div class="subtitle">Bradley-Terry model &middot; 14 categories &middot; 15 weeks remaining (weeks 6&ndash;20) &middot; Monte Carlo</div>
+<h1>Fantasy Baseball Season Simulator (Post Week 6)</h1>
+<div class="subtitle">Bradley-Terry model &middot; 14 categories &middot; 14 weeks remaining (weeks 7&ndash;20) &middot; Monte Carlo</div>
 
 <div class="helper-text">
-    Each team starts from their actual W-L-T through week 5; only the remaining 15 weeks are simulated.<br>
+    Each team starts from their actual W-L-T through week 6; only the remaining 14 weeks are simulated.<br>
     Enter each team's true talent win probability for the rest of the season (e.g. .525 means they'd win 52.5% of categories against a .500 team).
     <br>.500 = average &middot; .550 = strong &middot; .600 = dominant &middot; .450 = weak
 </div>
@@ -267,37 +267,35 @@ for (const [div, teams] of Object.entries(DIVISIONS)) {
 const NUM_CATEGORIES = 14;
 
 // ============================================================
-// STARTING RECORDS — actual cumulative W-L-T through week 5.
-// Source: Schedule/Results_thruweek5.csv. Each team's W+L+T = 70.
+// STARTING RECORDS — actual cumulative W-L-T through week 6.
+// Source: Schedule/Week_6_Results.csv. Each team's W+L+T = 84.
 // ============================================================
 
 const STARTING_RECORDS = {
-    "Skrey's Squad":         { wins: 42, losses: 25, ties: 3 },   // Kevin's Magoos
-    "Beasts of the East":    { wins: 32, losses: 33, ties: 5 },
-    "Acuna Matata":          { wins: 34, losses: 33, ties: 3 },
-    "Put Up or Shut Up":     { wins: 37, losses: 31, ties: 2 },
-    "wes11":                 { wins: 34, losses: 32, ties: 4 },
-    "Polar Bears":           { wins: 28, losses: 38, ties: 4 },
-    "Derty's Rolling Crew":  { wins: 40, losses: 23, ties: 7 },
-    "Cleveland Steamers":    { wins: 23, losses: 37, ties: 10 },
-    "Tardy Plumbers":        { wins: 35, losses: 32, ties: 3 },
-    "North Shore Beefs":     { wins: 25, losses: 35, ties: 10 },
-    "vves11":                { wins: 24, losses: 39, ties: 7 },
-    "Unkle Jerik":           { wins: 32, losses: 33, ties: 5 },   // UNKle Jerik
-    "$wagga":                { wins: 31, losses: 36, ties: 3 },
-    "Shmoulie":              { wins: 32, losses: 31, ties: 7 },
-    "The Bronx Boofers":     { wins: 38, losses: 29, ties: 3 },
-    "The Murk Master":       { wins: 33, losses: 33, ties: 4 },   // Murk Masters
+    "Skrey's Squad":         { wins: 54, losses: 26, ties: 4 },   // Kevin's Magoos
+    "Beasts of the East":    { wins: 38, losses: 41, ties: 5 },
+    "Acuna Matata":          { wins: 44, losses: 36, ties: 4 },
+    "Put Up or Shut Up":     { wins: 44, losses: 37, ties: 3 },
+    "wes11":                 { wins: 46, losses: 33, ties: 5 },
+    "Polar Bears":           { wins: 36, losses: 44, ties: 4 },
+    "Derty's Rolling Crew":  { wins: 46, losses: 31, ties: 7 },
+    "Cleveland Steamers":    { wins: 26, losses: 45, ties: 13 },
+    "Tardy Plumbers":        { wins: 37, losses: 44, ties: 3 },
+    "North Shore Beefs":     { wins: 27, losses: 45, ties: 12 },
+    "vves11":                { wins: 30, losses: 46, ties: 8 },
+    "Unkle Jerik":           { wins: 40, losses: 39, ties: 5 },   // UNKle Jerik
+    "$wagga":                { wins: 39, losses: 42, ties: 3 },
+    "Shmoulie":              { wins: 38, losses: 39, ties: 7 },
+    "The Bronx Boofers":     { wins: 39, losses: 41, ties: 4 },
+    "The Murk Master":       { wins: 41, losses: 36, ties: 7 },   // Murk Masters
 };
 
 // ============================================================
-// SCHEDULE — remaining 15 scoring periods (weeks 6–20).
-// Weeks 1–5 results live in STARTING_RECORDS.
+// SCHEDULE — remaining 14 scoring periods (weeks 7–20).
+// Weeks 1–6 results live in STARTING_RECORDS.
 // ============================================================
 
 const SCHEDULE = [
-    // Period 6
-    [["$wagga","Derty's Rolling Crew"],["Acuna Matata","North Shore Beefs"],["The Murk Master","Cleveland Steamers"],["The Bronx Boofers","wes11"],["Put Up or Shut Up","vves11"],["Beasts of the East","Unkle Jerik"],["Skrey's Squad","Tardy Plumbers"],["Shmoulie","Polar Bears"]],
     // Period 7
     [["$wagga","wes11"],["Acuna Matata","Tardy Plumbers"],["The Murk Master","Polar Bears"],["The Bronx Boofers","Cleveland Steamers"],["Put Up or Shut Up","Unkle Jerik"],["Beasts of the East","North Shore Beefs"],["Skrey's Squad","vves11"],["Shmoulie","Derty's Rolling Crew"]],
     // Period 8
