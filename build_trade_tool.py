@@ -1,16 +1,27 @@
 #!/usr/bin/env python3
 """
-Generate trade_tool.html from draft_tool.html + Post-Draft_Rosters.csv.
+Generate trade_tool.html from draft_tool.html + the most recent projection /
+roster files.
 
 The trade tool is an in-season variant of the draft tool:
-- All 16 rosters are pre-loaded from Post-Draft_Rosters.csv (not just keepers)
-- Every owned player (and FA) stays in the "pool" as a potential trade target
-- +MV column = wins gained if you ACQUIRED that player, assuming you drop your
-  lowest-value current player they could replace (tried over every possible
-  drop; we keep the best swap)
-- Position filter lets you see e.g. "all 1B sorted by trade upside"
+- Hitter projections come from Depth_Charts_May_ROS.csv (rest-of-season).
+  Counting stats are supplemented to TARGET_PA at replacement rates so
+  durability is baked in: a player projected for low ROS PA gets diluted
+  toward replacement, while a healthy starter (>= TARGET_PA) is unchanged.
+  The PER-PA rate × fixed PA/week framing is unchanged from the draft tool,
+  so the math still produces sensible weekly numbers even with smaller
+  ROS totals.
+- All 16 rosters are pre-loaded from rosters_May.csv (not just keepers).
+- Every owned player (and FA) stays in the "pool" as a potential trade target.
+- +MV column = wins gained if you ACQUIRED that player. For hitters we try
+  every possible drop from Skrey's roster and re-run the position optimizer,
+  so a 1B target naturally lets Arraez slide to 2B (or wherever else his
+  multi-position eligibility allows) — we keep whichever drop maximizes
+  total wins.
+- Position filter lets you see e.g. "all 1B sorted by trade upside".
 
-Re-run after roster moves: python3 build_trade_tool.py
+Re-run after roster moves or new projections:
+    python3 build_trade_tool.py
 """
 
 import csv
@@ -18,11 +29,35 @@ import json
 import re
 import unicodedata
 
-ROSTERS_CSV = "/home/user/FBB/Post-Draft_Rosters.csv"
+MAY_ROS_FILE = "/home/user/FBB/Depth_Charts_May_ROS.csv"
+ROSTERS_CSV = "/home/user/FBB/rosters_May.csv"
 SRC_HTML = "/home/user/FBB/draft_tool.html"
 OUT_HTML = "/home/user/FBB/trade_tool.html"
 
 MY_TEAM = "Skrey"
+
+# Fantrax team names after the May rename (BShit -> Shmoulie).
+TEAM_NAMES = [
+    "Skrey", "JDM", "BigJoe", "Ferrante", "Rut", "Gwon", "Beefs", "Unks",
+    "Swagga", "Triz", "Boofers", "Shmoulie", "DertyDer", "wes11",
+    "DGreasy", "Diarrhea",
+]
+
+# ---- Hitter projection generation (mirrors create_league_stats.py) ----
+# Filter: drop ROS projections below this PA (effectively bench bats / part-time).
+MIN_PA = 100
+# Supplement target: weekly stats are stat_total / NUM_WEEKS, so TARGET_PA / NUM_WEEKS
+# is the assumed PA/week for a healthy starter. Keeping the draft-tool defaults
+# (625 / 25 = 25 PA/week) means the weekly math is unchanged from draft time.
+TARGET_PA = 625
+# Replacement per-PA rates (cohort: DC ranks 155-175 from create_league_stats.py).
+REP_R_PER_PA = 0.121162
+REP_HR_PER_PA = 0.033035
+REP_RBI_PER_PA = 0.120773
+REP_SO_PER_PA = 0.222623
+REP_TB_PER_PA = 0.372522
+REP_SB_PER_PA = 0.015157
+REP_OBP = 0.324
 
 
 def normalize(name):
@@ -50,8 +85,108 @@ def extract_json_array(content, prefix):
     return json.loads(content[start:end]), start, end
 
 
+# ============================================================================
+# Hitter projection pipeline (Depth_Charts_May_ROS.csv -> JS-ready dicts)
+# ============================================================================
+
+def compute_hitters_from_ros(positions_lookup):
+    """Read May ROS depth-chart projections, supplement low-PA players to
+    TARGET_PA at replacement rates, return a list of hitter dicts."""
+    hitters = []
+    skipped_low_pa = 0
+    with open(MAY_ROS_FILE, 'r', encoding='utf-8-sig') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            try:
+                pa = float(row['PA'])
+                if pa < MIN_PA:
+                    skipped_low_pa += 1
+                    continue
+                name = row['Name']
+                k_pct = float(row['K%'])
+                singles = float(row['1B'])
+                doubles = float(row['2B'])
+                triples = float(row['3B'])
+                hr = float(row['HR'])
+                runs = float(row['R'])
+                rbi = float(row['RBI'])
+                sb = float(row['SB'])
+                obp = float(row['OBP'])
+
+                so = k_pct * pa
+                tb = singles + 2 * doubles + 3 * triples + 4 * hr
+
+                if pa < TARGET_PA:
+                    gap = TARGET_PA - pa
+                    runs += gap * REP_R_PER_PA
+                    hr += gap * REP_HR_PER_PA
+                    rbi += gap * REP_RBI_PER_PA
+                    so += gap * REP_SO_PER_PA
+                    tb += gap * REP_TB_PER_PA
+                    sb += gap * REP_SB_PER_PA
+                    obp = (pa * obp + gap * REP_OBP) / TARGET_PA
+                    pa = TARGET_PA
+
+                hitters.append({
+                    'name': name,
+                    'type': 'H',
+                    'pa': int(round(pa)),
+                    'r': int(round(runs)),
+                    'hr': int(round(hr)),
+                    'rbi': int(round(rbi)),
+                    'so': int(round(so)),
+                    'tb': int(round(tb)),
+                    'sb': int(round(sb)),
+                    'obp': round(obp, 3),
+                    'pos': positions_lookup.get(normalize(name), []),
+                })
+            except (ValueError, KeyError):
+                continue
+    print(f"  May ROS: kept {len(hitters)} hitters, skipped {skipped_low_pa} below MIN_PA={MIN_PA}")
+    return hitters
+
+
+def build_positions_lookup():
+    """Map normalized player name -> list of hitter-eligible positions from
+    rosters_May.csv. Skips pitcher positions; keeps first occurrence (lowest
+    RkOv, which is the MLB player rather than a name-collision minor leaguer)."""
+    lookup = {}
+    seen = set()
+    HITTER_SLOTS = ('C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'UT')
+    with open(ROSTERS_CSV) as f:
+        for row in csv.DictReader(f):
+            n = normalize(row['Player'])
+            if n in seen:
+                continue
+            seen.add(n)
+            positions = [p for p in row['Position'].split(',') if p in HITTER_SLOTS]
+            if positions:
+                lookup[n] = positions
+    return lookup
+
+
+def replace_hitter_arrays(content, hitters):
+    """Replace HITTERS_THEBAT / HITTERS_BATX / HITTERS_DC with the new May ROS
+    array. Only DC projections were refreshed for May, so all three slots get
+    the same data — the projection toggle in the UI becomes a no-op but it's
+    harmless to leave."""
+    new_json = json.dumps(hitters, ensure_ascii=False, separators=(',', ':'))
+    for prefix in ['HITTERS_THEBAT = [', 'HITTERS_BATX = [', 'HITTERS_DC = [']:
+        _, start, end = extract_json_array(content, prefix)
+        content = content[:start] + new_json + content[end:]
+    return content
+
+
+def replace_team_names(content):
+    """Update the embedded TEAM_NAMES array (BShit -> Shmoulie this cycle)."""
+    pattern = r"const TEAM_NAMES = \[.*?\];"
+    new_value = f"const TEAM_NAMES = {json.dumps(TEAM_NAMES)};"
+    return re.sub(pattern, new_value, content)
+
+
 def build_name_lookup(content):
-    """Map normalized projection name -> exact projection name (with accents)."""
+    """Map normalized projection name -> exact projection name (with accents),
+    used to translate Fantrax-CSV names into the embedded projection names."""
     lookup = {}
     for prefix in ['HITTERS_THEBAT = [', 'HITTERS_BATX = [', 'HITTERS_DC = [']:
         arr, _, _ = extract_json_array(content, prefix)
@@ -63,10 +198,12 @@ def build_name_lookup(content):
     return lookup
 
 
+# ============================================================================
+# Roster loading (CSV -> JS structures)
+# ============================================================================
+
 def resolve_proj_name(fx_name, name_lookup):
     """Map a Fantrax player name to a projection-array name. Returns None if unmatched."""
-    # Ohtani: projections use 'Shohei Ohtani' (the hitter); the SP entry has no
-    # projection match unless we add one.
     if fx_name == 'Shohei Ohtani-H':
         return name_lookup.get(normalize('Shohei Ohtani'))
     if fx_name == 'Shohei Ohtani-P':
@@ -75,7 +212,7 @@ def resolve_proj_name(fx_name, name_lookup):
 
 
 def load_rosters(name_lookup):
-    """Read Post-Draft_Rosters.csv. Returns (rosters, owners).
+    """Read rosters_May.csv. Returns (rosters, owners).
 
     rosters: {team_name: [{name, type, position?}]} for placing on teams
     owners:  {proj_name: team_name or 'FA'} for display in trade-target list
@@ -424,11 +561,24 @@ def main():
     with open(SRC_HTML) as f:
         content = f.read()
 
-    print("Building name lookup from projection arrays...")
+    print("Building position-eligibility lookup from rosters_May.csv...")
+    positions_lookup = build_positions_lookup()
+    print(f"  {len(positions_lookup)} players with hitter eligibility")
+
+    print("Computing May ROS hitter projections...")
+    hitters = compute_hitters_from_ros(positions_lookup)
+
+    print("Replacing embedded HITTERS arrays and TEAM_NAMES...")
+    content = replace_hitter_arrays(content, hitters)
+    content = replace_team_names(content)
+
+    # Name lookup must run AFTER the hitter arrays were swapped to May ROS,
+    # otherwise we'd map names against the stale March projection list.
+    print("Building name lookup from updated projection arrays...")
     name_lookup = build_name_lookup(content)
     print(f"  {len(name_lookup)} unique projection names")
 
-    print("Loading rosters from Post-Draft_Rosters.csv...")
+    print(f"Loading rosters from {ROSTERS_CSV}...")
     rosters, owners = load_rosters(name_lookup)
     print(f"  {len(rosters)} teams, {sum(len(r) for r in rosters.values())} owned players placed")
     print(f"  {len(owners)} total players in pool (incl. FA)")
