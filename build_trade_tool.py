@@ -50,6 +50,7 @@ MIN_PA = 100
 # is the assumed PA/week for a healthy starter. Keeping the draft-tool defaults
 # (625 / 25 = 25 PA/week) means the weekly math is unchanged from draft time.
 TARGET_PA = 625
+NUM_WEEKS = 25
 # Replacement per-PA rates (cohort: DC ranks 155-175 from create_league_stats.py).
 REP_R_PER_PA = 0.121162
 REP_HR_PER_PA = 0.033035
@@ -58,6 +59,10 @@ REP_SO_PER_PA = 0.222623
 REP_TB_PER_PA = 0.372522
 REP_SB_PER_PA = 0.015157
 REP_OBP = 0.324
+# League constants used to compute a `value` field per hitter (a zTotal proxy)
+# so the lineup optimizer can break position ties by fantasy value.
+SD_R, SD_HR, SD_RBI, SD_SB, SD_SO, SD_TB, SD_OBP = 6.03, 2.93, 6.72, 2.57, 7.45, 15.94, 0.04
+AVG_OBP = 0.327
 
 
 def normalize(name):
@@ -127,6 +132,16 @@ def compute_hitters_from_ros(positions_lookup):
                     obp = (pa * obp + gap * REP_OBP) / TARGET_PA
                     pa = TARGET_PA
 
+                # Per-category z-scores -> zTotal. Mirrors create_league_stats.py.
+                z_r = (runs / NUM_WEEKS) / SD_R
+                z_hr = (hr / NUM_WEEKS) / SD_HR
+                z_rbi = (rbi / NUM_WEEKS) / SD_RBI
+                z_sb = (sb / NUM_WEEKS) / SD_SB
+                z_tb = (tb / NUM_WEEKS) / SD_TB
+                z_so = -(so / NUM_WEEKS) / SD_SO
+                z_obp = (obp - AVG_OBP) / 9 / SD_OBP
+                value = z_r + z_hr + z_rbi + z_sb + z_tb + z_so + z_obp
+
                 hitters.append({
                     'name': name,
                     'type': 'H',
@@ -139,6 +154,7 @@ def compute_hitters_from_ros(positions_lookup):
                     'sb': int(round(sb)),
                     'obp': round(obp, 3),
                     'pos': positions_lookup.get(normalize(name), []),
+                    'value': round(value, 4),
                 })
             except (ValueError, KeyError):
                 continue
@@ -308,7 +324,8 @@ def patch_tabs(content):
 
 
 def replace_keepers_with_rosters(content, rosters):
-    """Replace the initKeepers IIFE with one that loads full rosters and optimizes."""
+    """Replace the initKeepers IIFE with one that loads full rosters and
+    selects the best 9 active hitters (rest go to benchHitters)."""
     rosters_json = json.dumps(rosters, ensure_ascii=False, separators=(',', ':'))
 
     new_init = f"""(function initRosters() {{
@@ -318,15 +335,18 @@ def replace_keepers_with_rosters(content, rosters):
             const team = allTeams[teamName];
             if (!team) return;
 
+            // Stage every hitter onto the bench first; the optimizer then picks
+            // the best 9 to be active and leaves the rest as bench. This is
+            // smarter than the old "first 9 by CSV order" loader, which could
+            // exclude a critical position player (e.g. the only catcher).
+            team.benchHitters = team.benchHitters || [];
+
             players.forEach(p => {{
                 if (p.type === 'H') {{
                     const proj = getHitters().find(h => h.name === p.name);
                     if (proj) {{
-                        const slotIdx = team.hitters.findIndex(s => s.player === null);
-                        if (slotIdx !== -1) {{
-                            team.hitters[slotIdx].player = {{ ...proj, type: 'H' }};
-                            draftedPlayers.add(proj.name);
-                        }}
+                        team.benchHitters.push({{ ...proj, type: 'H' }});
+                        draftedPlayers.add(proj.name);
                     }}
                 }} else if (p.type === 'SP') {{
                     const proj = PITCHERS.find(x => x.name === p.name);
@@ -349,15 +369,14 @@ def replace_keepers_with_rosters(content, rosters):
                 }}
             }});
 
-            // Run the position optimizer so multi-eligible hitters end up in
-            // the slots that don't waste their flexibility.
             optimizeTeamPositions(teamName);
         }});
 
-        // Build the set of players currently on MY team — these can't be
-        // trade targets (no point trading for someone you already have).
+        // Build the set of players currently on MY team (active + bench) —
+        // these can't be trade targets (no point trading for someone we have).
         const me = allTeams['{MY_TEAM}'];
         me.hitters.forEach(s => {{ if (s.player) myTeamPlayers.add(s.player.name); }});
+        me.benchHitters.forEach(p => myTeamPlayers.add(p.name));
         me.sps.forEach(p => {{ if (p) myTeamPlayers.add(p.name); }});
         me.rps.forEach(p => {{ if (p) myTeamPlayers.add(p.name); }});
     }})();"""
@@ -367,6 +386,157 @@ def replace_keepers_with_rosters(content, rosters):
     if n != 1:
         raise RuntimeError("Could not find initKeepers() block to replace")
     return new_content
+
+
+def replace_optimizer(content):
+    """Replace optimizeTeamPositions with a version that:
+    - Pools active+bench hitters and picks the best 9 active
+    - Sorts most-constrained-first; ties broken by `value` (zTotal proxy) DESC
+    - Two-pass placement: non-UTIL first, then UTIL for unplaced
+    - Players who don't fit any eligible slot go to benchHitters (no last-resort
+      placement into ineligible slots)"""
+    new_fn = """function optimizeTeamPositions(teamName) {
+        const team = allTeams[teamName];
+        if (!team.benchHitters) team.benchHitters = [];
+
+        // Pool = currently active + currently benched.
+        const pool = [];
+        team.hitters.forEach(slot => { if (slot.player) pool.push(slot.player); });
+        pool.push(...team.benchHitters);
+
+        // Clear active slots and bench; we'll reassign from scratch.
+        team.hitters.forEach(s => { s.player = null; });
+        team.benchHitters = [];
+
+        if (pool.length === 0) return;
+
+        // Build eligibility per player. UTIL counts as a 10th eligibility for
+        // any hitter with at least one defined position.
+        const elig = pool.map(player => {
+            const pos = player.pos || [];
+            const nonUtil = HITTER_POSITIONS.filter(s => s !== 'UTIL' && pos.includes(s));
+            const canUtil = pos.length > 0;
+            return {
+                player,
+                nonUtil,
+                canUtil,
+                eligCount: nonUtil.length + (canUtil ? 1 : 0),
+                value: typeof player.value === 'number' ? player.value : 0,
+            };
+        });
+
+        // Most-constrained-first (a C-only player goes before a 1B/3B player),
+        // with `value` DESC as the tie-breaker — when two players have the same
+        // number of eligible slots, the better fantasy bat gets first pick.
+        elig.sort((a, b) => {
+            if (a.eligCount !== b.eligCount) return a.eligCount - b.eligCount;
+            return b.value - a.value;
+        });
+
+        // For each player with multi-slot eligibility, prefer the RARER slot
+        // (the one fewest other pool players can fill). This avoids Arraez
+        // (1B/2B) parking at 1B when 2B has no other claimants.
+        const slotDemand = {};
+        for (const e of elig) {
+            for (const s of e.nonUtil) slotDemand[s] = (slotDemand[s] || 0) + 1;
+        }
+        for (const e of elig) {
+            e.nonUtil.sort((a, b) => slotDemand[a] - slotDemand[b]);
+        }
+
+        // Pass 1: place each player in their first available NON-UTIL eligible
+        // slot (rarity-sorted). Players who can't fit any position-specific
+        // slot fall through to pass 2.
+        const placed = new Set();
+        elig.forEach((e, idx) => {
+            for (const pos of e.nonUtil) {
+                const slotIdx = team.hitters.findIndex(s => s.position === pos && s.player === null);
+                if (slotIdx !== -1) {
+                    team.hitters[slotIdx].player = e.player;
+                    placed.add(idx);
+                    break;
+                }
+            }
+        });
+
+        // Pass 2: UTIL goes to the highest-value unplaced player (value DESC).
+        const unplaced = elig
+            .map((e, idx) => ({ e, idx }))
+            .filter(({ idx }) => !placed.has(idx))
+            .sort((a, b) => b.e.value - a.e.value);
+        for (const { e, idx } of unplaced) {
+            if (!e.canUtil) continue;
+            const slotIdx = team.hitters.findIndex(s => s.position === 'UTIL' && s.player === null);
+            if (slotIdx === -1) break;
+            team.hitters[slotIdx].player = e.player;
+            placed.add(idx);
+        }
+
+        // Pass 3: everyone still unplaced goes to bench. Order doesn't matter
+        // for scoring, but keep it value-DESC so the UI display is stable.
+        elig
+            .map((e, idx) => ({ e, idx }))
+            .filter(({ idx }) => !placed.has(idx))
+            .sort((a, b) => b.e.value - a.e.value)
+            .forEach(({ e }) => team.benchHitters.push(e.player));
+    }"""
+
+    pattern = r'function optimizeTeamPositions\(teamName\) \{.*?\n    \}'
+    new_content, n = re.subn(pattern, new_fn, content, count=1, flags=re.DOTALL)
+    if n != 1:
+        raise RuntimeError("Could not find optimizeTeamPositions to replace")
+    return new_content
+
+
+def add_bench_to_team_init(content):
+    """Add benchHitters: [] to each team's initialization object."""
+    return content.replace(
+        "rps: Array(RP_SLOTS).fill(null)",
+        "rps: Array(RP_SLOTS).fill(null),\n            benchHitters: []",
+        1,
+    )
+
+
+def add_bench_section_to_my_roster(content):
+    """Surface the benchHitters list in the My Roster view so the user can see
+    who's currently inactive (e.g. Moniak when Moreno wins the C slot)."""
+    # Add a placeholder div in the HTML markup after the RP section.
+    markup_old = '<div id="rp-roster" class="roster-grid pitchers"></div>\n            </div>'
+    markup_new = (
+        '<div id="rp-roster" class="roster-grid pitchers"></div>\n            </div>\n'
+        '            <div class="roster-section" id="bench-section" style="display: none;">\n'
+        '                <h3>Bench (not contributing to active stats)</h3>\n'
+        '                <div id="bench-roster" class="roster-grid"></div>\n'
+        '            </div>'
+    )
+    if markup_old not in content:
+        raise RuntimeError("Could not find RP roster markup to anchor bench section")
+    content = content.replace(markup_old, markup_new, 1)
+
+    # In renderRoster, populate the bench list right after the RP section.
+    js_marker = "// Category tables\n        const { hittingProj, pitchingProj, wins } = getExpectedWins('Skrey');"
+    js_new = (
+        "// Bench (inactive hitters)\n"
+        "        const bench = team.benchHitters || [];\n"
+        "        const benchSection = document.getElementById('bench-section');\n"
+        "        if (bench.length === 0) {\n"
+        "            benchSection.style.display = 'none';\n"
+        "        } else {\n"
+        "            benchSection.style.display = 'block';\n"
+        "            document.getElementById('bench-roster').innerHTML = bench.map(p => `\n"
+        "                <div class=\"roster-slot filled\">\n"
+        "                    <div class=\"position\">BENCH</div>\n"
+        "                    <div class=\"player-name\">${p.name}</div>\n"
+        "                    ${p.pos && p.pos.length ? `<div style=\"margin: 2px 0\">${p.pos.map(x => '<span class=\"pos-badge\">' + x + '</span>').join(' ')}</div>` : ''}\n"
+        "                    <div class=\"player-stats\">R:${p.r} HR:${p.hr} RBI:${p.rbi} SB:${p.sb} OBP:${p.obp.toFixed(3)}</div>\n"
+        "                </div>\n"
+        "            `).join('');\n"
+        "        }\n\n"
+        "        // Category tables\n        const { hittingProj, pitchingProj, wins } = getExpectedWins('Skrey');"
+    )
+    if js_marker not in content:
+        raise RuntimeError("Could not find renderRoster anchor for bench injection")
+    return content.replace(js_marker, js_new, 1)
 
 
 def add_owner_map_and_my_team_set(content, owners):
@@ -388,43 +558,46 @@ def add_owner_map_and_my_team_set(content, owners):
 
 
 def replace_marginal_value(content):
-    """Replace calculateMarginalValue with trade-swap logic (optimal drop)."""
+    """Replace calculateMarginalValue with trade-swap logic (optimal drop).
+
+    Drop candidates include both active AND benched hitters — trading away a
+    benched player is a real option (and the trade target may then push another
+    active player off the lineup)."""
     new_fn = """function calculateMarginalValue(player) {
         const team = allTeams['Skrey'];
         const currentWins = getExpectedWins('Skrey').wins.TOTAL;
         let bestWins = currentWins;
 
         if (player.type === 'H') {
-            // Save state: store current player in each slot
-            const saved = team.hitters.map(s => s.player);
-            const currentHitters = saved.filter(p => p !== null);
+            // Snapshot active slots + bench so we can restore exactly.
+            const savedActive = team.hitters.map(s => s.player);
+            const savedBench = [...team.benchHitters];
+            const allHitters = [...savedActive.filter(p => p !== null), ...savedBench];
 
-            // Build drop options: drop each current hitter (by index in currentHitters),
-            // or drop nobody if a slot is open.
-            const dropChoices = [];
-            for (let i = 0; i < currentHitters.length; i++) dropChoices.push(i);
-            if (currentHitters.length < team.hitters.length) dropChoices.push(-1);
+            // Drop options: each current hitter (active or bench), or no drop
+            // if the team has fewer than 9 hitters total.
+            const dropChoices = [...allHitters];
+            if (allHitters.length < team.hitters.length) dropChoices.push(null);
 
-            for (const dropIdx of dropChoices) {
-                const newHitters = currentHitters
-                    .filter((_, i) => i !== dropIdx)
+            for (const dropPlayer of dropChoices) {
+                const newPool = allHitters
+                    .filter(h => h !== dropPlayer)
                     .concat([player]);
 
-                // Clear slots, place hitters, then run the position optimizer.
+                // Stage everyone on the bench and let optimizeTeamPositions pick
+                // the best active 9. This naturally handles position scarcity —
+                // a 1B target with Arraez (1B/2B) on roster won't waste 2B.
                 team.hitters.forEach(s => { s.player = null; });
-                newHitters.forEach(h => {
-                    const slotIdx = team.hitters.findIndex(s => s.player === null);
-                    if (slotIdx !== -1) team.hitters[slotIdx].player = h;
-                });
+                team.benchHitters = newPool;
                 optimizeTeamPositions('Skrey');
 
                 const w = getExpectedWins('Skrey').wins.TOTAL;
                 if (w > bestWins) bestWins = w;
             }
 
-            // Restore original slot assignments (saved positions are preserved
-            // because we never modified the `position` field on slots).
-            team.hitters.forEach((s, i) => { s.player = saved[i]; });
+            // Restore original state.
+            team.hitters.forEach((s, i) => { s.player = savedActive[i]; });
+            team.benchHitters = savedBench;
         } else if (player.type === 'SP') {
             const saved = [...team.sps];
             for (let i = 0; i < team.sps.length; i++) {
@@ -588,6 +761,9 @@ def main():
     content = add_owner_badge_css(content)
     content = patch_tabs(content)
     content = add_owner_map_and_my_team_set(content, owners)
+    content = add_bench_to_team_init(content)
+    content = add_bench_section_to_my_roster(content)
+    content = replace_optimizer(content)
     content = replace_keepers_with_rosters(content, rosters)
     content = replace_marginal_value(content)
     content = patch_available_filter_and_clicks(content)
