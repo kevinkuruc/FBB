@@ -514,7 +514,11 @@ function saveSellers() { localStorage.setItem('deadline-sellers', JSON.stringify
 // My players: Δ wins if TRADED AWAY (≤ 0) — their current contribution, after
 // the lineup re-optimizes around the hole. Net effect of a 1-for-1 is
 // approximately the sum of the two numbers (the Trade Builder is exact).
+// Keyed by type-qualified name ('H|…' or 'P|…') — a two-way player (Ohtani)
+// appears in BOTH pools under the same display name, and a name-only key would
+// let one entry silently overwrite the other.
 const MV = new Map();
+const mvKey = (name, t) => (t === 'H' ? 'H|' : 'P|') + name;
 let mvReady = false;
 
 function computeAllMV() {
@@ -526,7 +530,7 @@ function computeAllMV() {
   for (const h of HITTERS) {
     if (OWNERS[h.name] === MY_TEAM) {
       if (me.hit.includes(h)) {
-        MV.set(h.name, evalHitting(me.hit.filter(x => x !== h)).total + myPitchTotal - base);
+        MV.set(mvKey(h.name, 'H'), evalHitting(me.hit.filter(x => x !== h)).total + myPitchTotal - base);
       }
       continue;
     }
@@ -538,7 +542,7 @@ function computeAllMV() {
       const w = evalHitting(pool).total + myPitchTotal;
       if (w > best) best = w;
     }
-    MV.set(h.name, best - base);
+    MV.set(mvKey(h.name, 'H'), best - base);
   }
   for (const p of PITCHERS) {
     if (OWNERS[p.name] === MY_TEAM) {
@@ -546,8 +550,8 @@ function computeAllMV() {
       const list2 = isSP2 ? me.sp : me.rp;
       if (list2.includes(p)) {
         const without = list2.filter(x => x !== p);
-        MV.set(p.name, myHitTotal - base + (isSP2 ? evalPitching(without, me.rp).total
-                                                  : evalPitching(me.sp, without).total));
+        MV.set(mvKey(p.name, 'P'), myHitTotal - base + (isSP2 ? evalPitching(without, me.rp).total
+                                                              : evalPitching(me.sp, without).total));
       }
       continue;
     }
@@ -563,7 +567,7 @@ function computeAllMV() {
                                    : evalPitching(me.sp, newList).total);
       if (w > best) best = w;
     }
-    MV.set(p.name, best - base);
+    MV.set(mvKey(p.name, 'P'), best - base);
   }
   mvReady = true;
 }
@@ -585,9 +589,9 @@ function ownerBadge(name) {
 function posBadges(h) {
   return (h.pos || []).filter(p => p !== 'UT').map(p => `<span class="badge">${p}</span>`).join('');
 }
-function mvCell(name) {
+function mvCell(name, t) {
   if (!mvReady) return '<span class="muted small">…</span>';
-  const v = MV.get(name);
+  const v = MV.get(mvKey(name, t));
   if (v === undefined) return '<span class="muted small">—</span>';
   return `<span class="mv-cell ${deltaClass(v)} num">${signed(v)}</span>`;
 }
@@ -702,7 +706,7 @@ function renderWeakCats() {
         <div style="display:flex; gap:8px; padding:2px 0; font-size:13px">
           <span>${esc(x.name)}</span>${ownerBadge(x.name)}
           <span class="muted small" style="margin-left:auto">${x.note}</span>
-          <span style="width:52px; text-align:right">${mvCell(x.name)}</span>
+          <span style="width:52px; text-align:right">${mvCell(x.name, kind)}</span>
         </div>`).join('')}
     </div>`).join('');
 }
@@ -724,7 +728,7 @@ function targetRows() {
     if (owner && o !== owner) return;
     if (sellersOnly && !sellers.has(o)) return;
     if (hideFA && o === 'FA') return;
-    rows.push({ name, t, o, obj, mv: MV.get(name) ?? -99 });
+    rows.push({ name, t, o, obj, mv: MV.get(mvKey(name, t === 'H' ? 'H' : 'P')) ?? -99 });
   };
   if (!type || type === 'H') {
     for (const h of HITTERS) {
@@ -754,7 +758,7 @@ function renderTargets() {
         <td class="muted">${r.t}${r.t !== 'H' ? ' <span class="badge warn" title="Pitcher projections are preseason ATC — stale">stale</span>' : ''}</td>
         <td>${ownerBadge(r.name)}</td>
         <td class="muted small">${r.t === 'H' ? hitterStatLine(r.obj) : pitcherStatLine(r.obj)}</td>
-        <td class="num">${mvCell(r.name)}</td>
+        <td class="num">${mvCell(r.name, r.t === 'H' ? 'H' : 'P')}</td>
       </tr>`).join('')}
     </table>`;
 }
@@ -772,8 +776,8 @@ function renderPoach() {
 
   grid.innerHTML = list.map(t => {
     const assets = (ROSTERS[t] || [])
-      .map(e => ({ ...e, mv: MV.get(e.name) ?? -99 }))
-      .filter(a => MV.has(a.name))
+      .map(e => ({ ...e, mv: MV.get(mvKey(e.name, e.type === 'H' ? 'H' : 'P')) ?? -99 }))
+      .filter(a => MV.has(mvKey(a.name, a.type === 'H' ? 'H' : 'P')))
       .sort((a, b) => b.mv - a.mv)
       .slice(0, 8);
     const maxMv = Math.max(0.01, ...assets.map(a => a.mv));

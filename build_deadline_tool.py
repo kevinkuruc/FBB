@@ -182,6 +182,11 @@ def load_pitchers():
     keep = ('name', 'type', 'ip_wk', 'l_wk', 'sv_wk', 'hld_wk', 'k_wk',
             'qs_wk', 'er_wk', 'wh_wk', 'era', 'whip', 'war', 'dualEligible')
     out = [{k: p[k] for k in keep if k in p} for p in arr]
+    # Ohtani exists in BOTH pools (bat + arm). Disambiguate the pitcher half so
+    # name-keyed maps (owners, MV) can never conflate the two.
+    for p in out:
+        if p['name'] == 'Shohei Ohtani':
+            p['name'] = 'Shohei Ohtani (P)'
     print(f"  pitchers: {len(out)} (ATC preseason, reused from {PITCHERS_SOURCE_HTML})")
     return out
 
@@ -198,7 +203,7 @@ def build_rosters_and_owners(hitters, pitchers, roster_rows):
         if fx == 'Shohei Ohtani-H':
             fx = 'Shohei Ohtani'
         elif fx == 'Shohei Ohtani-P':
-            continue
+            fx = 'Shohei Ohtani (P)'
         n = normalize(fx)
         has_bat = any(p in HITTER_SLOTS for p in pos)
         has_arm = any(p in ('SP', 'RP') for p in pos)
@@ -231,6 +236,10 @@ def main():
 
     print("Loading pitchers...")
     pitchers = load_pitchers()
+
+    overlap = {h['name'] for h in hitters} & {p['name'] for p in pitchers}
+    if overlap:
+        raise RuntimeError(f"Name collision between hitter and pitcher pools: {overlap}")
 
     print("Assembling rosters...")
     rosters, owners = build_rosters_and_owners(hitters, pitchers, roster_rows)
