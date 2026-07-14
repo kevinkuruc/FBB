@@ -286,6 +286,10 @@ footer.app li { margin: 3px 0; }
         <label class="chk"><input type="checkbox" id="tg-owned"> Hide free agents</label>
         <span class="muted small" id="tg-count" style="margin-left:auto"></span>
       </div>
+      <p class="small muted" style="margin:0 0 10px">
+        Your own players (<span class="badge you">YOU</span>) are listed too: their Δ is the wins/week you'd <b>lose</b> by trading
+        them away. Net effect of a 1-for-1 ≈ their Δ + the target's Δ; use the Trade Builder for the exact number.
+      </p>
       <div id="targets-table"></div>
     </div>
   </section>
@@ -505,7 +509,11 @@ if (!sellers.size) {
 }
 function saveSellers() { localStorage.setItem('deadline-sellers', JSON.stringify([...sellers])); }
 
-// ===================== marginal value (Δ wins if acquired, optimal drop) =====================
+// ===================== marginal value =====================
+// Other teams' players / FAs: Δ wins if ACQUIRED (optimal drop assumed).
+// My players: Δ wins if TRADED AWAY (≤ 0) — their current contribution, after
+// the lineup re-optimizes around the hole. Net effect of a 1-for-1 is
+// approximately the sum of the two numbers (the Trade Builder is exact).
 const MV = new Map();
 let mvReady = false;
 
@@ -516,7 +524,12 @@ function computeAllMV() {
   const myPitchTotal = teamEval[MY_TEAM].pitch.total;
 
   for (const h of HITTERS) {
-    if (OWNERS[h.name] === MY_TEAM) continue;
+    if (OWNERS[h.name] === MY_TEAM) {
+      if (me.hit.includes(h)) {
+        MV.set(h.name, evalHitting(me.hit.filter(x => x !== h)).total + myPitchTotal - base);
+      }
+      continue;
+    }
     let best = -Infinity;
     const drops = me.hit.length >= 9 ? me.hit : [...me.hit, null];
     for (const drop of drops) {
@@ -528,7 +541,16 @@ function computeAllMV() {
     MV.set(h.name, best - base);
   }
   for (const p of PITCHERS) {
-    if (OWNERS[p.name] === MY_TEAM) continue;
+    if (OWNERS[p.name] === MY_TEAM) {
+      const isSP2 = p.type === 'SP';
+      const list2 = isSP2 ? me.sp : me.rp;
+      if (list2.includes(p)) {
+        const without = list2.filter(x => x !== p);
+        MV.set(p.name, myHitTotal - base + (isSP2 ? evalPitching(without, me.rp).total
+                                                  : evalPitching(me.sp, without).total));
+      }
+      continue;
+    }
     const isSP = p.type === 'SP';
     const list = isSP ? me.sp : me.rp;
     const cap = isSP ? SP_SLOTS : RP_SLOTS;
@@ -697,7 +719,6 @@ function targetRows() {
   const rows = [];
   const push = (name, t, obj) => {
     const o = OWNERS[name] || 'FA';
-    if (o === MY_TEAM) return;
     if (q && !name.toLowerCase().includes(q)) return;
     if (type && t !== type) return;
     if (owner && o !== owner) return;
@@ -707,7 +728,7 @@ function targetRows() {
   };
   if (!type || type === 'H') {
     for (const h of HITTERS) {
-      if (h.synth) continue;
+      if (h.synth && OWNERS[h.name] !== MY_TEAM) continue;
       if (pos && !(h.pos || []).includes(pos)) continue;
       push(h.name, 'H', h);
     }
@@ -726,10 +747,10 @@ function renderTargets() {
   document.getElementById('targets-table').innerHTML = `
     <table class="list">
       <tr><th class="num" style="width:34px">#</th><th>Player</th><th>Type</th><th>Owner</th>
-          <th>Weekly line</th><th class="num" title="Expected category wins per week added to your team, assuming the optimal lineup shuffle and drop">Δ wins/wk</th></tr>
+          <th>Weekly line</th><th class="num" title="Others: expected category wins/week added to your team if acquired (optimal lineup shuffle + drop assumed). Your players: wins/week LOST if you traded them away (their current contribution). Net of a 1-for-1 ≈ sum of the two; the Trade Builder is exact.">Δ wins/wk</th></tr>
       ${shown.map((r, i) => `<tr>
         <td class="num muted">${i + 1}</td>
-        <td>${esc(r.name)}${r.t === 'H' ? posBadges(r.obj) : (r.obj.dualEligible ? '<span class="badge">SP/RP</span>' : '')}</td>
+        <td>${esc(r.name)}${r.t === 'H' ? posBadges(r.obj) : (r.obj.dualEligible ? '<span class="badge">SP/RP</span>' : '')}${r.obj.synth ? '<span class="badge warn">no proj</span>' : ''}</td>
         <td class="muted">${r.t}${r.t !== 'H' ? ' <span class="badge warn" title="Pitcher projections are preseason ATC — stale">stale</span>' : ''}</td>
         <td>${ownerBadge(r.name)}</td>
         <td class="muted small">${r.t === 'H' ? hitterStatLine(r.obj) : pitcherStatLine(r.obj)}</td>
@@ -1004,9 +1025,11 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
   document.getElementById('theme-toggle').textContent = '◐ ' + next[0].toUpperCase() + next.slice(1);
 });
 
-// owner filter options
-document.getElementById('tg-owner').innerHTML += TEAM_NAMES.filter(t => t !== MY_TEAM)
-  .map(t => `<option>${esc(t)}</option>`).join('') + `<option value="FA">FA</option>`;
+// owner filter options (your team first — pick it to see who you can afford to deal)
+document.getElementById('tg-owner').innerHTML +=
+  `<option value="${esc(MY_TEAM)}">${esc(MY_TEAM)} (you)</option>` +
+  TEAM_NAMES.filter(t => t !== MY_TEAM).map(t => `<option>${esc(t)}</option>`).join('') +
+  `<option value="FA">FA</option>`;
 ['tg-search', 'tg-type', 'tg-pos', 'tg-owner', 'tg-sellers', 'tg-owned'].forEach(id =>
   document.getElementById(id).addEventListener('input', renderTargets));
 
