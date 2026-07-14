@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trade Deadline Analyzer</title>
+<style>
+/* ============ theme (reference dataviz palette) ============ */
+:root {
+  color-scheme: light;
+  --page:      #f9f9f7;
+  --surface:   #fcfcfb;
+  --ink:       #0b0b0b;
+  --ink-2:     #52514e;
+  --muted:     #898781;
+  --grid:      #e1e0d9;
+  --baseline:  #c3c2b7;
+  --border:    rgba(11,11,11,0.10);
+  --accent:    #2a78d6;   /* series-1 blue */
+  --accent-2:  #1baf7a;   /* aqua */
+  --neg:       #e34948;   /* diverging red pole */
+  --neutral:   #f0efec;   /* diverging midpoint */
+  --good-text: #006300;
+  --bad-text:  #d03b3b;
+  --chip:      #eef3fa;
+  --hover:     rgba(42,120,214,0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page:      #0d0d0d;
+    --surface:   #1a1a19;
+    --ink:       #ffffff;
+    --ink-2:     #c3c2b7;
+    --muted:     #898781;
+    --grid:      #2c2c2a;
+    --baseline:  #383835;
+    --border:    rgba(255,255,255,0.10);
+    --accent:    #3987e5;
+    --accent-2:  #199e70;
+    --neg:       #e66767;
+    --neutral:   #383835;
+    --good-text: #0ca30c;
+    --bad-text:  #e66767;
+    --chip:      #22303f;
+    --hover:     rgba(57,135,229,0.12);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page:      #0d0d0d;
+  --surface:   #1a1a19;
+  --ink:       #ffffff;
+  --ink-2:     #c3c2b7;
+  --muted:     #898781;
+  --grid:      #2c2c2a;
+  --baseline:  #383835;
+  --border:    rgba(255,255,255,0.10);
+  --accent:    #3987e5;
+  --accent-2:  #199e70;
+  --neg:       #e66767;
+  --neutral:   #383835;
+  --good-text: #0ca30c;
+  --bad-text:  #e66767;
+  --chip:      #22303f;
+  --hover:     rgba(57,135,229,0.12);
+}
+
+/* ============ base ============ */
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+h1 { font-size: 20px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
+h3 { font-size: 13px; font-weight: 600; margin: 0 0 8px; color: var(--ink-2); }
+a { color: var(--accent); }
+button { font: inherit; cursor: pointer; }
+
+header.app {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 14px 22px 0;
+}
+header.app .sub { color: var(--muted); font-size: 12px; }
+header.app .spacer { flex: 1; }
+.theme-btn {
+  background: var(--surface); color: var(--ink-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 10px; font-size: 12px;
+}
+
+nav.tabs {
+  display: flex; gap: 4px; padding: 12px 22px 0; border-bottom: 1px solid var(--grid);
+  flex-wrap: wrap;
+}
+nav.tabs button {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  padding: 8px 14px 10px; color: var(--ink-2); font-size: 13.5px; font-weight: 550;
+}
+nav.tabs button.active { color: var(--ink); border-bottom-color: var(--accent); }
+nav.tabs button:hover { color: var(--ink); }
+
+main { padding: 18px 22px 60px; max-width: 1420px; margin: 0 auto; }
+section.view { display: none; }
+section.view.active { display: block; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px;
+}
+.grid { display: grid; gap: 14px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.num { font-variant-numeric: tabular-nums; }
+.pos-delta { color: var(--good-text); font-weight: 600; }
+.neg-delta { color: var(--bad-text); font-weight: 600; }
+.zero-delta { color: var(--muted); }
+
+/* badges */
+.badge {
+  display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+  padding: 1px 5px; border-radius: 4px; margin-left: 4px;
+  background: var(--chip); color: var(--ink-2); vertical-align: 1px;
+}
+.badge.owner { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+.badge.fa { color: var(--accent-2); border-color: var(--accent-2); }
+.badge.you { background: var(--accent); color: #fff; }
+.badge.warn { color: var(--bad-text); border: 1px solid var(--border); background: transparent; }
+
+/* stat tiles */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.tile .label { font-size: 12px; color: var(--ink-2); }
+.tile .value { font-size: 34px; font-weight: 600; margin-top: 2px; }
+.tile .value.hero { font-size: 48px; }
+.tile .delta { font-size: 12px; margin-top: 2px; }
+
+/* horizontal bar chart rows */
+.bar-row { display: grid; grid-template-columns: 130px 1fr 52px 60px; gap: 10px; align-items: center; padding: 3px 0; }
+.bar-row .name { font-size: 12.5px; text-align: right; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-row .name.me { color: var(--ink); font-weight: 650; }
+.bar-track { height: 14px; background: none; position: relative; }
+.bar-fill {
+  height: 14px; background: var(--accent); border-radius: 0 4px 4px 0;
+  min-width: 2px; transition: width .25s;
+}
+.bar-row .val { font-size: 12px; text-align: left; }
+.seller-toggle { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.seller-toggle input { accent-color: var(--accent); margin: 0; }
+
+/* category probability meters */
+.cat-table { width: 100%; border-collapse: collapse; }
+.cat-table td, .cat-table th { padding: 4px 8px; font-size: 12.5px; }
+.cat-table th { text-align: left; color: var(--muted); font-weight: 550; border-bottom: 1px solid var(--grid); }
+.cat-table td.num { text-align: right; }
+.meter { position: relative; height: 12px; background: var(--neutral); border-radius: 4px; overflow: hidden; min-width: 120px; }
+.meter .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 3px 3px 0; }
+.meter .mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--baseline); }
+.fill.up   { background: var(--accent); }
+.fill.down { background: var(--neg); }
+.fill.even { background: var(--muted); }
+
+/* filter row */
+.filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.filters input[type=text], .filters select {
+  background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 13px;
+}
+.filters label.chk { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 5px; align-items: center; }
+.filters input[type=checkbox] { accent-color: var(--accent); }
+
+/* tables */
+table.list { width: 100%; border-collapse: collapse; }
+table.list th {
+  text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--muted); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--grid);
+  white-space: nowrap;
+}
+table.list td { padding: 5px 8px; border-bottom: 1px solid var(--grid); font-size: 13px; }
+table.list tr:hover td { background: var(--hover); }
+table.list td.num, table.list th.num { text-align: right; }
+.mv-cell { font-weight: 650; }
+
+/* poach board */
+.poach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+.poach-card .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.poach-card .head .rank { color: var(--muted); font-size: 12px; }
+.asset { display: grid; grid-template-columns: 1fr 46px 58px 52px; gap: 8px; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--grid); }
+.asset:last-child { border-bottom: none; }
+.asset .nm { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-track { height: 10px; position: relative; }
+.mini-fill { height: 10px; background: var(--accent); border-radius: 0 3px 3px 0; min-width: 2px; }
+
+/* trade builder */
+.builder-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 900px) { .builder-cols { grid-template-columns: 1fr; } }
+.picker { max-height: 420px; overflow-y: auto; margin-top: 8px; }
+.pick-row {
+  display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 6px;
+  cursor: pointer; font-size: 13px;
+}
+.pick-row:hover { background: var(--hover); }
+.pick-row.selected { background: var(--hover); outline: 1px solid var(--accent); }
+.pick-row .stat { margin-left: auto; color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+.group-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 10px 0 4px; }
+.verdict { font-size: 15px; font-weight: 600; margin: 6px 0; }
+.impact-list { columns: 2; column-gap: 28px; margin-top: 6px; }
+.impact-list div { break-inside: avoid; font-size: 12.5px; padding: 2px 0; }
+.suggest-row { display: grid; grid-template-columns: 1fr 1fr 76px 76px; gap: 10px; padding: 6px 8px; border-bottom: 1px solid var(--grid); font-size: 13px; align-items: center; cursor: pointer; border-radius: 6px; }
+.suggest-row:hover { background: var(--hover); }
+.suggest-row .h { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); cursor: default; }
+
+/* teams view */
+.teams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.lineup { font-size: 12.5px; }
+.lineup .slot { display: flex; gap: 8px; padding: 1.5px 0; }
+.lineup .pos { width: 30px; color: var(--muted); font-size: 11px; padding-top: 1px; }
+.lineup .empty { color: var(--muted); }
+details.catdet summary { cursor: pointer; font-size: 12px; color: var(--accent); margin-top: 8px; }
+
+footer.app {
+  padding: 18px 22px 40px; max-width: 1420px; margin: 0 auto;
+  color: var(--muted); font-size: 12px; border-top: 1px solid var(--grid);
+}
+footer.app li { margin: 3px 0; }
+.loading-note { color: var(--muted); font-size: 13px; padding: 20px 0; }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <h1>⚾ Trade Deadline Analyzer</h1>
+  <span class="sub" id="meta-line"></span>
+  <span class="spacer"></span>
+  <button class="theme-btn" id="theme-toggle">◐ Theme</button>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-view="dashboard" class="active">Dashboard</button>
+  <button data-view="targets">Trade Targets</button>
+  <button data-view="poach">Poach Board</button>
+  <button data-view="builder">Trade Builder</button>
+  <button data-view="teams">Teams</button>
+</nav>
+
+<main>
+  <!-- ============ DASHBOARD ============ -->
+  <section class="view active" id="view-dashboard">
+    <div class="grid" style="grid-template-columns: 1fr; gap: 14px;">
+      <div class="tiles" id="dash-tiles"></div>
+      <div class="grid" style="grid-template-columns: minmax(380px, 5fr) minmax(420px, 6fr);" id="dash-main">
+        <div class="card">
+          <h2>League power rankings <span class="muted small">(projected weekly category wins, of 14)</span></h2>
+          <p class="small muted" style="margin:2px 0 10px">Tick “seller” to add a team to the Poach Board. Bottom-5 projected teams are pre-ticked.</p>
+          <div id="power-rankings"></div>
+        </div>
+        <div class="card">
+          <h2>Your category profile <span class="muted small">(win probability vs. league-average opponent)</span></h2>
+          <table class="cat-table" id="cat-profile"></table>
+        </div>
+      </div>
+      <div class="card" id="weak-cats-card">
+        <h2>Where to attack <span class="muted small">(your weakest categories &amp; best available fits)</span></h2>
+        <div id="weak-cats" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TARGETS ============ -->
+  <section class="view" id="view-targets">
+    <div class="card">
+      <div class="filters">
+        <input type="text" id="tg-search" placeholder="Search player…">
+        <select id="tg-type">
+          <option value="">All types</option>
+          <option value="H">Hitters</option>
+          <option value="SP">Starters</option>
+          <option value="RP">Relievers</option>
+        </select>
+        <select id="tg-pos">
+          <option value="">Any position</option>
+          <option>C</option><option>1B</option><option>2B</option><option>SS</option>
+          <option>3B</option><option>LF</option><option>CF</option><option>RF</option>
+        </select>
+        <select id="tg-owner"><option value="">Any owner</option></select>
+        <label class="chk"><input type="checkbox" id="tg-sellers"> Sellers only</label>
+        <label class="chk"><input type="checkbox" id="tg-owned"> Hide free agents</label>
+        <span class="muted small" id="tg-count" style="margin-left:auto"></span>
+      </div>
+      <div id="targets-table"></div>
+    </div>
+  </section>
+
+  <!-- ============ POACH BOARD ============ -->
+  <section class="view" id="view-poach">
+    <p class="small muted" style="margin: 0 0 12px">
+      Each card is a team ticked as a <b>seller</b> on the Dashboard. Assets are ranked by
+      <b>Δ wins/week to you</b> — what the player adds to <span id="poach-myteam"></span> after the optimal
+      lineup shuffle and drop. “Asset value” is the player’s overall fantasy value (z-score for hitters, WAR for pitchers) — a proxy for what they’ll cost.
+    </p>
+    <div class="poach-grid" id="poach-grid"></div>
+  </section>
+
+  <!-- ============ BUILDER ============ -->
+  <section class="view" id="view-builder">
+    <div class="filters">
+      <label class="small" style="color:var(--ink-2)">Trade partner:</label>
+      <select id="bld-partner"></select>
+      <button class="theme-btn" id="bld-suggest">💡 Suggest 1-for-1 trades</button>
+      <button class="theme-btn" id="bld-clear">Clear</button>
+    </div>
+    <div class="card" id="bld-result" style="margin-bottom:14px"></div>
+    <div id="bld-suggestions"></div>
+    <div class="builder-cols">
+      <div class="card">
+        <h2>You get <span class="muted small">(click players on <span id="bld-partner-name"></span>)</span></h2>
+        <div class="picker" id="bld-their-roster"></div>
+      </div>
+      <div class="card">
+        <h2>You give <span class="muted small">(click your players)</span></h2>
+        <div class="picker" id="bld-my-roster"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TEAMS ============ -->
+  <section class="view" id="view-teams">
+    <div class="teams-grid" id="teams-grid"></div>
+  </section>
+</main>
+
+<footer class="app">
+  <b>Data provenance &amp; caveats</b>
+  <ul id="provenance"></ul>
+</footer>
+
+<script>
+'use strict';
+const DATA = /*__DATA__*/null;
+const { MY_TEAM, TEAM_NAMES, HITTERS, PITCHERS, ROSTERS, OWNERS, META } = DATA;
+
+// ===================== constants (league history: 34% '24 + 66% '25) =====================
+const HITTING_SD  = { R: 6.02, HR: 3.04, RBI: 6.89, SB: 2.57, SO: 7.96, TB: 15.98, OBP: 0.0351 };
+const HITTING_AVG = { R: 29.43, HR: 8.41, RBI: 28.65, SB: 4.78, SO: 49.93, TB: 90.72, OBP: 0.327 };
+const PITCHING_SD  = { L: 1.8012, SV: 1.5509, K: 13.4752, HLD: 1.5596, ERA: 1.3062, WHIP: 0.2108, QS: 1.4334 };
+const PITCHING_AVG = { L: 3.15, SV: 2.17, K: 51.30, HLD: 2.26, ERA: 3.80, WHIP: 1.22, QS: 3.21 };
+const LOWER_BETTER = new Set(['SO', 'L', 'ERA', 'WHIP']);
+const HIT_CATS   = ['R', 'HR', 'RBI', 'SB', 'TB', 'SO', 'OBP'];
+const PITCH_CATS = ['K', 'QS', 'SV', 'HLD', 'L', 'ERA', 'WHIP'];
+
+// Weekly replacement hitter = 25 PA/wk at the ranks-155-175 per-PA cohort rates.
+const REP_H = { r: 3.029, hr: 0.826, rbi: 3.019, so: 5.566, tb: 9.313, sb: 0.379, obp: 0.324 };
+// SP replacement per start (× 1.1 starts/wk when filling an empty slot).
+const SP_REP = { ip: 5.756, l: 0.3379, qs: 0.3797, k: 5.187, er: 2.688, wh: 7.448 };
+const RP_REP = { ip_wk: 2.480, l_wk: 0.1180, sv_wk: 0.1208, hld_wk: 0.8484, k_wk: 2.693, er_wk: 0.963, wh_wk: 2.852 };
+const SP_SLOTS = 7, RP_SLOTS = 4;
+const POSITIONS = ['C', '1B', '2B', 'SS', '3B', 'LF', 'CF', 'RF'];
+
+// ===================== indexes =====================
+const hitterByName  = new Map(HITTERS.map(h => [h.name, h]));
+const pitcherByName = new Map(PITCHERS.map(p => [p.name, p]));
+
+// ===================== math =====================
+function normalCDF(x) {
+  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741,
+        a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  x = Math.abs(x) / Math.SQRT2;
+  const t = 1 / (1 + p * x);
+  const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  return 0.5 * (1 + sign * y);
+}
+function winProb(mine, opp, sd, lower) {
+  const z = (lower ? opp - mine : mine - opp) / (sd * Math.SQRT2);
+  return normalCDF(z);
+}
+
+// ===================== lineup optimizer (pure) =====================
+// Most-constrained-first; value DESC tiebreak; rarer slot preferred; then a
+// UTIL pass by value; leftovers to bench. Mirrors the audited trade_tool logic.
+function optimizeHitters(pool) {
+  const slots = {};
+  POSITIONS.forEach(p => slots[p] = null);
+  slots.UTIL = null;
+  const bench = [];
+  if (!pool.length) return { slots, bench };
+
+  const elig = pool.map(player => {
+    const pos = player.pos || [];
+    const nonUtil = POSITIONS.filter(s => pos.includes(s));
+    return { player, nonUtil, canUtil: pos.length > 0,
+             count: nonUtil.length + (pos.length ? 1 : 0),
+             value: player.value || 0 };
+  });
+  elig.sort((a, b) => a.count - b.count || b.value - a.value);
+
+  const demand = {};
+  for (const e of elig) for (const s of e.nonUtil) demand[s] = (demand[s] || 0) + 1;
+  for (const e of elig) e.nonUtil.sort((a, b) => demand[a] - demand[b]);
+
+  const placed = new Set();
+  elig.forEach((e, i) => {
+    for (const p of e.nonUtil) {
+      if (slots[p] === null) { slots[p] = e.player; placed.add(i); break; }
+    }
+  });
+  elig.map((e, i) => ({ e, i })).filter(x => !placed.has(x.i))
+      .sort((a, b) => b.e.value - a.e.value)
+      .forEach(({ e, i }) => {
+        if (e.canUtil && slots.UTIL === null) { slots.UTIL = e.player; placed.add(i); }
+      });
+  elig.map((e, i) => ({ e, i })).filter(x => !placed.has(x.i))
+      .sort((a, b) => b.e.value - a.e.value)
+      .forEach(({ e }) => bench.push(e.player));
+  return { slots, bench };
+}
+
+// ===================== projections & expected wins =====================
+function hitProjection(slots) {
+  const proj = { R: 0, HR: 0, RBI: 0, SB: 0, TB: 0, SO: 0, OBP: 0 };
+  let n = 0;
+  for (const pos of [...POSITIONS, 'UTIL']) {
+    const p = slots[pos] || REP_H;
+    proj.R += p.r; proj.HR += p.hr; proj.RBI += p.rbi;
+    proj.SB += p.sb; proj.TB += p.tb; proj.SO += p.so;
+    proj.OBP += p.obp; n++;
+  }
+  proj.OBP /= n;
+  return proj;
+}
+function pitchProjection(sps, rps) {
+  let ip = 0, l = 0, sv = 0, hld = 0, k = 0, qs = 0, er = 0, wh = 0;
+  for (let i = 0; i < SP_SLOTS; i++) {
+    const p = sps[i];
+    if (p) { ip += p.ip_wk; l += p.l_wk; sv += p.sv_wk; hld += p.hld_wk;
+             k += p.k_wk; qs += p.qs_wk; er += p.er_wk; wh += p.wh_wk; }
+    else   { ip += SP_REP.ip * 1.1; l += SP_REP.l * 1.1; qs += SP_REP.qs * 1.1;
+             k += SP_REP.k * 1.1; er += SP_REP.er * 1.1; wh += SP_REP.wh * 1.1; }
+  }
+  for (let i = 0; i < RP_SLOTS; i++) {
+    const p = rps[i];
+    if (p) { ip += p.ip_wk; l += p.l_wk; sv += p.sv_wk; hld += p.hld_wk;
+             k += p.k_wk; er += p.er_wk; wh += p.wh_wk; }
+    else   { ip += RP_REP.ip_wk; l += RP_REP.l_wk; sv += RP_REP.sv_wk;
+             hld += RP_REP.hld_wk; k += RP_REP.k_wk; er += RP_REP.er_wk; wh += RP_REP.wh_wk; }
+  }
+  return { K: k, QS: qs, SV: sv, HLD: hld, L: l, ERA: er * 9 / ip, WHIP: wh / ip };
+}
+function catProbs(proj, avg, sd) {
+  const probs = {};
+  for (const c of Object.keys(proj)) {
+    probs[c] = winProb(proj[c], avg[c], sd[c], LOWER_BETTER.has(c));
+  }
+  return probs;
+}
+const sum = o => Object.values(o).reduce((a, b) => a + b, 0);
+
+function evalHitting(pool) {
+  const { slots, bench } = optimizeHitters(pool);
+  const proj = hitProjection(slots);
+  const probs = catProbs(proj, HITTING_AVG, HITTING_SD);
+  return { slots, bench, proj, probs, total: sum(probs) };
+}
+function evalPitching(spList, rpList) {
+  const sps = [...spList].sort((a, b) => (b.war || 0) - (a.war || 0));
+  const rps = [...rpList].sort((a, b) => (b.war || 0) - (a.war || 0));
+  const proj = pitchProjection(sps.slice(0, SP_SLOTS), rps.slice(0, RP_SLOTS));
+  const probs = catProbs(proj, PITCHING_AVG, PITCHING_SD);
+  return { active: { sps: sps.slice(0, SP_SLOTS), rps: rps.slice(0, RP_SLOTS) },
+           bench: [...sps.slice(SP_SLOTS), ...rps.slice(RP_SLOTS)],
+           proj, probs, total: sum(probs) };
+}
+function evalTeam(pools) {
+  const hit = evalHitting(pools.hit);
+  const pitch = evalPitching(pools.sp, pools.rp);
+  return { hit, pitch, total: hit.total + pitch.total };
+}
+
+// ===================== team pools from rosters =====================
+const teamPools = {};   // {team: {hit:[], sp:[], rp:[]}}
+for (const t of TEAM_NAMES) {
+  const pools = { hit: [], sp: [], rp: [] };
+  for (const entry of (ROSTERS[t] || [])) {
+    if (entry.type === 'H') {
+      const h = hitterByName.get(entry.name);
+      if (h) pools.hit.push(h);
+    } else {
+      const p = pitcherByName.get(entry.name);
+      if (p) pools[entry.type === 'SP' ? 'sp' : 'rp'].push(p);
+    }
+  }
+  teamPools[t] = pools;
+}
+const teamEval = {};
+for (const t of TEAM_NAMES) teamEval[t] = evalTeam(teamPools[t]);
+const ranking = [...TEAM_NAMES].sort((a, b) => teamEval[b].total - teamEval[a].total);
+const rankOf = Object.fromEntries(ranking.map((t, i) => [t, i + 1]));
+
+// ===================== sellers =====================
+let sellers = new Set();
+try {
+  const saved = JSON.parse(localStorage.getItem('deadline-sellers') || 'null');
+  if (Array.isArray(saved)) sellers = new Set(saved.filter(t => TEAM_NAMES.includes(t)));
+} catch (e) { /* fresh default below */ }
+if (!sellers.size) {
+  ranking.slice(-5).filter(t => t !== MY_TEAM).forEach(t => sellers.add(t));
+}
+function saveSellers() { localStorage.setItem('deadline-sellers', JSON.stringify([...sellers])); }
+
+// ===================== marginal value (Δ wins if acquired, optimal drop) =====================
+const MV = new Map();
+let mvReady = false;
+
+function computeAllMV() {
+  const me = teamPools[MY_TEAM];
+  const base = teamEval[MY_TEAM].total;
+  const myHitTotal = teamEval[MY_TEAM].hit.total;
+  const myPitchTotal = teamEval[MY_TEAM].pitch.total;
+
+  for (const h of HITTERS) {
+    if (OWNERS[h.name] === MY_TEAM) continue;
+    let best = -Infinity;
+    const drops = me.hit.length >= 9 ? me.hit : [...me.hit, null];
+    for (const drop of drops) {
+      const pool = me.hit.filter(x => x !== drop);
+      pool.push(h);
+      const w = evalHitting(pool).total + myPitchTotal;
+      if (w > best) best = w;
+    }
+    MV.set(h.name, best - base);
+  }
+  for (const p of PITCHERS) {
+    if (OWNERS[p.name] === MY_TEAM) continue;
+    const isSP = p.type === 'SP';
+    const list = isSP ? me.sp : me.rp;
+    const cap = isSP ? SP_SLOTS : RP_SLOTS;
+    let best = -Infinity;
+    const drops = list.length >= cap ? list : [...list, null];
+    for (const drop of drops) {
+      const newList = list.filter(x => x !== drop);
+      newList.push(p);
+      const w = myHitTotal + (isSP ? evalPitching(newList, me.rp).total
+                                   : evalPitching(me.sp, newList).total);
+      if (w > best) best = w;
+    }
+    MV.set(p.name, best - base);
+  }
+  mvReady = true;
+}
+
+// ===================== formatting helpers =====================
+const fmt  = (x, d = 1) => x.toFixed(d);
+const fmt3 = x => x.toFixed(3).replace(/^0/, '');
+const pct  = p => (p * 100).toFixed(0) + '%';
+const signed = (x, d = 2) => (x >= 0 ? '+' : '') + x.toFixed(d);
+function deltaClass(x, eps = 0.005) { return x > eps ? 'pos-delta' : x < -eps ? 'neg-delta' : 'zero-delta'; }
+function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+function ownerBadge(name) {
+  const o = OWNERS[name] || 'FA';
+  if (o === MY_TEAM) return `<span class="badge you">YOU</span>`;
+  if (o === 'FA') return `<span class="badge owner fa">FA</span>`;
+  const sell = sellers.has(o) ? ' 🏳' : '';
+  return `<span class="badge owner">${esc(o)}${sell}</span>`;
+}
+function posBadges(h) {
+  return (h.pos || []).filter(p => p !== 'UT').map(p => `<span class="badge">${p}</span>`).join('');
+}
+function mvCell(name) {
+  if (!mvReady) return '<span class="muted small">…</span>';
+  const v = MV.get(name);
+  if (v === undefined) return '<span class="muted small">—</span>';
+  return `<span class="mv-cell ${deltaClass(v)} num">${signed(v)}</span>`;
+}
+function hitterStatLine(h) {
+  return `${fmt(h.r)} R · ${fmt(h.hr)} HR · ${fmt(h.rbi)} RBI · ${fmt(h.sb)} SB · ${fmt(h.tb, 1)} TB · ${fmt3(h.obp)} OBP /wk`;
+}
+function pitcherStatLine(p) {
+  return p.type === 'SP'
+    ? `${fmt(p.k_wk)} K · ${fmt(p.qs_wk, 2)} QS · ${fmt(p.era, 2)} ERA · ${fmt(p.whip, 2)} WHIP /wk`
+    : `${fmt(p.sv_wk, 2)} SV · ${fmt(p.hld_wk, 2)} HLD · ${fmt(p.k_wk)} K · ${fmt(p.era, 2)} ERA /wk`;
+}
+
+// ===================== DASHBOARD =====================
+function renderDashboard() {
+  const meEval = teamEval[MY_TEAM];
+  const totals = ranking.map(t => teamEval[t].total);
+  const median = (totals[7] + totals[8]) / 2;
+  const leader = totals[0];
+
+  document.getElementById('dash-tiles').innerHTML = `
+    <div class="card tile">
+      <div class="label">Your expected weekly wins</div>
+      <div class="value hero num">${fmt(meEval.total, 2)}<span class="muted" style="font-size:20px"> / 14</span></div>
+      <div class="delta ${deltaClass(meEval.total - median)}">${signed(meEval.total - median)} vs league median</div>
+    </div>
+    <div class="card tile">
+      <div class="label">League rank (projected)</div>
+      <div class="value num">#${rankOf[MY_TEAM]}<span class="muted" style="font-size:18px"> of 16</span></div>
+      <div class="delta muted">${fmt(leader - meEval.total, 2)} behind #1 (${esc(ranking[0])})</div>
+    </div>
+    <div class="card tile">
+      <div class="label">Hitting / pitching split</div>
+      <div class="value num" style="font-size:26px">${fmt(meEval.hit.total, 2)} <span class="muted">/</span> ${fmt(meEval.pitch.total, 2)}</div>
+      <div class="delta muted">of 7 each</div>
+    </div>
+    <div class="card tile">
+      <div class="label">Sellers flagged</div>
+      <div class="value num">${sellers.size}</div>
+      <div class="delta muted">feeding the Poach Board</div>
+    </div>`;
+
+  // power ranking bars (single-hue, baseline 0, direct value labels)
+  const maxW = 14;
+  document.getElementById('power-rankings').innerHTML = ranking.map(t => {
+    const w = teamEval[t].total;
+    const me = t === MY_TEAM;
+    return `<div class="bar-row" title="${esc(t)}: ${fmt(w, 2)} expected category wins/week">
+      <div class="name ${me ? 'me' : ''}">${me ? '▸ ' : ''}${esc(t)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(w / maxW * 100).toFixed(1)}%; ${me ? '' : 'opacity:.62'}"></div></div>
+      <div class="val num">${fmt(w, 2)}</div>
+      <label class="seller-toggle">${me ? '' :
+        `<input type="checkbox" data-team="${esc(t)}" ${sellers.has(t) ? 'checked' : ''}> seller`}</label>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('#power-rankings input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.checked ? sellers.add(cb.dataset.team) : sellers.delete(cb.dataset.team);
+      saveSellers(); renderDashboard(); renderPoach(); renderTargets();
+    });
+  });
+
+  // category profile
+  const rows = [];
+  const addRows = (cats, proj, probs, avg, dec) => {
+    for (const c of cats) {
+      const p = probs[c];
+      const cls = p >= 0.55 ? 'up' : p <= 0.45 ? 'down' : 'even';
+      const d = dec[c] !== undefined ? dec[c] : 1;
+      rows.push(`<tr>
+        <td><b>${c}</b>${LOWER_BETTER.has(c) ? ' <span class="muted small">↓</span>' : ''}</td>
+        <td class="num">${fmt(proj[c], d)}</td>
+        <td class="num muted">${fmt(avg[c], d)}</td>
+        <td><div class="meter" title="P(win ${c}) = ${pct(p)}"><div class="fill ${cls}" style="width:${(p * 100).toFixed(1)}%"></div><div class="mid"></div></div></td>
+        <td class="num" style="width:44px">${pct(p)}</td>
+      </tr>`);
+    }
+  };
+  const meE = teamEval[MY_TEAM];
+  addRows(HIT_CATS, meE.hit.proj, meE.hit.probs, HITTING_AVG, { OBP: 3 });
+  addRows(PITCH_CATS, meE.pitch.proj, meE.pitch.probs, PITCHING_AVG, { ERA: 2, WHIP: 2, QS: 2, SV: 2, HLD: 2 });
+  document.getElementById('cat-profile').innerHTML =
+    `<tr><th>Cat</th><th class="num" style="text-align:right">You</th><th class="num" style="text-align:right">Lg avg</th><th>Win probability <span style="font-weight:400">(mid line = 50%)</span></th><th></th></tr>` + rows.join('');
+
+  renderWeakCats();
+}
+
+function renderWeakCats() {
+  const meE = teamEval[MY_TEAM];
+  const all = [
+    ...HIT_CATS.map(c => ({ c, p: meE.hit.probs[c], kind: 'H' })),
+    ...PITCH_CATS.map(c => ({ c, p: meE.pitch.probs[c], kind: 'P' })),
+  ].sort((a, b) => a.p - b.p).slice(0, 3);
+
+  const isTarget = name => (OWNERS[name] || 'FA') !== MY_TEAM;
+  const leaders = (cat, kind) => {
+    if (kind === 'H') {
+      const key = { R: 'r', HR: 'hr', RBI: 'rbi', SB: 'sb', TB: 'tb', SO: 'so', OBP: 'obp' }[cat];
+      const pool = HITTERS.filter(h => isTarget(h.name) && !h.synth && h.value > 0.5);
+      pool.sort(cat === 'SO' ? (a, b) => a.so - b.so : (a, b) => b[key] - a[key]);
+      return pool.slice(0, 4).map(h => ({ name: h.name, note: cat === 'SO' ? `${fmt(h.so)} K/wk` : `${fmt(h[key], key === 'obp' ? 3 : 1)} ${cat}/wk` }));
+    }
+    const key = { K: 'k_wk', QS: 'qs_wk', SV: 'sv_wk', HLD: 'hld_wk', L: 'l_wk', ERA: 'era', WHIP: 'whip' }[cat];
+    const pool = PITCHERS.filter(p => isTarget(p.name) && (p.war || 0) > 1);
+    pool.sort(LOWER_BETTER.has(cat) ? (a, b) => a[key] - b[key] : (a, b) => b[key] - a[key]);
+    return pool.slice(0, 4).map(p => ({ name: p.name, note: `${fmt(p[key], 2)} ${cat}${cat === 'ERA' || cat === 'WHIP' ? '' : '/wk'}` }));
+  };
+
+  document.getElementById('weak-cats').innerHTML = all.map(({ c, p, kind }) => `
+    <div class="card" style="background:var(--page)">
+      <h3>${c} — ${pct(p)} win probability</h3>
+      ${leaders(c, kind).map(x => `
+        <div style="display:flex; gap:8px; padding:2px 0; font-size:13px">
+          <span>${esc(x.name)}</span>${ownerBadge(x.name)}
+          <span class="muted small" style="margin-left:auto">${x.note}</span>
+          <span style="width:52px; text-align:right">${mvCell(x.name)}</span>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+// ===================== TARGETS =====================
+function targetRows() {
+  const q = document.getElementById('tg-search').value.trim().toLowerCase();
+  const type = document.getElementById('tg-type').value;
+  const pos = document.getElementById('tg-pos').value;
+  const owner = document.getElementById('tg-owner').value;
+  const sellersOnly = document.getElementById('tg-sellers').checked;
+  const hideFA = document.getElementById('tg-owned').checked;
+
+  const rows = [];
+  const push = (name, t, obj) => {
+    const o = OWNERS[name] || 'FA';
+    if (o === MY_TEAM) return;
+    if (q && !name.toLowerCase().includes(q)) return;
+    if (type && t !== type) return;
+    if (owner && o !== owner) return;
+    if (sellersOnly && !sellers.has(o)) return;
+    if (hideFA && o === 'FA') return;
+    rows.push({ name, t, o, obj, mv: MV.get(name) ?? -99 });
+  };
+  if (!type || type === 'H') {
+    for (const h of HITTERS) {
+      if (h.synth) continue;
+      if (pos && !(h.pos || []).includes(pos)) continue;
+      push(h.name, 'H', h);
+    }
+  }
+  if (!pos && (!type || type === 'SP')) for (const p of PITCHERS) if (p.type === 'SP') push(p.name, 'SP', p);
+  if (!pos && (!type || type === 'RP')) for (const p of PITCHERS) if (p.type === 'RP') push(p.name, 'RP', p);
+  rows.sort((a, b) => b.mv - a.mv);
+  return rows;
+}
+
+function renderTargets() {
+  const rows = targetRows();
+  const shown = rows.slice(0, 300);
+  document.getElementById('tg-count').textContent =
+    `${rows.length} players${rows.length > 300 ? ' (top 300 shown)' : ''}` + (mvReady ? '' : ' — computing Δ wins…');
+  document.getElementById('targets-table').innerHTML = `
+    <table class="list">
+      <tr><th class="num" style="width:34px">#</th><th>Player</th><th>Type</th><th>Owner</th>
+          <th>Weekly line</th><th class="num" title="Expected category wins per week added to your team, assuming the optimal lineup shuffle and drop">Δ wins/wk</th></tr>
+      ${shown.map((r, i) => `<tr>
+        <td class="num muted">${i + 1}</td>
+        <td>${esc(r.name)}${r.t === 'H' ? posBadges(r.obj) : (r.obj.dualEligible ? '<span class="badge">SP/RP</span>' : '')}</td>
+        <td class="muted">${r.t}${r.t !== 'H' ? ' <span class="badge warn" title="Pitcher projections are preseason ATC — stale">stale</span>' : ''}</td>
+        <td>${ownerBadge(r.name)}</td>
+        <td class="muted small">${r.t === 'H' ? hitterStatLine(r.obj) : pitcherStatLine(r.obj)}</td>
+        <td class="num">${mvCell(r.name)}</td>
+      </tr>`).join('')}
+    </table>`;
+}
+
+// ===================== POACH BOARD =====================
+function renderPoach() {
+  document.getElementById('poach-myteam').textContent = MY_TEAM;
+  const grid = document.getElementById('poach-grid');
+  const list = ranking.filter(t => sellers.has(t));
+  if (!list.length) {
+    grid.innerHTML = `<p class="muted">No sellers ticked — flag some flailing teams on the Dashboard.</p>`;
+    return;
+  }
+  if (!mvReady) { grid.innerHTML = `<p class="loading-note">Computing trade values…</p>`; return; }
+
+  grid.innerHTML = list.map(t => {
+    const assets = (ROSTERS[t] || [])
+      .map(e => ({ ...e, mv: MV.get(e.name) ?? -99 }))
+      .filter(a => MV.has(a.name))
+      .sort((a, b) => b.mv - a.mv)
+      .slice(0, 8);
+    const maxMv = Math.max(0.01, ...assets.map(a => a.mv));
+    return `<div class="card poach-card">
+      <div class="head">
+        <h2 style="margin:0">${esc(t)}</h2>
+        <span class="rank num">#${rankOf[t]} · ${fmt(teamEval[t].total, 2)} W/wk</span>
+      </div>
+      <div class="asset" style="border-bottom:1px solid var(--grid)">
+        <span class="small muted">Asset</span>
+        <span class="small muted" style="text-align:right">Δ wins</span><span></span>
+        <span class="small muted" style="text-align:right">value</span>
+      </div>
+      ${assets.map(a => {
+        const obj = a.type === 'H' ? hitterByName.get(a.name) : pitcherByName.get(a.name);
+        const val = a.type === 'H' ? (obj.value || 0).toFixed(1) + 'z' : (obj.war || 0).toFixed(1) + ' WAR';
+        const w = Math.max(0, a.mv) / maxMv * 100;
+        return `<div class="asset" title="${esc(a.name)} — ${a.type === 'H' ? hitterStatLine(obj) : pitcherStatLine(obj)}">
+          <span class="nm">${esc(a.name)} <span class="badge">${a.type === 'H' ? (obj.pos || []).filter(p => p !== 'UT')[0] || 'UT' : a.type}</span></span>
+          <span class="${deltaClass(a.mv)} num small" style="text-align:right">${signed(a.mv)}</span>
+          <div class="mini-track"><div class="mini-fill" style="width:${w.toFixed(0)}%"></div></div>
+          <span class="num small muted" style="text-align:right">${val}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+// ===================== TRADE BUILDER =====================
+const builder = { partner: null, give: new Set(), get: new Set() };
+
+function applyTrade(pools, giveNames, getPlayers) {
+  const out = {
+    hit: pools.hit.filter(h => !giveNames.has(h.name)),
+    sp:  pools.sp.filter(p => !giveNames.has(p.name)),
+    rp:  pools.rp.filter(p => !giveNames.has(p.name)),
+  };
+  for (const g of getPlayers) {
+    if (g.type === 'H') out.hit.push(g.obj);
+    else out[g.type === 'SP' ? 'sp' : 'rp'].push(g.obj);
+  }
+  return out;
+}
+function playersOf(team) {
+  return (ROSTERS[team] || []).map(e => ({
+    name: e.name, type: e.type,
+    obj: e.type === 'H' ? hitterByName.get(e.name) : pitcherByName.get(e.name),
+  })).filter(x => x.obj);
+}
+function evalTrade(giveNames, getNames) {
+  const partner = builder.partner;
+  const mine = playersOf(MY_TEAM), theirs = playersOf(partner);
+  const gets = theirs.filter(x => getNames.has(x.name));
+  const gives = mine.filter(x => giveNames.has(x.name));
+  const myAfter = evalTeam(applyTrade(teamPools[MY_TEAM], giveNames, gets));
+  const theirAfter = evalTeam(applyTrade(teamPools[partner], getNames, gives));
+  return {
+    myBefore: teamEval[MY_TEAM], myAfter,
+    theirBefore: teamEval[partner], theirAfter,
+    myDelta: myAfter.total - teamEval[MY_TEAM].total,
+    theirDelta: theirAfter.total - teamEval[partner].total,
+  };
+}
+
+function renderBuilderRosters() {
+  const partner = builder.partner;
+  document.getElementById('bld-partner-name').textContent = partner;
+  const render = (team, sel, containerId, side) => {
+    const groups = { H: [], SP: [], RP: [] };
+    playersOf(team).forEach(x => groups[x.type].push(x));
+    groups.H.sort((a, b) => (b.obj.value || 0) - (a.obj.value || 0));
+    groups.SP.sort((a, b) => (b.obj.war || 0) - (a.obj.war || 0));
+    groups.RP.sort((a, b) => (b.obj.war || 0) - (a.obj.war || 0));
+    const row = x => `<div class="pick-row ${sel.has(x.name) ? 'selected' : ''}" data-name="${esc(x.name)}" data-side="${side}">
+        <span>${sel.has(x.name) ? '☑' : '☐'}</span>
+        <span>${esc(x.name)}${x.type === 'H' ? posBadges(x.obj) : `<span class="badge">${x.type}</span>`}${x.obj.synth ? '<span class="badge warn">no proj</span>' : ''}</span>
+        <span class="stat">${x.type === 'H' ? `${(x.obj.value || 0).toFixed(1)}z · ${fmt(x.obj.hr)} HR · ${fmt(x.obj.sb)} SB` : `${(x.obj.war || 0).toFixed(1)} WAR`}</span>
+      </div>`;
+    document.getElementById(containerId).innerHTML =
+      `<div class="group-label">Hitters</div>` + groups.H.map(row).join('') +
+      `<div class="group-label">Starters</div>` + groups.SP.map(row).join('') +
+      `<div class="group-label">Relievers</div>` + groups.RP.map(row).join('');
+  };
+  render(partner, builder.get, 'bld-their-roster', 'get');
+  render(MY_TEAM, builder.give, 'bld-my-roster', 'give');
+  document.querySelectorAll('.pick-row').forEach(el => {
+    el.addEventListener('click', () => {
+      const set = el.dataset.side === 'get' ? builder.get : builder.give;
+      set.has(el.dataset.name) ? set.delete(el.dataset.name) : set.add(el.dataset.name);
+      renderBuilderRosters(); renderBuilderResult();
+    });
+  });
+}
+
+function renderBuilderResult() {
+  const box = document.getElementById('bld-result');
+  if (!builder.give.size && !builder.get.size) {
+    box.innerHTML = `<span class="muted">Select players on both sides to evaluate a trade — or hit “Suggest 1-for-1 trades”.</span>`;
+    return;
+  }
+  const r = evalTrade(builder.give, builder.get);
+  const verdict =
+    r.myDelta > 0.02 && r.theirDelta > 0.02 ? '🤝 Win-win — this is your easiest pitch.' :
+    r.myDelta > 0.02 && r.theirDelta > -0.05 ? '👍 Good for you, roughly neutral for them — sellable.' :
+    r.myDelta > 0.02 ? '⚠️ You win, they lose — expect pushback unless they value futures.' :
+    r.myDelta < -0.02 ? '🛑 This trade hurts your team.' : '➖ Roughly neutral for you.';
+
+  const impacts = [];
+  const addImpact = (cats, before, after) => {
+    for (const c of cats) {
+      const d = (after.probs[c] - before.probs[c]) * 100;
+      if (Math.abs(d) >= 0.5) impacts.push({ c, d });
+    }
+  };
+  addImpact(HIT_CATS, r.myBefore.hit, r.myAfter.hit);
+  addImpact(PITCH_CATS, r.myBefore.pitch, r.myAfter.pitch);
+  impacts.sort((a, b) => b.d - a.d);
+
+  box.innerHTML = `
+    <div style="display:flex; gap:28px; flex-wrap:wrap; align-items:baseline">
+      <div><span class="small muted">You (${esc(MY_TEAM)})</span><br>
+        <span class="num" style="font-size:22px">${fmt(r.myBefore.total, 2)} → ${fmt(r.myAfter.total, 2)}</span>
+        <span class="${deltaClass(r.myDelta)} num" style="font-size:16px"> ${signed(r.myDelta)}</span></div>
+      <div><span class="small muted">${esc(builder.partner)}</span><br>
+        <span class="num" style="font-size:22px">${fmt(r.theirBefore.total, 2)} → ${fmt(r.theirAfter.total, 2)}</span>
+        <span class="${deltaClass(r.theirDelta)} num" style="font-size:16px"> ${signed(r.theirDelta)}</span></div>
+      <div class="verdict" style="flex:1; min-width:240px">${verdict}</div>
+    </div>
+    ${impacts.length ? `<div class="impact-list">${impacts.map(x =>
+      `<div><b>${x.c}</b>: <span class="${deltaClass(x.d, 0.01)} num">${signed(x.d, 1)} pp</span></div>`).join('')}</div>`
+      : '<div class="small muted" style="margin-top:6px">No category moves ≥ 0.5 pp.</div>'}`;
+}
+
+function renderSuggestions() {
+  const el = document.getElementById('bld-suggestions');
+  el.innerHTML = `<div class="card" style="margin-bottom:14px"><span class="loading-note">Evaluating all 1-for-1 swaps with ${esc(builder.partner)}…</span></div>`;
+  setTimeout(() => {
+    const mine = playersOf(MY_TEAM).filter(x => !x.obj.synth);
+    const theirs = playersOf(builder.partner).filter(x => !x.obj.synth);
+    const results = [];
+    for (const t of theirs) {
+      for (const g of mine) {
+        const r = evalTrade(new Set([g.name]), new Set([t.name]));
+        if (r.myDelta > 0.03) results.push({ give: g.name, get: t.name, my: r.myDelta, their: r.theirDelta });
+      }
+    }
+    results.sort((a, b) => (Math.min(b.their, 0) * 0.5 + b.my) - (Math.min(a.their, 0) * 0.5 + a.my));
+    const top = results.slice(0, 12);
+    el.innerHTML = `<div class="card" style="margin-bottom:14px">
+      <h2>Suggested 1-for-1 swaps with ${esc(builder.partner)} <span class="muted small">(ranked by your gain, penalized when it guts them — click to load)</span></h2>
+      ${top.length ? `<div class="suggest-row"><span class="h">You get</span><span class="h">You give</span><span class="h" style="text-align:right">Your Δ</span><span class="h" style="text-align:right">Their Δ</span></div>` +
+        top.map(s => `<div class="suggest-row" data-give="${esc(s.give)}" data-get="${esc(s.get)}">
+          <span>${esc(s.get)}</span><span>${esc(s.give)}</span>
+          <span class="num pos-delta" style="text-align:right">${signed(s.my)}</span>
+          <span class="num ${deltaClass(s.their)}" style="text-align:right">${signed(s.their)}</span>
+        </div>`).join('')
+      : `<p class="muted">No 1-for-1 swap with ${esc(builder.partner)} gains you ≥ 0.03 wins/week. Try a 2-for-1 manually, or another partner.</p>`}
+    </div>`;
+    el.querySelectorAll('.suggest-row[data-give]').forEach(row => {
+      row.addEventListener('click', () => {
+        builder.give = new Set([row.dataset.give]);
+        builder.get = new Set([row.dataset.get]);
+        renderBuilderRosters(); renderBuilderResult();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+  }, 30);
+}
+
+function initBuilder() {
+  const sel = document.getElementById('bld-partner');
+  const others = ranking.filter(t => t !== MY_TEAM);
+  sel.innerHTML = others.map(t =>
+    `<option value="${esc(t)}">${esc(t)} (#${rankOf[t]}${sellers.has(t) ? ' · seller' : ''})</option>`).join('');
+  builder.partner = others.find(t => sellers.has(t)) || others[0];
+  sel.value = builder.partner;
+  sel.addEventListener('change', () => {
+    builder.partner = sel.value; builder.give.clear(); builder.get.clear();
+    document.getElementById('bld-suggestions').innerHTML = '';
+    renderBuilderRosters(); renderBuilderResult();
+  });
+  document.getElementById('bld-clear').addEventListener('click', () => {
+    builder.give.clear(); builder.get.clear();
+    document.getElementById('bld-suggestions').innerHTML = '';
+    renderBuilderRosters(); renderBuilderResult();
+  });
+  document.getElementById('bld-suggest').addEventListener('click', renderSuggestions);
+  renderBuilderRosters(); renderBuilderResult();
+}
+
+// ===================== TEAMS =====================
+function renderTeams() {
+  document.getElementById('teams-grid').innerHTML = ranking.map(t => {
+    const ev = teamEval[t];
+    const slotRow = (pos, p) => `<div class="slot"><span class="pos">${pos}</span>
+      ${p ? `<span>${esc(p.name)}${p.synth ? ' <span class="badge warn">no proj</span>' : ''}</span>
+             <span class="muted small" style="margin-left:auto">${p.value !== undefined ? (p.value || 0).toFixed(1) + 'z' : ''}</span>`
+          : `<span class="empty">— replacement</span>`}</div>`;
+    const catRow = (c, p) => `<tr><td>${c}</td><td><div class="meter"><div class="fill ${p >= 0.55 ? 'up' : p <= 0.45 ? 'down' : 'even'}" style="width:${(p * 100).toFixed(1)}%"></div><div class="mid"></div></div></td><td class="num">${pct(p)}</td></tr>`;
+    return `<div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px">
+        <h2 style="margin:0">${esc(t)}${t === MY_TEAM ? ' <span class="badge you">YOU</span>' : ''}${sellers.has(t) ? ' <span class="badge">SELLER</span>' : ''}</h2>
+        <span class="muted small num">#${rankOf[t]} · ${fmt(ev.total, 2)} W/wk</span>
+      </div>
+      <div class="lineup">
+        ${[...POSITIONS, 'UTIL'].map(pos => slotRow(pos, ev.hit.slots[pos])).join('')}
+        ${ev.hit.bench.length ? `<div class="slot"><span class="pos">BN</span><span class="muted">${ev.hit.bench.map(p => esc(p.name)).join(', ')}</span></div>` : ''}
+        <div style="border-top:1px solid var(--grid); margin:6px 0"></div>
+        ${ev.pitch.active.sps.map(p => slotRow('SP', { ...p, value: undefined })).join('')}
+        ${Array(Math.max(0, SP_SLOTS - ev.pitch.active.sps.length)).fill().map(() => slotRow('SP', null)).join('')}
+        ${ev.pitch.active.rps.map(p => slotRow('RP', { ...p, value: undefined })).join('')}
+        ${Array(Math.max(0, RP_SLOTS - ev.pitch.active.rps.length)).fill().map(() => slotRow('RP', null)).join('')}
+        ${ev.pitch.bench.length ? `<div class="slot"><span class="pos">BN</span><span class="muted">${ev.pitch.bench.map(p => esc(p.name)).join(', ')}</span></div>` : ''}
+      </div>
+      <details class="catdet"><summary>Category win probabilities</summary>
+        <table class="cat-table" style="margin-top:6px">
+          ${HIT_CATS.map(c => catRow(c, ev.hit.probs[c])).join('')}
+          ${PITCH_CATS.map(c => catRow(c, ev.pitch.probs[c])).join('')}
+        </table>
+      </details>
+    </div>`;
+  }).join('');
+}
+
+// ===================== chrome =====================
+document.getElementById('meta-line').textContent =
+  `${META.hitterSource} · rosters: ${META.rosterSource} · built ${META.built} · ~6 scoring weeks left (season ends Aug 23)`;
+
+document.getElementById('provenance').innerHTML = `
+  <li><b>Hitters:</b> ${esc(META.hitterSource)} — weekly rates over a ${META.rosWeeks}-week MLB rest-of-season; players under ${META.targetPA} projected PA are blended toward replacement for the missing playing time (same methodology as the draft tool, rebased for ROS).</li>
+  <li><b>Pitchers:</b> ${esc(META.pitcherSource)}. Treat pitcher Δ-wins as directional only — export a ROS pitching projection and rebuild to fix.</li>
+  <li><b>Rosters:</b> ${esc(META.rosterSource)} — re-export from Fantrax and rebuild (<code>python3 build_deadline_tool.py</code>) if trades/pickups have happened since.</li>
+  <li><b>Method:</b> each category is N(μ, σ) with σ from 2024–25 league history; P(win) = Φ((μ_you − μ_opp)/(σ√2)) vs a league-average opponent; Δ wins/wk re-optimizes your lineup and assumes the best drop.</li>`;
+
+// tabs
+document.getElementById('tabs').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-view]');
+  if (!btn) return;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b === btn));
+  document.querySelectorAll('section.view').forEach(s => s.classList.toggle('active', s.id === 'view-' + btn.dataset.view));
+});
+
+// theme toggle: auto -> dark -> light -> auto
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const cur = document.documentElement.dataset.theme || 'auto';
+  const next = cur === 'auto' ? 'dark' : cur === 'dark' ? 'light' : 'auto';
+  if (next === 'auto') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = next;
+  document.getElementById('theme-toggle').textContent = '◐ ' + next[0].toUpperCase() + next.slice(1);
+});
+
+// owner filter options
+document.getElementById('tg-owner').innerHTML += TEAM_NAMES.filter(t => t !== MY_TEAM)
+  .map(t => `<option>${esc(t)}</option>`).join('') + `<option value="FA">FA</option>`;
+['tg-search', 'tg-type', 'tg-pos', 'tg-owner', 'tg-sellers', 'tg-owned'].forEach(id =>
+  document.getElementById(id).addEventListener('input', renderTargets));
+
+// ===================== boot =====================
+renderDashboard();
+renderTargets();
+renderPoach();
+renderTeams();
+initBuilder();
+setTimeout(() => {
+  computeAllMV();
+  renderTargets(); renderPoach(); renderWeakCats();
+}, 50);
+</script>
+</body>
+</html>
