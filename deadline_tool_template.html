@@ -375,8 +375,13 @@ function winProb(mine, opp, sd, lower) {
 }
 
 // ===================== lineup optimizer (pure) =====================
-// Most-constrained-first; value DESC tiebreak; rarer slot preferred; then a
-// UTIL pass by value; leftovers to bench. Mirrors the audited trade_tool logic.
+// Greedy-by-value over the transversal matroid: take players best-bat-first
+// and admit each via an augmenting path (Kuhn's algorithm), relocating
+// already-placed players to make room when their eligibility allows. The set
+// of simultaneously-placeable players is a transversal matroid, so greedy by
+// value is provably the maximum-total-value legal lineup — unlike the old
+// most-constrained-first heuristic, which could strand a good bat on the
+// bench behind a chain of movable players.
 function optimizeHitters(pool) {
   const slots = {};
   POSITIONS.forEach(p => slots[p] = null);
@@ -384,33 +389,27 @@ function optimizeHitters(pool) {
   const bench = [];
   if (!pool.length) return { slots, bench };
 
-  const elig = pool.map(player => {
-    const pos = player.pos || [];
-    const nonUtil = POSITIONS.filter(s => pos.includes(s));
-    return { player, nonUtil, canUtil: pos.length > 0,
-             count: nonUtil.length + (pos.length ? 1 : 0),
-             value: player.value || 0 };
-  });
-  elig.sort((a, b) => a.count - b.count || b.value - a.value);
-
-  const demand = {};
-  for (const e of elig) for (const s of e.nonUtil) demand[s] = (demand[s] || 0) + 1;
-  for (const e of elig) e.nonUtil.sort((a, b) => demand[a] - demand[b]);
-
-  const placed = new Set();
-  elig.forEach((e, i) => {
-    for (const p of e.nonUtil) {
-      if (slots[p] === null) { slots[p] = e.player; placed.add(i); break; }
+  const eligOf = p => {
+    const pos = p.pos || [];
+    const e = POSITIONS.filter(s => pos.includes(s));
+    if (pos.length) e.push('UTIL');
+    return e;
+  };
+  const tryPlace = (p, visited) => {
+    for (const s of eligOf(p)) {
+      if (visited.has(s)) continue;
+      visited.add(s);
+      if (slots[s] === null || tryPlace(slots[s], visited)) {
+        slots[s] = p;
+        return true;
+      }
     }
-  });
-  elig.map((e, i) => ({ e, i })).filter(x => !placed.has(x.i))
-      .sort((a, b) => b.e.value - a.e.value)
-      .forEach(({ e, i }) => {
-        if (e.canUtil && slots.UTIL === null) { slots.UTIL = e.player; placed.add(i); }
-      });
-  elig.map((e, i) => ({ e, i })).filter(x => !placed.has(x.i))
-      .sort((a, b) => b.e.value - a.e.value)
-      .forEach(({ e }) => bench.push(e.player));
+    return false;
+  };
+  const sorted = [...pool].sort((a, b) => (b.value || 0) - (a.value || 0));
+  for (const p of sorted) {
+    if (!tryPlace(p, new Set())) bench.push(p);
+  }
   return { slots, bench };
 }
 
