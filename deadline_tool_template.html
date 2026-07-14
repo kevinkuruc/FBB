@@ -596,7 +596,7 @@ function mvCell(name, t) {
   return `<span class="mv-cell ${deltaClass(v)} num">${signed(v)}</span>`;
 }
 function hitterStatLine(h) {
-  return `${fmt(h.r)} R · ${fmt(h.hr)} HR · ${fmt(h.rbi)} RBI · ${fmt(h.sb)} SB · ${fmt(h.tb, 1)} TB · ${fmt3(h.obp)} OBP /wk`;
+  return `${fmt(h.r)} R · ${fmt(h.hr)} HR · ${fmt(h.rbi)} RBI · ${fmt(h.sb)} SB · ${fmt(h.tb, 1)} TB · ${fmt(h.so)} K · ${fmt3(h.obp)} OBP /wk`;
 }
 function pitcherStatLine(p) {
   return p.type === 'SP'
